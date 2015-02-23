@@ -155,10 +155,17 @@ private:
     }
 };
 
+Parser::~Parser() {
+    if (tokenizer) delete tokenizer;
+    if (current_ast_node) delete current_ast_node;
+}
+
 AST *Parser::parse(const std::string &text) {
+    if (tokenizer) delete tokenizer;
+    if (current_ast_node) delete current_ast_node;
     tokenizer = new Tokenizer(text);
     block();
-    return NULL;
+    return new AST(current_ast_node->root());
 }
 
 void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
@@ -167,6 +174,10 @@ void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
         abort();
     }
     tokenizer->next();
+}
+
+void Parser::abort() {
+    exit(1);
 }
 
 bool Parser::is_unop_token(const Token &t) {
@@ -178,17 +189,15 @@ bool Parser::is_binop_token(const Token &t) {
         t.isa(Token::StarType) || t.isa(Token::SlashType);
 }
 
-void Parser::abort() {
-    exit(1);
-}
-
 void Parser::block() {
     Token t = tokenizer->peek();
     expect(t, Token::LBraceType, "Expected block to begin with '{'");
+    current_ast_node = new Block(current_ast_node);
     do {
         stmt();
     } while (!tokenizer->peek().isa(Token::RBraceType));
     expect(tokenizer->peek(), Token::RBraceType, "Expected block to end with '}'");
+    current_ast_node = current_ast_node->parent();
 }
 
 void Parser::stmt() {
