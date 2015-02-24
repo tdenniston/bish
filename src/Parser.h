@@ -125,7 +125,7 @@ private:
     ASTNode *stmt();
     Variable *var();
     ASTNode *expr();
-    BinOp *binop();
+    BinOp *binop(ASTNode *a);
     UnaryOp *unop();
     ASTNode *atom();
 };

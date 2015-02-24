@@ -252,13 +252,16 @@ ASTNode *Parser::expr() {
     } else if (is_unop_token(t)) {
         return unop();
     } else {
-        return binop();
+        ASTNode *a = atom();
+        if (is_binop_token(tokenizer->peek())) {
+            return binop(a);
+        }
+        return a;
     }
 }
 
-BinOp *Parser::binop() {
+BinOp *Parser::binop(ASTNode *a) {
     BinOp *bin = NULL;
-    ASTNode *a = atom();
     while (is_binop_token(tokenizer->peek())) {
         BinOp::Operator op = get_binop_operator(tokenizer->peek());
         tokenizer->next();

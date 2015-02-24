@@ -17,7 +17,8 @@ T convert_string(const std::string &s) {
 namespace Bish {
 
 class ASTNode {
-
+public:
+    virtual ~ASTNode() {}
 };
 
 class Block : public ASTNode {
@@ -85,11 +86,40 @@ public:
 
 class AST {
 public:
-    AST() : root(NULL) {}
-    AST(ASTNode *r) : root(r) {}
-    
+    AST() : root_(NULL) {}
+    AST(ASTNode *r) : root_(r) {}
+    ASTNode *root() { return root_; }
 private:
-    ASTNode *root;
+    ASTNode *root_;
+};
+
+class ASTPrinter {
+public:
+    void print(AST *ast);
+protected:
+    virtual void print_block(Block *n, std::ostream &os) {}
+    virtual void print_variable(Variable *n, std::ostream &os) {}
+    virtual void print_assignment(Assignment *n, std::ostream &os) {}
+    virtual void print_binop(BinOp *n, std::ostream &os) {}
+    virtual void print_unaryop(UnaryOp *n, std::ostream &os) {}
+    virtual void print_integer(Integer *n, std::ostream &os) {}
+    virtual void print_fractional(Fractional *n, std::ostream &os) {}
+    virtual void print_string(String *n, std::ostream &os) {}
+    virtual void print_boolean(Boolean *n, std::ostream &os) {}
+    void print(ASTNode *n, std::ostream &os);
+};
+
+class BishPrinter : public ASTPrinter {
+protected:
+    virtual void print_block(Block *n, std::ostream &os);
+    virtual void print_variable(Variable *n, std::ostream &os);
+    virtual void print_assignment(Assignment *n, std::ostream &os);
+    virtual void print_binop(BinOp *n, std::ostream &os);
+    virtual void print_unaryop(UnaryOp *n, std::ostream &os);
+    virtual void print_integer(Integer *n, std::ostream &os);
+    virtual void print_fractional(Fractional *n, std::ostream &os);
+    virtual void print_string(String *n, std::ostream &os);
+    virtual void print_boolean(Boolean *n, std::ostream &os);
 };
 
 }
