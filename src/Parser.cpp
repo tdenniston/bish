@@ -105,7 +105,7 @@ private:
             return ResultState(Token::Star(), idx + 1);
         } else if (c == '/') {
             return ResultState(Token::Slash(), idx + 1);
-        } else if (is_digit(c) || (c == '-' && is_digit(nextchar()))) {
+        } else if (is_digit(c)) {
             return read_number();
         } else {
             return read_symbol();
@@ -116,14 +116,7 @@ private:
         char c = curchar();
         bool fractional = false;
         std::string snum;
-        unsigned newidx;
-        if (c == '-') {
-            assert(false);
-            snum += "-";
-            newidx = idx + 1;
-        } else {
-            newidx = idx;
-        }
+        unsigned newidx = idx;
         while (is_digit(text[newidx])) {
             snum += text[newidx];
             newidx++;
