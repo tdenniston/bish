@@ -164,19 +164,21 @@ AST *Parser::parse(const std::string &text) {
     if (tokenizer) delete tokenizer;
     if (current_ast_node) delete current_ast_node;
     tokenizer = new Tokenizer(text);
-    block();
-    return new AST(current_ast_node->root());
+    ASTNode *b = block();
+    return new AST(b);
 }
 
 void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
     if (!t.isa(ty)) {
-        std::cerr << "Parsing error: " << msg << " near " << tokenizer->position() << "\n";
-        abort();
+        std::stringstream errstr;
+        errstr << "Parsing error: " << msg << " near " << tokenizer->position();
+        abort(errstr.str());
     }
     tokenizer->next();
 }
 
-void Parser::abort() {
+void Parser::abort(const std::string &msg) {
+    std::cerr << msg << "\n";
     exit(1);
 }
 
@@ -189,58 +191,105 @@ bool Parser::is_binop_token(const Token &t) {
         t.isa(Token::StarType) || t.isa(Token::SlashType);
 }
 
-void Parser::block() {
-    Token t = tokenizer->peek();
-    expect(t, Token::LBraceType, "Expected block to begin with '{'");
-    current_ast_node = new Block(current_ast_node);
-    do {
-        stmt();
-    } while (!tokenizer->peek().isa(Token::RBraceType));
-    expect(tokenizer->peek(), Token::RBraceType, "Expected block to end with '}'");
-    current_ast_node = current_ast_node->parent();
-}
-
-void Parser::stmt() {
-    Token t = tokenizer->peek();
-    var();
-    expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
-    expr();
-    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
-}
-
-void Parser::var() {
-    expect(tokenizer->peek(), Token::SymbolType, "Expected variable to be a symbol");
-}
-
-void Parser::expr() {
-    Token t = tokenizer->peek();
-    if (t.isa(Token::LParenType)) {
-        tokenizer->next();
-        expr();
-        expect(tokenizer->peek(), Token::RParenType, "Unmatched '('");
-    } else if (is_unop_token(t)) {
-        unop();
-    } else {
-        atom();
-        Token t = tokenizer->peek();
-        while (is_binop_token(t)) {
-            tokenizer->next();
-            atom();
-            t = tokenizer->peek();
-        }
+BinOp::Operator Parser::get_binop_operator(const Token &t) {
+    switch (t.type()) {
+    case Token::PlusType:
+        return BinOp::Add;
+    case Token::MinusType:
+        return BinOp::Sub;
+    case Token::StarType:
+        return BinOp::Mul;
+    case Token::SlashType:
+        return BinOp::Div;
+    default:
+        abort("Invalid operator for binary operation.");
+        return BinOp::Add;
     }
 }
 
-void Parser::binop() {
-    tokenizer->next();
+UnaryOp::Operator Parser::get_unaryop_operator(const Token &t) {
+    switch (t.type()) {
+    case Token::MinusType:
+        return UnaryOp::Negate;
+    default:
+        abort("Invalid operator for unary operation.");
+        return UnaryOp::Negate;
+    }
 }
 
-void Parser::unop() {
-    tokenizer->next();
+Block *Parser::block() {
+    std::vector<ASTNode *> statements;
+    Token t = tokenizer->peek();
+    expect(t, Token::LBraceType, "Expected block to begin with '{'");
+    do {
+        statements.push_back(stmt());
+    } while (!tokenizer->peek().isa(Token::RBraceType));
+    expect(tokenizer->peek(), Token::RBraceType, "Expected block to end with '}'");
+    return new Block(statements);
 }
 
-void Parser::atom() {
+ASTNode *Parser::stmt() {
+    Variable *v = var();
+    expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
+    ASTNode *e = expr();
+    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    return new Assignment(v, e);
+}
+
+Variable *Parser::var() {
+    std::string name = tokenizer->peek().value();
+    expect(tokenizer->peek(), Token::SymbolType, "Expected variable to be a symbol");
+    return new Variable(name);
+}
+
+ASTNode *Parser::expr() {
+    Token t = tokenizer->peek();
+    if (t.isa(Token::LParenType)) {
+        tokenizer->next();
+        ASTNode *e = expr();
+        expect(tokenizer->peek(), Token::RParenType, "Unmatched '('");
+        return e;
+    } else if (is_unop_token(t)) {
+        return unop();
+    } else {
+        return binop();
+    }
+}
+
+BinOp *Parser::binop() {
+    BinOp *bin = NULL;
+    ASTNode *a = atom();
+    while (is_binop_token(tokenizer->peek())) {
+        BinOp::Operator op = get_binop_operator(tokenizer->peek());
+        tokenizer->next();
+        ASTNode *b = atom();
+        bin = new BinOp(op, a, b);
+        a = bin;
+    }
+    return bin;
+}
+
+UnaryOp *Parser::unop() {
+    UnaryOp::Operator op = get_unaryop_operator(tokenizer->peek());
     tokenizer->next();
+    ASTNode *a = atom();
+    return new UnaryOp(op, a);
+}
+
+ASTNode *Parser::atom() {
+    Token t = tokenizer->peek();
+    tokenizer->next();
+    switch(t.type()) {
+    case Token::SymbolType:
+        return new Variable(t.value());
+    case Token::IntType:
+        return new Integer(t.value());
+    case Token::FractionalType:
+        return new Fractional(t.value());
+    default:
+        abort("Invalid token type for atom.");
+        return NULL;
+    }
 }
 
 }

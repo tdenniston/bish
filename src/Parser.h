@@ -13,7 +13,7 @@ var ::= NAME
 expr ::= '(' expr ')' | unop atom | atom { binop atom }
 binop ::= '+' | '-' | '*' | '/'
 unop ::= '-'
-atom ::= var | NUMBER | true | false
+atom ::= var | NUMBER
 */
 
 namespace Bish {
@@ -38,13 +38,14 @@ public:
                    EOSType,
                    NoneType } Type;
 
-    Token() : type(NoneType) {}
-    Token(Type t) : type(t) {}
-    Token(Type t, const std::string &s) : type(t), str_value(s) {}
+    Token() : type_(NoneType) {}
+    Token(Type t) : type_(t) {}
+    Token(Type t, const std::string &s) : type_(t), value_(s) {}
 
-    bool defined() const { return type != NoneType; }
-    bool isa(Type t) const { return type == t; }
-    const std::string &value() const { return str_value; }
+    bool defined() const { return type_ != NoneType; }
+    bool isa(Type t) const { return type_ == t; }
+    Type type() const { return type_; }
+    const std::string &value() const { return value_; }
 
     static Token LParen() {
         return Token(LParenType, "(");
@@ -102,8 +103,8 @@ public:
         return Token(EOSType, "<EOS>");
     }
 private:
-    Type type;
-    std::string str_value;
+    Type type_;
+    std::string value_;
 };
 
 class Parser {
@@ -117,14 +118,16 @@ private:
     void expect(const Token &t, Token::Type ty, const std::string &msg);
     bool is_unop_token(const Token &t);
     bool is_binop_token(const Token &t);
-    void abort();
-    void block();
-    void stmt();
-    void var();
-    void expr();
-    void binop();
-    void unop();
-    void atom();
+    BinOp::Operator get_binop_operator(const Token &t);
+    UnaryOp::Operator get_unaryop_operator(const Token &t);
+    void abort(const std::string &msg);
+    Block *block();
+    ASTNode *stmt();
+    Variable *var();
+    ASTNode *expr();
+    BinOp *binop();
+    UnaryOp *unop();
+    ASTNode *atom();
 };
 
 }
