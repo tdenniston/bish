@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "SymbolTable.h"
 
 namespace {
 template <typename T>
@@ -23,9 +24,11 @@ public:
 
 class Block : public ASTNode {
 public:
+    SymbolTable *symbol_table;
     std::vector<ASTNode *> nodes;
     Block(const std::vector<ASTNode *> &n) {
         nodes.insert(nodes.begin(), n.begin(), n.end());
+        symbol_table = new SymbolTable();
     }
 };
 

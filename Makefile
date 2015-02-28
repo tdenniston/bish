@@ -5,23 +5,22 @@ RM=rm -f
 SRC=src
 OBJ=obj
 
+SOURCE_FILES=AST.cpp Parser.cpp SymbolTable.cpp
+HEADER_FILES=AST.h Parser.h SymbolTable.h
+
+OBJECTS = $(SOURCE_FILES:%.cpp=$(OBJ)/%.o)
+HEADERS = $(HEADER_FILES:%.h=$(SRC)/%.h)
+
 all: bish
 
-parser.o: $(SRC)/parser.cpp
-	$(CXX) $(CFLAGS) -c $(SRC)/parser.cpp -o $(OBJ)/parser.o
+$(OBJ)/%.o: $(SRC)/%.cpp $(SRC)/%.h
+	@-mkdir -p $(OBJ)
+	$(CXX) $(CXX_FLAGS) -c $< -o $@ -MMD -MF $(OBJ)/$*.d -MT $(OBJ)/$*.o
 
-AST.o: $(SRC)/AST.cpp
-	$(CXX) $(CFLAGS) -c $(SRC)/AST.cpp -o $(OBJ)/AST.o
+bish: $(OBJECTS)
+	$(CXX) $(CFLAGS) -o bish $(SRC)/bish.cpp $(OBJECTS)
 
-bish.o: $(SRC)/bish.cpp
-	$(CXX) $(CFLAGS) -c $(SRC)/bish.cpp -o $(OBJ)/bish.o
-
-bish: dirs parser.o bish.o AST.o
-	$(CXX) $(CFLAGS) -o bish $(OBJ)/parser.o $(OBJ)/bish.o $(OBJ)/AST.o
-
-dirs:
-	mkdir -p $(OBJ)
-
+.PHONY: clean
 clean:
-	$(RM) $(OBJ)/* bish
-	rmdir $(OBJ)
+	$(RM) -r $(OBJ)
+	$(RM) -r bish.dSYM
