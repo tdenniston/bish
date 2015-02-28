@@ -157,8 +157,13 @@ AST *Parser::parse(const std::string &text) {
     if (tokenizer) delete tokenizer;
     if (current_ast_node) delete current_ast_node;
     tokenizer = new Tokenizer(text);
-    ASTNode *b = block();
-    return new AST(b);
+    
+    AST *ast = new AST(block());
+    // Create symbol tables
+    //ast->accept(CreateSymbolTable());
+    // Type coercion and checking
+    //ast->accept(TypeChecker());
+    return ast;
 }
 
 void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
