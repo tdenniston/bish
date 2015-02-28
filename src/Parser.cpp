@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "Parser.h"
+#include "TypeChecker.h"
 
 namespace {
 inline bool is_newline(char c) {
@@ -150,20 +151,16 @@ private:
 
 Parser::~Parser() {
     if (tokenizer) delete tokenizer;
-    if (current_ast_node) delete current_ast_node;
 }
 
 AST *Parser::parse(const std::string &text) {
     if (tokenizer) delete tokenizer;
-    if (current_ast_node) delete current_ast_node;
     tokenizer = new Tokenizer(text);
     
     AST *ast = new AST(block());
-    // Create symbol tables
-    CreateSymbolTable create;
-    ast->accept(&create);
-    // Type coercion and checking
-    //ast->accept(TypeChecker());
+    // Type checking
+    TypeChecker types;
+    ast->accept(&types);
     return ast;
 }
 
@@ -217,6 +214,8 @@ UnaryOp::Operator Parser::get_unaryop_operator(const Token &t) {
 }
 
 Block *Parser::block() {
+    SymbolTable *old = current_symbol_table;
+    current_symbol_table = new SymbolTable();
     std::vector<ASTNode *> statements;
     Token t = tokenizer->peek();
     expect(t, Token::LBraceType, "Expected block to begin with '{'");
@@ -224,7 +223,9 @@ Block *Parser::block() {
         statements.push_back(stmt());
     } while (!tokenizer->peek().isa(Token::RBraceType));
     expect(tokenizer->peek(), Token::RBraceType, "Expected block to end with '}'");
-    return new Block(statements);
+    Block *result = new Block(statements, current_symbol_table);
+    current_symbol_table = old;
+    return result;
 }
 
 ASTNode *Parser::stmt() {
@@ -232,6 +233,7 @@ ASTNode *Parser::stmt() {
     expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
     ASTNode *e = expr();
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    current_symbol_table->propagate(v, e);
     return new Assignment(v, e);
 }
 
@@ -284,10 +286,16 @@ ASTNode *Parser::atom() {
     switch(t.type()) {
     case Token::SymbolType:
         return new Variable(t.value());
-    case Token::IntType:
-        return new Integer(t.value());
-    case Token::FractionalType:
-        return new Fractional(t.value());
+    case Token::IntType: {
+        ASTNode *a = new Integer(t.value());
+        current_symbol_table->insert(a, IntegerTy);
+        return a;
+    }
+    case Token::FractionalType: {
+        ASTNode *a = new Fractional(t.value());
+        current_symbol_table->insert(a, FractionalTy);
+        return a;
+    }
     default:
         abort("Invalid token type for atom.");
         return NULL;

@@ -3,28 +3,27 @@
 
 #include <map>
 #include "ASTVisitor.h"
+#include "Type.h"
 
 namespace Bish {
 
-class SymbolTable {
+class SymbolTableEntry {
 public:
-    void insert(Variable *v, ASTNode *value);
-    ASTNode *lookup(Variable *v) const;
-private:
-    typedef std::map<std::string, ASTNode *> TableTy;
-    typedef TableTy::iterator iterator;
-    typedef TableTy::const_iterator const_iterator;
-    TableTy table;
+    Type type;
+    SymbolTableEntry(Type ty) : type(ty) {}
 };
 
-// ASTVisitor that creates symbol tables.
-class CreateSymbolTable : public ASTVisitor {
+class SymbolTable {
 public:
-    CreateSymbolTable() : current(NULL) {}
-    virtual void visit(const Block *);
-    virtual void visit(const Assignment *);
+    void insert(const ASTNode *v, Type ty);
+    SymbolTableEntry *lookup(const ASTNode *v) const;
+    void propagate(const ASTNode *a, const ASTNode *b);
+    bool contains(const ASTNode *v) const;
 private:
-    SymbolTable *current;
+    // Used to map ASTNodes to entries.
+    std::map<const ASTNode *, SymbolTableEntry *> ast_table;
+    // Used to map names to entries.
+    std::map<std::string, SymbolTableEntry *> name_table;
 };
 
 }

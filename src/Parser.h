@@ -3,6 +3,7 @@
 
 #include <string>
 #include "AST.h"
+#include "SymbolTable.h"
 
 /*
 Grammar:
@@ -109,12 +110,12 @@ private:
 
 class Parser {
 public:
-    Parser() : tokenizer(NULL), current_ast_node(NULL) {}
+    Parser() : tokenizer(NULL), current_symbol_table(NULL) {}
     ~Parser();
     AST *parse(const std::string &text);
 private:
     Tokenizer *tokenizer;
-    ASTNode *current_ast_node;
+    SymbolTable *current_symbol_table;
     void expect(const Token &t, Token::Type ty, const std::string &msg);
     bool is_unop_token(const Token &t);
     bool is_binop_token(const Token &t);

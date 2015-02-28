@@ -39,9 +39,9 @@ class Block : public BaseASTNode<Block> {
 public:
     SymbolTable *symbol_table;
     std::vector<ASTNode *> nodes;
-    Block(const std::vector<ASTNode *> &n) {
+    Block(const std::vector<ASTNode *> &n, SymbolTable *tab) {
         nodes.insert(nodes.begin(), n.begin(), n.end());
-        symbol_table = new SymbolTable();
+        symbol_table = tab;
     }
 };
 

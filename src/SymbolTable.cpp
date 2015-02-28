@@ -1,30 +1,50 @@
+#include <iostream>
+#include <cassert>
 #include "AST.h"
 #include "SymbolTable.h"
 
 using namespace Bish;
 
-void SymbolTable::insert(Variable *v, ASTNode *value) {
-    table[v->name] = value;
-}
-
-ASTNode *SymbolTable::lookup(Variable *v) const {
-    const_iterator I = table.find(v->name);
-    if (I == table.end()) {
-        return NULL;
+void SymbolTable::insert(const ASTNode *v, Type ty) {
+    assert(v);
+    SymbolTableEntry *e = new SymbolTableEntry(ty);
+    if (const Variable *var = dynamic_cast<const Variable*>(v)) {
+        name_table[var->name] = e;
+    } else {
+        ast_table[v] = e;
     }
-    return I->second;
 }
 
-void CreateSymbolTable::visit(const Block *node) {
-    SymbolTable *old = current;
-    current = node->symbol_table;
-    for (std::vector<ASTNode *>::const_iterator I = node->nodes.begin(),
-             E = node->nodes.end(); I != E; ++I) {
-        (*I)->accept(this);
+SymbolTableEntry *SymbolTable::lookup(const ASTNode *v) const {
+    assert(v);
+    if (const Variable *var = dynamic_cast<const Variable*>(v)) {
+        std::map<std::string, SymbolTableEntry *>::const_iterator I = name_table.find(var->name);
+        if (I == name_table.end()) {
+            return NULL;
+        }
+        return I->second;
+    } else {
+        std::map<const ASTNode *, SymbolTableEntry *>::const_iterator I = ast_table.find(v);
+        if (I == ast_table.end()) {
+            return NULL;
+        }
+        return I->second;
     }
-    current = old;
 }
 
-void CreateSymbolTable::visit(const Assignment *node) {
-    current->insert(node->variable, node->value);
+void SymbolTable::propagate(const ASTNode *a, const ASTNode *b) {
+    assert(a && b);
+    SymbolTableEntry *e = lookup(b);
+    if (e) {
+        insert(a, e->type);
+    }
+}
+
+bool SymbolTable::contains(const ASTNode *v) const {
+    assert(v);
+    if (const Variable *var = dynamic_cast<const Variable*>(v)) {
+        return name_table.find(var->name) != name_table.end();
+    } else {
+        return ast_table.find(v) != ast_table.end();
+    }
 }
