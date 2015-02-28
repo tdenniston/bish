@@ -110,33 +110,20 @@ private:
     ASTNode *root_;
 };
 
-class ASTPrinter {
+class BishPrinter : public ASTVisitor {
 public:
-    void print(AST *ast);
-protected:
-    virtual void print_block(Block *n, std::ostream &os) {}
-    virtual void print_variable(Variable *n, std::ostream &os) {}
-    virtual void print_assignment(Assignment *n, std::ostream &os) {}
-    virtual void print_binop(BinOp *n, std::ostream &os) {}
-    virtual void print_unaryop(UnaryOp *n, std::ostream &os) {}
-    virtual void print_integer(Integer *n, std::ostream &os) {}
-    virtual void print_fractional(Fractional *n, std::ostream &os) {}
-    virtual void print_string(String *n, std::ostream &os) {}
-    virtual void print_boolean(Boolean *n, std::ostream &os) {}
-    void print(ASTNode *n, std::ostream &os);
-};
-
-class BishPrinter : public ASTPrinter {
-protected:
-    virtual void print_block(Block *n, std::ostream &os);
-    virtual void print_variable(Variable *n, std::ostream &os);
-    virtual void print_assignment(Assignment *n, std::ostream &os);
-    virtual void print_binop(BinOp *n, std::ostream &os);
-    virtual void print_unaryop(UnaryOp *n, std::ostream &os);
-    virtual void print_integer(Integer *n, std::ostream &os);
-    virtual void print_fractional(Fractional *n, std::ostream &os);
-    virtual void print_string(String *n, std::ostream &os);
-    virtual void print_boolean(Boolean *n, std::ostream &os);
+    BishPrinter(std::ostream &os) : stream(os) {}
+    virtual void visit(const Block *);
+    virtual void visit(const Variable *);
+    virtual void visit(const Assignment *);
+    virtual void visit(const BinOp *);
+    virtual void visit(const UnaryOp *);
+    virtual void visit(const Integer *);
+    virtual void visit(const Fractional *);
+    virtual void visit(const String *);
+    virtual void visit(const Boolean *);
+private:
+    std::ostream &stream;
 };
 
 }
