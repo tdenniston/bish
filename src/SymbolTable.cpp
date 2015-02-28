@@ -14,3 +14,17 @@ ASTNode *SymbolTable::lookup(Variable *v) const {
     }
     return I->second;
 }
+
+void CreateSymbolTable::visit(const Block *node) {
+    SymbolTable *old = current;
+    current = node->symbol_table;
+    for (std::vector<ASTNode *>::const_iterator I = node->nodes.begin(),
+             E = node->nodes.end(); I != E; ++I) {
+        (*I)->accept(this);
+    }
+    current = old;
+}
+
+void CreateSymbolTable::visit(const Assignment *node) {
+    current->insert(node->variable, node->value);
+}

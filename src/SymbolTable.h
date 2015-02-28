@@ -2,11 +2,9 @@
 #define __BISH_SYMBOL_TABLE_H__
 
 #include <map>
+#include "ASTVisitor.h"
 
 namespace Bish {
-
-class ASTNode;
-class Variable;
 
 class SymbolTable {
 public:
@@ -17,6 +15,16 @@ private:
     typedef TableTy::iterator iterator;
     typedef TableTy::const_iterator const_iterator;
     TableTy table;
+};
+
+// ASTVisitor that creates symbol tables.
+class CreateSymbolTable : public ASTVisitor {
+public:
+    CreateSymbolTable() : current(NULL) {}
+    virtual void visit(const Block *);
+    virtual void visit(const Assignment *);
+private:
+    SymbolTable *current;
 };
 
 }

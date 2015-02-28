@@ -160,7 +160,8 @@ AST *Parser::parse(const std::string &text) {
     
     AST *ast = new AST(block());
     // Create symbol tables
-    //ast->accept(CreateSymbolTable());
+    CreateSymbolTable create;
+    ast->accept(&create);
     // Type coercion and checking
     //ast->accept(TypeChecker());
     return ast;
