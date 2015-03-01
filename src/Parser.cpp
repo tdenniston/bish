@@ -207,6 +207,7 @@ AST *Parser::parse_string(const std::string &text) {
     tokenizer = new Tokenizer(preprocessed);
     
     AST *ast = new AST(block());
+    expect(tokenizer->peek(), Token::EOSType, "Expected end of string.");
     // Type checking
     TypeChecker types;
     ast->accept(&types);
@@ -295,6 +296,9 @@ Block *Parser::block() {
     while (!end) {
         t = tokenizer->peek();
         switch (t.type()) {
+        case Token::LBraceType:
+            statements.push_back(block());
+            break;
         case Token::RBraceType:
             end = true;
             break;
