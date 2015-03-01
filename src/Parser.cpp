@@ -36,21 +36,29 @@ inline bool is_alphanumeric(char c) {
 
 namespace Bish {
 
-
+/*
+ * The Bish tokenizer. Given a string to tokenize, use the peek() and
+ * next() methods to produce a stream of tokens.
+ */
 class Tokenizer {
 public:
     Tokenizer(const std::string &t) : text(t), idx(0), lineno(1) {}
 
+    // Return the token at the head of the stream, but do not skip it.
     Token peek() {
         ResultState st = get_token();
         return st.first;
     }
 
+    // Skip the token currently at the head of the stream.
     void next() {
         ResultState st = get_token();
         idx = st.second;
     }
 
+    // Return the substring beginning at the current index and
+    // continuing  until the first occurrence of a token of type
+    // 'type'.
     std::string scan_until(Token::Type type) {
         unsigned start = idx;
         Token t = peek();
@@ -61,7 +69,9 @@ public:
         unsigned len = idx - start;
         return text.substr(start, len);
     }
-    
+
+    // Return a human-readable representation of the current position
+    // in the string.
     std::string position() const {
         std::stringstream s;
         s << "character '" << text[idx] << "', line " << lineno;
@@ -74,18 +84,17 @@ private:
     unsigned idx;
     unsigned lineno;
 
+    // Return the current character.
     inline char curchar() const {
         return text[idx];
     }
 
-    inline char nextchar() const {
-        return text[idx + 1];
-    }
-
+    // Return true if the tokenizer is at "end of string".
     inline bool eos() const {
         return idx >= text.length();
     }
 
+    // Skip ahead until the next non-whitespace character.
     inline void skip_whitespace() {
         while (!eos() && is_whitespace(curchar())) {
             if (is_newline(curchar())) ++lineno;
@@ -93,6 +102,8 @@ private:
         }
     }
 
+    // Form the next token. The result is a pair (T, n) where T is the
+    // token and n is the new index after skipping past T.
     ResultState get_token() {
         skip_whitespace();
         char c = curchar();
@@ -127,6 +138,7 @@ private:
         }
     }
 
+    // Read a multi-digit (and possibly fractional) number token.
     ResultState read_number() {
         char c = curchar();
         bool fractional = false;
@@ -152,6 +164,7 @@ private:
         }
     }
 
+    // Read a multi-character string of characters.
     ResultState read_symbol() {
         std::string sym = "";
         unsigned newidx = idx;
@@ -167,6 +180,7 @@ Parser::~Parser() {
     if (tokenizer) delete tokenizer;
 }
 
+// Return the entire contents of the file at the given path.
 std::string Parser::read_file(const std::string &path) {
     std::ifstream t(path);
     if (!t.is_open()) {
@@ -178,11 +192,13 @@ std::string Parser::read_file(const std::string &path) {
     return buffer.str();
 }
 
+// Parse the given file into a Bish AST.
 AST *Parser::parse(const std::string &path) {
     std::string contents = read_file(path);
     return parse_string(contents);
 }
 
+// Parse the given string into a Bish AST.
 AST *Parser::parse_string(const std::string &text) {
     if (tokenizer) delete tokenizer;
     tokenizer = new Tokenizer(text);
@@ -194,6 +210,8 @@ AST *Parser::parse_string(const std::string &text) {
     return ast;
 }
 
+// Assert that the given token is of the given type. If true, advance
+// the tokenizer. If false, produce an error message.
 void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
     if (!t.isa(ty)) {
         std::stringstream errstr;
@@ -203,20 +221,24 @@ void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
     tokenizer->next();
 }
 
+// Terminate the parsing process with the given error message.
 void Parser::abort(const std::string &msg) {
     std::cerr << msg << "\n";
     exit(1);
 }
 
+// Return true if the given token is a unary operator.
 bool Parser::is_unop_token(const Token &t) {
     return t.isa(Token::MinusType);
 }
 
+// Return true if the given token is a binary operator.
 bool Parser::is_binop_token(const Token &t) {
     return t.isa(Token::PlusType) || t.isa(Token::MinusType) ||
         t.isa(Token::StarType) || t.isa(Token::SlashType);
 }
 
+// Return the binary Operator corresponding to the given token.
 BinOp::Operator Parser::get_binop_operator(const Token &t) {
     switch (t.type()) {
     case Token::PlusType:
@@ -233,6 +255,7 @@ BinOp::Operator Parser::get_binop_operator(const Token &t) {
     }
 }
 
+// Return the unary Operator corresponding to the given token.
 UnaryOp::Operator Parser::get_unaryop_operator(const Token &t) {
     switch (t.type()) {
     case Token::MinusType:
@@ -243,6 +266,7 @@ UnaryOp::Operator Parser::get_unaryop_operator(const Token &t) {
     }
 }
 
+// Return the Bish Type to represent the given AST node.
 Type Parser::get_primitive_type(const ASTNode *n) {
     if (const Integer *v = dynamic_cast<const Integer*>(n)) {
         return IntegerTy;
@@ -257,6 +281,7 @@ Type Parser::get_primitive_type(const ASTNode *n) {
     }
 }
 
+// Parse a Bish block.
 Block *Parser::block() {
     SymbolTable *old = current_symbol_table;
     current_symbol_table = new SymbolTable();
@@ -272,6 +297,7 @@ Block *Parser::block() {
     return result;
 }
 
+// Parse a Bish statement.
 ASTNode *Parser::stmt() {
     Variable *v = var();
     expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
@@ -284,12 +310,14 @@ ASTNode *Parser::stmt() {
     return new Assignment(v, e);
 }
 
+// Parse a Bish variable.
 Variable *Parser::var() {
     std::string name = tokenizer->peek().value();
     expect(tokenizer->peek(), Token::SymbolType, "Expected variable to be a symbol");
     return new Variable(name);
 }
 
+// Parse a Bish expression.
 ASTNode *Parser::expr() {
     Token t = tokenizer->peek();
     if (t.isa(Token::LParenType)) {
@@ -308,6 +336,7 @@ ASTNode *Parser::expr() {
     }
 }
 
+// Parse a Bish binary operator.
 BinOp *Parser::binop(ASTNode *a) {
     BinOp *bin = NULL;
     while (is_binop_token(tokenizer->peek())) {
@@ -320,6 +349,7 @@ BinOp *Parser::binop(ASTNode *a) {
     return bin;
 }
 
+// Parse a Bish unary operator.
 UnaryOp *Parser::unop() {
     UnaryOp::Operator op = get_unaryop_operator(tokenizer->peek());
     tokenizer->next();
@@ -327,6 +357,7 @@ UnaryOp *Parser::unop() {
     return new UnaryOp(op, a);
 }
 
+// Parse a Bish atom.
 ASTNode *Parser::atom() {
     Token t = tokenizer->peek();
     tokenizer->next();
