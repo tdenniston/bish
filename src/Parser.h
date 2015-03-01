@@ -8,13 +8,13 @@
 /*
 Grammar:
 
-block ::= '{' { stmt ';' } '}'
-stmt ::= var '=' expr
-var ::= NAME
-expr ::= '(' expr ')' | unop atom | atom { binop atom }
+block ::= '{' { stmt } '}'
+stmt ::= expr ';' | | block
+expr ::= '(' expr ')' | var '=' expr | unop atom | atom { binop atom }
 binop ::= '+' | '-' | '*' | '/'
 unop ::= '-'
 atom ::= var | NUMBER | '"' STRING '"'
+var ::= STRING
 */
 
 namespace Bish {
@@ -136,6 +136,7 @@ private:
     ASTNode *stmt();
     Variable *var();
     ASTNode *expr();
+    Assignment *assignment(ASTNode *a);
     BinOp *binop(ASTNode *a);
     UnaryOp *unop();
     ASTNode *atom();

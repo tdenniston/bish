@@ -292,21 +292,9 @@ Block *Parser::block() {
     std::vector<ASTNode *> statements;
     Token t = tokenizer->peek();
     expect(t, Token::LBraceType, "Expected block to begin with '{'");
-    bool end = false;
-    while (!end) {
-        t = tokenizer->peek();
-        switch (t.type()) {
-        case Token::LBraceType:
-            statements.push_back(block());
-            break;
-        case Token::RBraceType:
-            end = true;
-            break;
-        default:
-            statements.push_back(stmt());
-            break;
-        }
-    }
+    do {
+        statements.push_back(stmt());
+    } while (!tokenizer->peek().isa(Token::RBraceType));
     expect(tokenizer->peek(), Token::RBraceType, "Expected block to end with '}'");
     Block *result = new Block(statements, current_symbol_table);
     current_symbol_table = old;
@@ -315,10 +303,24 @@ Block *Parser::block() {
 
 // Parse a Bish statement.
 ASTNode *Parser::stmt() {
-    Variable *v = var();
+    Token t = tokenizer->peek();
+    switch (t.type()) {
+    case Token::LBraceType:
+        return block();
+    default:
+        ASTNode *a = expr();
+        expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+        return a;
+    }
+}
+
+Assignment *Parser::assignment(ASTNode *a) {
+    Variable *v = dynamic_cast<Variable *>(a);
+    if (!v) {
+        abort("Attempt to assign to non-variable atom.");
+    }
     expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
     ASTNode *e = expr();
-    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     Type t = get_primitive_type(e);
     if (t != UndefinedTy) {
         current_symbol_table->insert(v->name, t);
@@ -345,10 +347,13 @@ ASTNode *Parser::expr() {
         return unop();
     } else {
         ASTNode *a = atom();
-        if (is_binop_token(tokenizer->peek())) {
+        if (tokenizer->peek().isa(Token::EqualsType)) {
+            return assignment(a);
+        } else if (is_binop_token(tokenizer->peek())) {
             return binop(a);
+        } else {
+            return a;
         }
-        return a;
     }
 }
 
