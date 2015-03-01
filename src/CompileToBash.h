@@ -9,7 +9,7 @@ namespace Bish {
   
 class CompileToBash : public ASTVisitor {
 public:
-    CompileToBash(std::ostream &os) : stream(os) {}
+    CompileToBash(std::ostream &os) : stream(os), indent_level(0) {}
     virtual void visit(const Block *);
     virtual void visit(const Variable *);
     virtual void visit(const Assignment *);
@@ -21,6 +21,7 @@ public:
     virtual void visit(const Boolean *);
 private:
     std::ostream &stream;
+    unsigned indent_level;
 };
 
 }

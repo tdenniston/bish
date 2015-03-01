@@ -3,12 +3,16 @@
 using namespace Bish;
 
 void CompileToBash::visit(const Block *n) {
+    indent_level++;
     for (std::vector<ASTNode *>::const_iterator I = n->nodes.begin(), E = n->nodes.end();
          I != E; ++I) {
-        stream << "    ";
+        for (unsigned i = 0; i < indent_level - 1; i++) {
+            stream << "    ";
+        }
         (*I)->accept(this);
         stream << "\n";
     }
+    indent_level--;
 }
 
 void CompileToBash::visit(const Variable *n) {
