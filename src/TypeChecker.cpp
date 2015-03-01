@@ -45,6 +45,11 @@ void TypeChecker::visit(const Assignment *node) {
     }
 }
 
+void TypeChecker::visit(const IfStatement *node) {
+    node->condition->accept(this);
+    node->body->accept(this);
+}
+
 void TypeChecker::visit(const BinOp *node) {
     node->a->accept(this);
     node->b->accept(this);

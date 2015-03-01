@@ -12,6 +12,7 @@ public:
     CompileToBash(std::ostream &os) : stream(os), indent_level(0) {}
     virtual void visit(const Block *);
     virtual void visit(const Variable *);
+    virtual void visit(const IfStatement *);
     virtual void visit(const Assignment *);
     virtual void visit(const BinOp *);
     virtual void visit(const UnaryOp *);

@@ -58,6 +58,13 @@ public:
     Assignment(Variable *var, ASTNode *val) : variable(var), value(val) {}
 };
 
+class IfStatement : public BaseASTNode<IfStatement> {
+public:
+    ASTNode *condition;
+    ASTNode *body;
+    IfStatement(ASTNode *c, ASTNode *b) : condition(c), body(b) {}
+};
+ 
 class BinOp : public BaseASTNode<BinOp> {
 public:
     typedef enum { Add, Sub, Mul, Div } Operator;
@@ -115,6 +122,7 @@ public:
     BishPrinter(std::ostream &os) : stream(os), indent_level(0) {}
     virtual void visit(const Block *);
     virtual void visit(const Variable *);
+    virtual void visit(const IfStatement *);
     virtual void visit(const Assignment *);
     virtual void visit(const BinOp *);
     virtual void visit(const UnaryOp *);

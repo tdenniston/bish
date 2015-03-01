@@ -19,6 +19,14 @@ void CompileToBash::visit(const Variable *n) {
     stream << "$" << n->name;
 }
 
+void CompileToBash::visit(const IfStatement *n) {
+    stream << "if ";
+    n->condition->accept(this);
+    stream << ";\n";
+    n->body->accept(this);
+    stream << "fi";
+}
+
 void CompileToBash::visit(const Assignment *n) {
     stream << n->variable->name << "=";
     n->value->accept(this);

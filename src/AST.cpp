@@ -22,6 +22,13 @@ void BishPrinter::visit(const Variable *n) {
     stream << n->name;
 }
 
+void BishPrinter::visit(const IfStatement *n) {
+    stream << "if (";
+    n->condition->accept(this);
+    stream << ") ";
+    n->body->accept(this);
+}
+
 void BishPrinter::visit(const Assignment *n) {
     n->variable->accept(this);
     stream << " = ";

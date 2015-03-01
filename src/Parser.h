@@ -9,7 +9,7 @@
 Grammar:
 
 block ::= '{' { stmt } '}'
-stmt ::= assign ';' | block
+stmt ::= assign ';' | 'if' '(' expr ')' block | block
 assign ::= var '=' expr | expr
 expr ::= expr '+' term | expr '-' term | term
 term ::= term '*' unary | term '/' unary | unary
@@ -30,6 +30,7 @@ public:
                    LBraceType,
                    RBraceType,
                    SemicolonType,
+                   IfType,
                    EqualsType,
                    PlusType,
                    MinusType,
@@ -69,6 +70,10 @@ public:
 
     static Token Semicolon() {
         return Token(SemicolonType, ";");
+    }
+
+    static Token If() {
+      return Token(IfType, "if");
     }
 
     static Token Equals() {
@@ -136,6 +141,7 @@ private:
 
     Block *block();
     ASTNode *stmt();
+    ASTNode *ifstmt();
     ASTNode *assignment();
     Variable *var();
     ASTNode *expr();

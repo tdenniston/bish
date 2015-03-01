@@ -172,7 +172,17 @@ private:
             sym += text[newidx];
             newidx++;
         }
-        return ResultState(Token::Symbol(sym), newidx);
+        return ResultState(get_multichar_token(sym), newidx);
+    }
+
+    // Return the correct token type for a string of letters. This
+    // checks for reserved keywords.
+    Token get_multichar_token(const std::string &s) {
+        if (s.compare("if") == 0) {
+            return Token::If();
+        } else {
+            return Token::Symbol(s);
+        }
     }
 };
 
@@ -290,8 +300,7 @@ Block *Parser::block() {
     SymbolTable *old = current_symbol_table;
     current_symbol_table = new SymbolTable(old);
     std::vector<ASTNode *> statements;
-    Token t = tokenizer->peek();
-    expect(t, Token::LBraceType, "Expected block to begin with '{'");
+    expect(tokenizer->peek(), Token::LBraceType, "Expected block to begin with '{'");
     do {
         statements.push_back(stmt());
     } while (!tokenizer->peek().isa(Token::RBraceType));
@@ -306,11 +315,22 @@ ASTNode *Parser::stmt() {
     switch (t.type()) {
     case Token::LBraceType:
         return block();
+    case Token::IfType:
+        return ifstmt();
     default:
         ASTNode *a = assignment();
         expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
         return a;
     }
+}
+
+ASTNode *Parser::ifstmt() {
+    expect(tokenizer->peek(), Token::IfType, "Expected if statement");
+    expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
+    ASTNode *cond = expr();
+    expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
+    ASTNode *body = block();
+    return new IfStatement(cond, body);
 }
 
 ASTNode *Parser::assignment() {
