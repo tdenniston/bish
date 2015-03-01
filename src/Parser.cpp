@@ -89,6 +89,10 @@ private:
         return text[idx];
     }
 
+    inline char nextchar() const {
+        return text[idx + 1];
+    }
+
     // Return true if the tokenizer is at "end of string".
     inline bool eos() const {
         return idx >= text.length();
@@ -120,7 +124,11 @@ private:
         } else if (c == ';') {
             return ResultState(Token::Semicolon(), idx + 1);
         } else if (c == '=') {
-            return ResultState(Token::Equals(), idx + 1);
+            if (nextchar() == '=') {
+                return ResultState(Token::DoubleEquals(), idx + 2);
+            } else {
+                return ResultState(Token::Equals(), idx + 1);
+            }
         } else if (c == '+') {
             return ResultState(Token::Plus(), idx + 1);
         } else if (c == '-') {
@@ -351,6 +359,15 @@ Variable *Parser::var() {
 }
 
 ASTNode *Parser::expr() {
+    ASTNode *a = arith();
+    if (tokenizer->peek().isa(Token::DoubleEqualsType)) {
+        tokenizer->next();
+        a = new Comparison(a, arith());
+    }
+    return a;
+}
+
+ASTNode *Parser::arith() {
     ASTNode *a = term();
     Token t = tokenizer->peek();
     while (t.isa(Token::PlusType) || t.isa(Token::MinusType)) {

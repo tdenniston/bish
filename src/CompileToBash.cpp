@@ -21,10 +21,18 @@ void CompileToBash::visit(const Variable *n) {
 
 void CompileToBash::visit(const IfStatement *n) {
     stream << "if ";
+    stream << "[[ ";
     n->condition->accept(this);
-    stream << ";\n";
+    stream << " ]]";
+    stream << "; then\n";
     n->body->accept(this);
     stream << "fi";
+}
+
+void CompileToBash::visit(const Comparison *n) {
+    n->a->accept(this);
+    stream << " == ";
+    n->b->accept(this);
 }
 
 void CompileToBash::visit(const Assignment *n) {

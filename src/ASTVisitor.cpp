@@ -21,6 +21,11 @@ void ASTVisitor::visit(const IfStatement *node) {
     node->body->accept(this);
 }
 
+void ASTVisitor::visit(const Comparison *node) {
+    node->a->accept(this);
+    node->b->accept(this);
+}
+
 void ASTVisitor::visit(const Assignment *node) {
     node->variable->accept(this);
     node->value->accept(this);

@@ -64,6 +64,13 @@ public:
     ASTNode *body;
     IfStatement(ASTNode *c, ASTNode *b) : condition(c), body(b) {}
 };
+
+class Comparison : public BaseASTNode<Comparison> {
+public:
+    ASTNode *a;
+    ASTNode *b;
+    Comparison(ASTNode *a_, ASTNode *b_) : a(a_), b(b_) {}
+};
  
 class BinOp : public BaseASTNode<BinOp> {
 public:
@@ -123,6 +130,7 @@ public:
     virtual void visit(const Block *);
     virtual void visit(const Variable *);
     virtual void visit(const IfStatement *);
+    virtual void visit(const Comparison *);
     virtual void visit(const Assignment *);
     virtual void visit(const BinOp *);
     virtual void visit(const UnaryOp *);

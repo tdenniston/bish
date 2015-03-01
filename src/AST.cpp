@@ -36,6 +36,13 @@ void BishPrinter::visit(const Assignment *n) {
     stream << ";";
 }
 
+void BishPrinter::visit(const Comparison *n) {
+    n->a->accept(this);
+    stream << " == ";
+    n->b->accept(this);
+    stream << ";";
+}
+
 void BishPrinter::visit(const BinOp *n) {
     n->a->accept(this);
     switch (n->op) {

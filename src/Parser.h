@@ -10,8 +10,9 @@ Grammar:
 
 block ::= '{' { stmt } '}'
 stmt ::= assign ';' | 'if' '(' expr ')' block | block
-assign ::= var '=' expr | expr
-expr ::= expr '+' term | expr '-' term | term
+assign ::= var '=' expr
+expr ::= expr '==' arith | arith
+arith ::= arith '+' term | arith '-' term | term
 term ::= term '*' unary | term '/' unary | unary
 unary ::= '-' unary | factor
 factor ::= '( expr ')' | atom
@@ -32,6 +33,7 @@ public:
                    SemicolonType,
                    IfType,
                    EqualsType,
+                   DoubleEqualsType,
                    PlusType,
                    MinusType,
                    StarType,
@@ -80,6 +82,10 @@ public:
         return Token(EqualsType, "=");
     }
 
+    static Token DoubleEquals() {
+        return Token(DoubleEqualsType, "==");
+    }
+    
     static Token Plus() {
         return Token(PlusType, "+");
     }
@@ -145,6 +151,7 @@ private:
     ASTNode *assignment();
     Variable *var();
     ASTNode *expr();
+    ASTNode *arith();
     ASTNode *term();
     ASTNode *unary();
     ASTNode *factor();
