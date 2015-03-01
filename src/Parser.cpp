@@ -201,7 +201,10 @@ AST *Parser::parse(const std::string &path) {
 // Parse the given string into a Bish AST.
 AST *Parser::parse_string(const std::string &text) {
     if (tokenizer) delete tokenizer;
-    tokenizer = new Tokenizer(text);
+
+    // Insert a dummy block for root scope.
+    std::string preprocessed = "{" + text + "}";
+    tokenizer = new Tokenizer(preprocessed);
     
     AST *ast = new AST(block());
     // Type checking
@@ -288,9 +291,18 @@ Block *Parser::block() {
     std::vector<ASTNode *> statements;
     Token t = tokenizer->peek();
     expect(t, Token::LBraceType, "Expected block to begin with '{'");
-    do {
-        statements.push_back(stmt());
-    } while (!tokenizer->peek().isa(Token::RBraceType));
+    bool end = false;
+    while (!end) {
+        t = tokenizer->peek();
+        switch (t.type()) {
+        case Token::RBraceType:
+            end = true;
+            break;
+        default:
+            statements.push_back(stmt());
+            break;
+        }
+    }
     expect(tokenizer->peek(), Token::RBraceType, "Expected block to end with '}'");
     Block *result = new Block(statements, current_symbol_table);
     current_symbol_table = old;

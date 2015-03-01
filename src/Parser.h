@@ -122,14 +122,16 @@ public:
 private:
     Tokenizer *tokenizer;
     SymbolTable *current_symbol_table;
+    
     std::string read_file(const std::string &path);
-    void expect(const Token &t, Token::Type ty, const std::string &msg);
+    void abort(const std::string &msg);
     bool is_unop_token(const Token &t);
     bool is_binop_token(const Token &t);
     BinOp::Operator get_binop_operator(const Token &t);
     UnaryOp::Operator get_unaryop_operator(const Token &t);
     Type get_primitive_type(const ASTNode *n);
-    void abort(const std::string &msg);
+    void expect(const Token &t, Token::Type ty, const std::string &msg);
+
     Block *block();
     ASTNode *stmt();
     Variable *var();
