@@ -301,25 +301,21 @@ Block *Parser::block() {
     return result;
 }
 
-// Parse a Bish statement.
 ASTNode *Parser::stmt() {
     Token t = tokenizer->peek();
     switch (t.type()) {
     case Token::LBraceType:
         return block();
     default:
-        ASTNode *a = expr();
+        ASTNode *a = assignment();
         expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
         return a;
     }
 }
 
-Assignment *Parser::assignment(ASTNode *a) {
-    Variable *v = dynamic_cast<Variable *>(a);
-    if (!v) {
-        abort("Attempt to assign to non-variable atom.");
-    }
-    expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
+ASTNode *Parser::assignment() {
+    Variable *v = var();
+    expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator.");
     ASTNode *e = expr();
     Type t = get_primitive_type(e);
     if (t != UndefinedTy) {
@@ -328,57 +324,55 @@ Assignment *Parser::assignment(ASTNode *a) {
     return new Assignment(v, e);
 }
 
-// Parse a Bish variable.
 Variable *Parser::var() {
     std::string name = tokenizer->peek().value();
     expect(tokenizer->peek(), Token::SymbolType, "Expected variable to be a symbol");
     return new Variable(name);
 }
 
-// Parse a Bish expression.
 ASTNode *Parser::expr() {
+    ASTNode *a = term();
     Token t = tokenizer->peek();
-    if (t.isa(Token::LParenType)) {
+    while (t.isa(Token::PlusType) || t.isa(Token::MinusType)) {
+        tokenizer->next();
+        a = new BinOp(get_binop_operator(t), a, term());
+        t = tokenizer->peek();
+    }
+    return a;
+}
+
+ASTNode *Parser::term() {
+    ASTNode *a = unary();
+    Token t = tokenizer->peek();
+    while (t.isa(Token::StarType) || t.isa(Token::SlashType)) {
+        tokenizer->next();
+        a = new BinOp(get_binop_operator(t), a, unary());
+        t = tokenizer->peek();
+    }
+    return a;
+}
+
+ASTNode *Parser::unary() {
+    Token t = tokenizer->peek();
+    if (is_unop_token(t)) {
+        tokenizer->next();
+        return new UnaryOp(get_unaryop_operator(t), factor());
+    } else {
+        return factor();
+    }
+}
+
+ASTNode *Parser::factor() {
+    if (tokenizer->peek().isa(Token::LParenType)) {
         tokenizer->next();
         ASTNode *e = expr();
         expect(tokenizer->peek(), Token::RParenType, "Unmatched '('");
         return e;
-    } else if (is_unop_token(t)) {
-        return unop();
     } else {
-        ASTNode *a = atom();
-        if (tokenizer->peek().isa(Token::EqualsType)) {
-            return assignment(a);
-        } else if (is_binop_token(tokenizer->peek())) {
-            return binop(a);
-        } else {
-            return a;
-        }
+        return atom();
     }
 }
 
-// Parse a Bish binary operator.
-BinOp *Parser::binop(ASTNode *a) {
-    BinOp *bin = NULL;
-    while (is_binop_token(tokenizer->peek())) {
-        BinOp::Operator op = get_binop_operator(tokenizer->peek());
-        tokenizer->next();
-        ASTNode *b = atom();
-        bin = new BinOp(op, a, b);
-        a = bin;
-    }
-    return bin;
-}
-
-// Parse a Bish unary operator.
-UnaryOp *Parser::unop() {
-    UnaryOp::Operator op = get_unaryop_operator(tokenizer->peek());
-    tokenizer->next();
-    ASTNode *a = atom();
-    return new UnaryOp(op, a);
-}
-
-// Parse a Bish atom.
 ASTNode *Parser::atom() {
     Token t = tokenizer->peek();
     tokenizer->next();

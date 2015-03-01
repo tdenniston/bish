@@ -9,10 +9,12 @@
 Grammar:
 
 block ::= '{' { stmt } '}'
-stmt ::= expr ';' | | block
-expr ::= '(' expr ')' | var '=' expr | unop atom | atom { binop atom }
-binop ::= '+' | '-' | '*' | '/'
-unop ::= '-'
+stmt ::= assign ';' | block
+assign ::= var '=' expr | expr
+expr ::= expr '+' term | expr '-' term | term
+term ::= term '*' unary | term '/' unary | unary
+unary ::= '-' unary | factor
+factor ::= '( expr ')' | atom
 atom ::= var | NUMBER | '"' STRING '"'
 var ::= STRING
 */
@@ -134,11 +136,12 @@ private:
 
     Block *block();
     ASTNode *stmt();
+    ASTNode *assignment();
     Variable *var();
     ASTNode *expr();
-    Assignment *assignment(ASTNode *a);
-    BinOp *binop(ASTNode *a);
-    UnaryOp *unop();
+    ASTNode *term();
+    ASTNode *unary();
+    ASTNode *factor();
     ASTNode *atom();
 };
 
