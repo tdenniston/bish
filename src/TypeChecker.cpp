@@ -46,8 +46,18 @@ void TypeChecker::visit(const Assignment *node) {
 }
 
 void TypeChecker::visit(const IfStatement *node) {
+    // XXX: ensure condition is boolean
     node->condition->accept(this);
     node->body->accept(this);
+}
+
+void TypeChecker::visit(const Comparison *node) {
+    node->a->accept(this);
+    node->b->accept(this);
+    SymbolTableEntry *ea = lookup(node->a);
+    SymbolTableEntry *eb = lookup(node->b);
+    assert(ea && eb);
+    assert(ea->type == eb->type);
 }
 
 void TypeChecker::visit(const BinOp *node) {
