@@ -121,6 +121,7 @@ private:
     bool is_binop_token(const Token &t);
     BinOp::Operator get_binop_operator(const Token &t);
     UnaryOp::Operator get_unaryop_operator(const Token &t);
+    Type get_primitive_type(const ASTNode *n);
     void abort(const std::string &msg);
     Block *block();
     ASTNode *stmt();

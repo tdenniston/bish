@@ -213,6 +213,20 @@ UnaryOp::Operator Parser::get_unaryop_operator(const Token &t) {
     }
 }
 
+Type Parser::get_primitive_type(const ASTNode *n) {
+    if (const Integer *v = dynamic_cast<const Integer*>(n)) {
+        return IntegerTy;
+    } else if (const Fractional *v = dynamic_cast<const Fractional*>(n)) {
+        return FractionalTy;
+    } else if (const String *v = dynamic_cast<const String*>(n)) {
+        return StringTy;
+    } else if (const Boolean *v = dynamic_cast<const Boolean*>(n)) {
+        return BooleanTy;
+    } else {
+        return UndefinedTy;
+    }
+}
+
 Block *Parser::block() {
     SymbolTable *old = current_symbol_table;
     current_symbol_table = new SymbolTable();
@@ -233,7 +247,10 @@ ASTNode *Parser::stmt() {
     expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
     ASTNode *e = expr();
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
-    current_symbol_table->propagate(v, e);
+    Type t = get_primitive_type(e);
+    if (t != UndefinedTy) {
+        current_symbol_table->insert(v->name, t);
+    }
     return new Assignment(v, e);
 }
 
@@ -286,16 +303,10 @@ ASTNode *Parser::atom() {
     switch(t.type()) {
     case Token::SymbolType:
         return new Variable(t.value());
-    case Token::IntType: {
-        ASTNode *a = new Integer(t.value());
-        current_symbol_table->insert(a, IntegerTy);
-        return a;
-    }
-    case Token::FractionalType: {
-        ASTNode *a = new Fractional(t.value());
-        current_symbol_table->insert(a, FractionalTy);
-        return a;
-    }
+    case Token::IntType:
+        return new Integer(t.value());
+    case Token::FractionalType:
+        return new Fractional(t.value());
     default:
         abort("Invalid token type for atom.");
         return NULL;

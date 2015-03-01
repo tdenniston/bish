@@ -5,48 +5,86 @@
 
 using namespace Bish;
 
+void ASTNodeSymbolTable::insert(const ASTNode *n, Type ty) {
+    table[n] = new SymbolTableEntry(ty);
+}
+
+SymbolTableEntry *ASTNodeSymbolTable::lookup(const ASTNode *n) const {
+    std::map<const ASTNode *, SymbolTableEntry *>::const_iterator I = table.find(n);
+    if (I == table.end()) {
+        return NULL;
+    }
+    return I->second;
+}
+
 void TypeChecker::visit(const Block *node) {
-    SymbolTable *old = current;
-    current = node->symbol_table;
+    SymbolTable *old_symtab = current_symtab;
+    ASTNodeSymbolTable *old_ast_symtab = current_astnode_symtab;
+    current_symtab = node->symbol_table;
+    current_astnode_symtab = new ASTNodeSymbolTable();
     for (std::vector<ASTNode *>::const_iterator I = node->nodes.begin(),
              E = node->nodes.end(); I != E; ++I) {
         (*I)->accept(this);
     }
-    current = old;
-}
-
-void TypeChecker::visit(const Variable *node) {
-    // Variable symbol table entries are by name, so we must propagate the type to this AST node.
-    SymbolTableEntry *e = current->lookup(node);
-    // There may not be a symbol table entry for 'node' if we are on the left hand side of an assignment.
-    if (e) {
-        current->insert(node, e->type);
-    }
+    delete current_astnode_symtab;
+    current_symtab = old_symtab;
+    current_astnode_symtab = old_ast_symtab;
 }
 
 void TypeChecker::visit(const Assignment *node) {
     node->variable->accept(this);
     node->value->accept(this);
 
-    SymbolTableEntry *eval = current->lookup(node->value);
+    SymbolTableEntry *evar = lookup(node->variable);
+    SymbolTableEntry *eval = lookup(node->value);
     assert(eval);
-    current->insert(node->variable, eval->type);
+    if (evar) {
+        assert(evar->type == eval->type);
+    } else {
+        current_symtab->insert(node->variable->name, eval->type);
+    }
 }
 
 void TypeChecker::visit(const BinOp *node) {
     node->a->accept(this);
     node->b->accept(this);
 
-    SymbolTableEntry *ea = current->lookup(node->a);
-    SymbolTableEntry *eb = current->lookup(node->b);
+    SymbolTableEntry *ea = lookup(node->a);
+    SymbolTableEntry *eb = lookup(node->b);
     assert(ea && eb);
     assert(ea->type == eb->type && "Type mismatch to binary operator.");
-    current->insert(node, ea->type);
+    current_astnode_symtab->insert(node, ea->type);
 }
 
 void TypeChecker::visit(const UnaryOp *node) {
     node->a->accept(this);
-    SymbolTableEntry *e = current->lookup(node->a);
+    SymbolTableEntry *e = lookup(node->a);
     assert(e);
-    current->insert(node, e->type);
+    current_astnode_symtab->insert(node, e->type);
+}
+
+void TypeChecker::visit(const Integer *node) {
+    current_astnode_symtab->insert(node, IntegerTy);
+}
+
+void TypeChecker::visit(const Fractional *node) {
+    current_astnode_symtab->insert(node, FractionalTy);
+}
+
+void TypeChecker::visit(const String *node) {
+    current_astnode_symtab->insert(node, StringTy);
+}
+
+void TypeChecker::visit(const Boolean *node) {
+    current_astnode_symtab->insert(node, BooleanTy);
+}
+
+SymbolTableEntry *TypeChecker::lookup(const ASTNode *n) {
+    SymbolTableEntry *e = NULL;
+    if (const Variable *v = dynamic_cast<const Variable*>(n)) {
+        e = current_symtab->lookup(v->name);
+    } else {
+        e = current_astnode_symtab->lookup(n);
+    }
+    return e;
 }
