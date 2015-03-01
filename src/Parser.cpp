@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstdlib>
+#include <fstream>
 #include <sstream>
 #include <iostream>
 
@@ -153,7 +154,23 @@ Parser::~Parser() {
     if (tokenizer) delete tokenizer;
 }
 
-AST *Parser::parse(const std::string &text) {
+std::string Parser::read_file(const std::string &path) {
+    std::ifstream t(path);
+    if (!t.is_open()) {
+        std::string msg = "Failed to open file at " + path;
+        abort(msg);
+    }
+    std::stringstream buffer;
+    buffer << t.rdbuf();
+    return buffer.str();
+}
+
+AST *Parser::parse(const std::string &path) {
+    std::string contents = read_file(path);
+    return parse_string(contents);
+}
+
+AST *Parser::parse_string(const std::string &text) {
     if (tokenizer) delete tokenizer;
     tokenizer = new Tokenizer(text);
     

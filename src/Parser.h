@@ -112,10 +112,12 @@ class Parser {
 public:
     Parser() : tokenizer(NULL), current_symbol_table(NULL) {}
     ~Parser();
-    AST *parse(const std::string &text);
+    AST *parse(const std::string &path);
+    AST *parse_string(const std::string &text);
 private:
     Tokenizer *tokenizer;
     SymbolTable *current_symbol_table;
+    std::string read_file(const std::string &path);
     void expect(const Token &t, Token::Type ty, const std::string &msg);
     bool is_unop_token(const Token &t);
     bool is_binop_token(const Token &t);

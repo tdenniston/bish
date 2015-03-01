@@ -2,16 +2,23 @@
 #include "CompileToBash.h"
 #include "Parser.h"
 
-int main() {
-  std::string test = "{ a = 0; b = 7; c = a + b; }";
-  Bish::Parser p;
-  Bish::AST *ast = p.parse(test);
-  Bish::BishPrinter printer(std::cout);
-  ast->accept(&printer);
-  std::cout << std::endl;
+void compile_to_bash(std::ostream &os, Bish::AST *ast) {
+    Bish::CompileToBash compile(os);
+    ast->accept(&compile);
+}
 
-  Bish::CompileToBash compile(std::cout);
-  ast->accept(&compile);
-  
-  return 0;
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        std::cerr << "USAGE: " << argv[0] << " <INPUT>\n";
+        std::cerr << "  Compiles Bish file <INPUT> to bash.\n";
+        return 1;
+    }
+    
+    std::string path(argv[1]);
+    Bish::Parser p;
+    Bish::AST *ast = p.parse(path);
+
+    compile_to_bash(std::cout, ast);
+    
+    return 0;
 }
