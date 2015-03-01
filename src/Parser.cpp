@@ -288,7 +288,7 @@ Type Parser::get_primitive_type(const ASTNode *n) {
 // Parse a Bish block.
 Block *Parser::block() {
     SymbolTable *old = current_symbol_table;
-    current_symbol_table = new SymbolTable();
+    current_symbol_table = new SymbolTable(old);
     std::vector<ASTNode *> statements;
     Token t = tokenizer->peek();
     expect(t, Token::LBraceType, "Expected block to begin with '{'");

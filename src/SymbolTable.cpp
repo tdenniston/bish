@@ -11,7 +11,11 @@ void SymbolTable::insert(const std::string &v, Type ty) {
 SymbolTableEntry *SymbolTable::lookup(const std::string &v) const {
     std::map<std::string, SymbolTableEntry *>::const_iterator I = table.find(v);
     if (I == table.end()) {
-        return NULL;
+        if (parent) {
+            return parent->lookup(v);
+        } else {
+            return NULL;
+        }
     }
     return I->second;
 }
