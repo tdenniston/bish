@@ -35,7 +35,7 @@ void TypeChecker::visit(const Assignment *node) {
     node->variable->accept(this);
     node->value->accept(this);
 
-    SymbolTableEntry *evar = lookup(node->variable);
+    SymbolTableEntry *evar = lookup(node->variable, false);
     SymbolTableEntry *eval = lookup(node->value);
     assert(eval);
     if (evar) {
@@ -94,10 +94,14 @@ void TypeChecker::visit(const Boolean *node) {
     current_astnode_symtab->insert(node, BooleanTy);
 }
 
-SymbolTableEntry *TypeChecker::lookup(const ASTNode *n) {
+SymbolTableEntry *TypeChecker::lookup(const ASTNode *n, bool assert_non_null) {
     SymbolTableEntry *e = NULL;
     if (const Variable *v = dynamic_cast<const Variable*>(n)) {
         e = current_symtab->lookup(v->name);
+        if (assert_non_null && e == NULL) {
+            std::cerr << "Unknown symbol '" << v->name << "'\n";
+            assert(false);
+        }
     } else {
         e = current_astnode_symtab->lookup(n);
     }

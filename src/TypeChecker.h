@@ -31,7 +31,8 @@ private:
     SymbolTable *current_symtab;
     ASTNodeSymbolTable *current_astnode_symtab;
 
-    SymbolTableEntry *lookup(const ASTNode *n);
+    SymbolTableEntry *lookup(const ASTNode *n,
+                             bool assert_non_null=true);
 };
 
 }
