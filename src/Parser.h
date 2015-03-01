@@ -14,7 +14,7 @@ var ::= NAME
 expr ::= '(' expr ')' | unop atom | atom { binop atom }
 binop ::= '+' | '-' | '*' | '/'
 unop ::= '-'
-atom ::= var | NUMBER
+atom ::= var | NUMBER | '"' STRING '"'
 */
 
 namespace Bish {
@@ -33,6 +33,7 @@ public:
                    MinusType,
                    StarType,
                    SlashType,
+                   QuoteType,
                    SymbolType,
                    IntType,
                    FractionalType,
@@ -86,6 +87,10 @@ public:
     
     static Token Slash() {
         return Token(SlashType, "/");
+    }
+
+    static Token Quote() {
+      return Token(QuoteType, "\"");
     }
     
     static Token Symbol(const std::string &s) {

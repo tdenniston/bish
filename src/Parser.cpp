@@ -51,6 +51,17 @@ public:
         idx = st.second;
     }
 
+    std::string scan_until(Token::Type type) {
+        unsigned start = idx;
+        Token t = peek();
+        while (!t.isa(type) && !eos()) {
+            next();
+            t = peek();
+        }
+        unsigned len = idx - start;
+        return text.substr(start, len);
+    }
+    
     std::string position() const {
         std::stringstream s;
         s << "character '" << text[idx] << "', line " << lineno;
@@ -107,6 +118,8 @@ private:
             return ResultState(Token::Star(), idx + 1);
         } else if (c == '/') {
             return ResultState(Token::Slash(), idx + 1);
+        } else if (c == '"') {
+            return ResultState(Token::Quote(), idx + 1);
         } else if (is_digit(c)) {
             return read_number();
         } else {
@@ -317,6 +330,7 @@ UnaryOp *Parser::unop() {
 ASTNode *Parser::atom() {
     Token t = tokenizer->peek();
     tokenizer->next();
+    
     switch(t.type()) {
     case Token::SymbolType:
         return new Variable(t.value());
@@ -324,6 +338,11 @@ ASTNode *Parser::atom() {
         return new Integer(t.value());
     case Token::FractionalType:
         return new Fractional(t.value());
+    case Token::QuoteType: {
+        std::string str = tokenizer->scan_until(Token::QuoteType);
+        expect(tokenizer->peek(), Token::QuoteType, "Unmatched '\"'");
+        return new String(str);
+    }
     default:
         abort("Invalid token type for atom.");
         return NULL;
