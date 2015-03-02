@@ -1,10 +1,10 @@
 #include <iostream>
-#include "CompileToBash.h"
+#include "CodeGen_Bash.h"
 #include "Parser.h"
 
 void compile_to_bash(std::ostream &os, Bish::AST *ast) {
     os << "#!/bin/bash\n";
-    Bish::CompileToBash compile(os);
+    Bish::CodeGen_Bash compile(os);
     ast->accept(&compile);
 }
 

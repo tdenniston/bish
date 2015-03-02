@@ -1,5 +1,5 @@
-#ifndef __BISH_COMPILE_TO_BASH_H__
-#define __BISH_COMPILE_TO_BASH_H__
+#ifndef __BISH_CODEGEN_BASH_H__
+#define __BISH_CODEGEN_BASH_H__
 
 #include <iostream>
 #include "AST.h"
@@ -7,9 +7,9 @@
 
 namespace Bish {
   
-class CompileToBash : public ASTVisitor {
+class CodeGen_Bash : public ASTVisitor {
 public:
-    CompileToBash(std::ostream &os) : stream(os), indent_level(0) {}
+    CodeGen_Bash(std::ostream &os) : stream(os), indent_level(0) {}
     virtual void visit(const Block *);
     virtual void visit(const Variable *);
     virtual void visit(const IfStatement *);

@@ -1,8 +1,8 @@
-#include "CompileToBash.h"
+#include "CodeGen_Bash.h"
 
 using namespace Bish;
 
-void CompileToBash::visit(const Block *n) {
+void CodeGen_Bash::visit(const Block *n) {
     indent_level++;
     if (should_print_block_braces()) stream << "{\n";
     for (std::vector<ASTNode *>::const_iterator I = n->nodes.begin(), E = n->nodes.end();
@@ -17,11 +17,11 @@ void CompileToBash::visit(const Block *n) {
     indent_level--;
 }
 
-void CompileToBash::visit(const Variable *n) {
+void CodeGen_Bash::visit(const Variable *n) {
     stream << "$" << n->name;
 }
 
-void CompileToBash::visit(const IfStatement *n) {
+void CodeGen_Bash::visit(const IfStatement *n) {
     stream << "if ";
     stream << "[[ ";
     n->condition->accept(this);
@@ -33,7 +33,7 @@ void CompileToBash::visit(const IfStatement *n) {
     stream << "fi";
 }
 
-void CompileToBash::visit(const Function *n) {
+void CodeGen_Bash::visit(const Function *n) {
     stream << "function " << n->name->name << " ";
     // Bash doesn't allow named arguments to functions.
     // We'll have to translate to positional arguments.
@@ -41,7 +41,7 @@ void CompileToBash::visit(const Function *n) {
     n->body->accept(this);
 }
 
-void CompileToBash::visit(const FunctionCall *n) {
+void CodeGen_Bash::visit(const FunctionCall *n) {
     const int nargs = n->args->nodes.size();
     stream << n->name->name;
     for (int i = 0; i < nargs; i++) {
@@ -50,18 +50,18 @@ void CompileToBash::visit(const FunctionCall *n) {
     }
 }
 
-void CompileToBash::visit(const Comparison *n) {
+void CodeGen_Bash::visit(const Comparison *n) {
     n->a->accept(this);
     stream << " == ";
     n->b->accept(this);
 }
 
-void CompileToBash::visit(const Assignment *n) {
+void CodeGen_Bash::visit(const Assignment *n) {
     stream << n->variable->name << "=";
     n->value->accept(this);
 }
 
-void CompileToBash::visit(const BinOp *n) {
+void CodeGen_Bash::visit(const BinOp *n) {
     stream << "$((";
     n->a->accept(this);
     switch (n->op) {
@@ -82,7 +82,7 @@ void CompileToBash::visit(const BinOp *n) {
     stream << "))";
 }
 
-void CompileToBash::visit(const UnaryOp *n) {
+void CodeGen_Bash::visit(const UnaryOp *n) {
     switch (n->op) {
     case UnaryOp::Negate:
         stream << "-";
@@ -91,18 +91,18 @@ void CompileToBash::visit(const UnaryOp *n) {
     n->a->accept(this);
 }
 
-void CompileToBash::visit(const Integer *n) {
+void CodeGen_Bash::visit(const Integer *n) {
     stream << n->value;
 }
 
-void CompileToBash::visit(const Fractional *n) {
+void CodeGen_Bash::visit(const Fractional *n) {
     stream << n->value;
 }
 
-void CompileToBash::visit(const String *n) {
+void CodeGen_Bash::visit(const String *n) {
     stream << "\"" << n->value << "\"";
 }
 
-void CompileToBash::visit(const Boolean *n) {
+void CodeGen_Bash::visit(const Boolean *n) {
     stream << n->value;
 }

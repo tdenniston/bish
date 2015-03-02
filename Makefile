@@ -5,8 +5,8 @@ RM=rm -f
 SRC=src
 OBJ=obj
 
-SOURCE_FILES=AST.cpp ASTVisitor.cpp CompileToBash.cpp Parser.cpp SymbolTable.cpp TypeChecker.cpp
-HEADER_FILES=AST.h ASTVisitor.h CompileToBash.h Parser.h SymbolTable.h TypeChecker.h
+SOURCE_FILES=AST.cpp ASTVisitor.cpp CodeGen_Bash.cpp Parser.cpp SymbolTable.cpp TypeChecker.cpp
+HEADER_FILES=AST.h ASTVisitor.h CodeGen_Bash.h Parser.h SymbolTable.h TypeChecker.h
 
 OBJECTS = $(SOURCE_FILES:%.cpp=$(OBJ)/%.o)
 HEADERS = $(HEADER_FILES:%.h=$(SRC)/%.h)
