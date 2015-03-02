@@ -13,6 +13,7 @@ public:
     virtual void visit(const Block *);
     virtual void visit(const Variable *);
     virtual void visit(const IfStatement *);
+    virtual void visit(const Function *);
     virtual void visit(const Comparison *);
     virtual void visit(const Assignment *);
     virtual void visit(const BinOp *);
@@ -24,6 +25,15 @@ public:
 private:
     std::ostream &stream;
     unsigned indent_level;
+    bool block_print_braces;
+    bool variable_print_dollar;
+
+    inline void disable_block_braces() { block_print_braces = false; }
+    inline void enable_block_braces() { block_print_braces = true; }
+    inline bool should_print_block_braces() const { return block_print_braces; }
+    inline void disable_variable_dollar() { variable_print_dollar = false; }
+    inline void enable_variable_dollar() { variable_print_dollar = true; }
+    inline bool should_print_variable_dollar() const { return variable_print_dollar; }
 };
 
 }

@@ -51,6 +51,14 @@ public:
     Variable(const std::string &n) : name(n) {}
 };
 
+class NameList : public BaseASTNode<NameList> {
+public:
+    std::vector<Variable *> variables;
+    NameList(const std::vector<Variable *> &v) {
+        variables.insert(variables.begin(), v.begin(), v.end());
+    }
+};
+
 class Assignment : public BaseASTNode<Assignment> {
 public:
     Variable *variable;
@@ -63,6 +71,14 @@ public:
     ASTNode *condition;
     ASTNode *body;
     IfStatement(ASTNode *c, ASTNode *b) : condition(c), body(b) {}
+};
+
+class Function : public BaseASTNode<Function> {
+public:
+    Variable *name;
+    ASTNode *args;
+    ASTNode *body;
+    Function(Variable *n, ASTNode *a, ASTNode *b) : name(n), args(a), body(b) {}
 };
 
 class Comparison : public BaseASTNode<Comparison> {

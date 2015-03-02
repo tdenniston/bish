@@ -4,6 +4,7 @@ using namespace Bish;
 
 void CompileToBash::visit(const Block *n) {
     indent_level++;
+    if (should_print_block_braces()) stream << "{\n";
     for (std::vector<ASTNode *>::const_iterator I = n->nodes.begin(), E = n->nodes.end();
          I != E; ++I) {
         for (unsigned i = 0; i < indent_level - 1; i++) {
@@ -12,6 +13,7 @@ void CompileToBash::visit(const Block *n) {
         (*I)->accept(this);
         stream << "\n";
     }
+    if (should_print_block_braces()) stream << "}";
     indent_level--;
 }
 
@@ -25,8 +27,17 @@ void CompileToBash::visit(const IfStatement *n) {
     n->condition->accept(this);
     stream << " ]]";
     stream << "; then\n";
+    disable_block_braces();
     n->body->accept(this);
+    enable_block_braces();
     stream << "fi";
+}
+
+void CompileToBash::visit(const Function *n) {
+    stream << "function " << n->name->name << " ";
+    // I don't think bash allows named arguments to functions.
+    stream << "() ";
+    n->body->accept(this);
 }
 
 void CompileToBash::visit(const Comparison *n) {

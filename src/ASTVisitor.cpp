@@ -16,8 +16,21 @@ void ASTVisitor::visit(const Variable *node) {
 
 }
 
+void ASTVisitor::visit(const NameList *node) {
+    for (std::vector<Variable *>::const_iterator I = node->variables.begin(),
+             E = node->variables.end(); I != E; ++I) {
+        (*I)->accept(this);
+    }
+}
+
 void ASTVisitor::visit(const IfStatement *node) {
     node->condition->accept(this);
+    node->body->accept(this);
+}
+
+void ASTVisitor::visit(const Function *node) {
+    node->name->accept(this);
+    node->args->accept(this);
     node->body->accept(this);
 }
 

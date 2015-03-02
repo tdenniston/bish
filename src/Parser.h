@@ -9,7 +9,10 @@
 Grammar:
 
 block ::= '{' { stmt } '}'
-stmt ::= assign ';' | 'if' '(' expr ')' block | block
+stmt ::= assign ';'
+       | 'if' '(' expr ')' block
+       | 'def' var '(' varlist ')' block
+       | block
 assign ::= var '=' expr
 expr ::= expr '==' arith | arith
 arith ::= arith '+' term | arith '-' term | term
@@ -18,6 +21,7 @@ unary ::= '-' unary | factor
 factor ::= '( expr ')' | atom
 atom ::= var | NUMBER | '"' STRING '"'
 var ::= STRING
+varlist ::= var { ',' var }
 */
 
 namespace Bish {
@@ -31,7 +35,9 @@ public:
                    LBraceType,
                    RBraceType,
                    SemicolonType,
+                   CommaType,
                    IfType,
+                   DefType,
                    EqualsType,
                    DoubleEqualsType,
                    PlusType,
@@ -74,8 +80,16 @@ public:
         return Token(SemicolonType, ";");
     }
 
+    static Token Comma() {
+        return Token(CommaType, ",");
+    }
+
     static Token If() {
-      return Token(IfType, "if");
+        return Token(IfType, "if");
+    }
+
+    static Token Def() {
+        return Token(DefType, "def");
     }
 
     static Token Equals() {
@@ -148,8 +162,10 @@ private:
     Block *block();
     ASTNode *stmt();
     ASTNode *ifstmt();
+    ASTNode *functiondef();
     ASTNode *assignment();
     Variable *var();
+    ASTNode *namelist();
     ASTNode *expr();
     ASTNode *arith();
     ASTNode *term();

@@ -123,6 +123,8 @@ private:
             return ResultState(Token::RBrace(), idx + 1);
         } else if (c == ';') {
             return ResultState(Token::Semicolon(), idx + 1);
+        } else if (c == ',') {
+            return ResultState(Token::Comma(), idx + 1);
         } else if (c == '=') {
             if (nextchar() == '=') {
                 return ResultState(Token::DoubleEquals(), idx + 2);
@@ -186,8 +188,10 @@ private:
     // Return the correct token type for a string of letters. This
     // checks for reserved keywords.
     Token get_multichar_token(const std::string &s) {
-        if (s.compare("if") == 0) {
+        if (s.compare(Token::If().value()) == 0) {
             return Token::If();
+        } else if (s.compare(Token::Def().value()) == 0) {
+            return Token::Def();
         } else {
             return Token::Symbol(s);
         }
@@ -325,6 +329,8 @@ ASTNode *Parser::stmt() {
         return block();
     case Token::IfType:
         return ifstmt();
+    case Token::DefType:
+        return functiondef();
     default:
         ASTNode *a = assignment();
         expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
@@ -339,6 +345,16 @@ ASTNode *Parser::ifstmt() {
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     ASTNode *body = block();
     return new IfStatement(cond, body);
+}
+
+ASTNode *Parser::functiondef() {
+    expect(tokenizer->peek(), Token::DefType, "Expected def statement");
+    ASTNode *name = var();
+    expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
+    ASTNode *args = namelist();
+    expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
+    ASTNode *body = block();
+    return new Function(name, args, body);
 }
 
 ASTNode *Parser::assignment() {
@@ -356,6 +372,16 @@ Variable *Parser::var() {
     std::string name = tokenizer->peek().value();
     expect(tokenizer->peek(), Token::SymbolType, "Expected variable to be a symbol");
     return new Variable(name);
+}
+
+ASTNode *Parser::namelist() {
+    std::vector<Variable *> vars;
+    vars.push_back(var());
+    while (tokenizer->peek().isa(Token::CommaType)) {
+        tokenizer->next();
+        vars.push_back(var());
+    }
+    return new NameList(vars);
 }
 
 ASTNode *Parser::expr() {
