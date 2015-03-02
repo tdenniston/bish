@@ -10,6 +10,7 @@ Grammar:
 
 block ::= '{' { stmt } '}'
 stmt ::= assign ';'
+       | funcall ';'
        | 'if' '(' expr ')' block
        | 'def' var '(' varlist ')' block
        | block
@@ -18,10 +19,12 @@ expr ::= expr '==' arith | arith
 arith ::= arith '+' term | arith '-' term | term
 term ::= term '*' unary | term '/' unary | unary
 unary ::= '-' unary | factor
-factor ::= '( expr ')' | atom
+factor ::= '( expr ')' | funcall | atom
+funcall ::= var '(' atomlist ')'
 atom ::= var | NUMBER | '"' STRING '"'
 var ::= STRING
 varlist ::= var { ',' var }
+atomlist ::= atom { ',' atom }
 */
 
 namespace Bish {
@@ -161,17 +164,20 @@ private:
 
     Block *block();
     ASTNode *stmt();
+    ASTNode *otherstmt();
     ASTNode *ifstmt();
     ASTNode *functiondef();
-    ASTNode *assignment();
+    ASTNode *funcall(Variable *a);
+    ASTNode *assignment(Variable *a);
     Variable *var();
-    ASTNode *namelist();
+    NodeList *nodelist();
     ASTNode *expr();
     ASTNode *arith();
     ASTNode *term();
     ASTNode *unary();
     ASTNode *factor();
     ASTNode *atom();
+    
 };
 
 }

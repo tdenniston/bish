@@ -11,7 +11,7 @@ void CompileToBash::visit(const Block *n) {
             stream << "    ";
         }
         (*I)->accept(this);
-        stream << "\n";
+        stream << ";\n";
     }
     if (should_print_block_braces()) stream << "}";
     indent_level--;
@@ -35,9 +35,19 @@ void CompileToBash::visit(const IfStatement *n) {
 
 void CompileToBash::visit(const Function *n) {
     stream << "function " << n->name->name << " ";
-    // I don't think bash allows named arguments to functions.
+    // Bash doesn't allow named arguments to functions.
+    // We'll have to translate to positional arguments.
     stream << "() ";
     n->body->accept(this);
+}
+
+void CompileToBash::visit(const FunctionCall *n) {
+    const int nargs = n->args->nodes.size();
+    stream << n->name->name;
+    for (int i = 0; i < nargs; i++) {
+        stream << " ";
+        n->args->nodes[i]->accept(this);
+    }
 }
 
 void CompileToBash::visit(const Comparison *n) {
@@ -49,7 +59,6 @@ void CompileToBash::visit(const Comparison *n) {
 void CompileToBash::visit(const Assignment *n) {
     stream << n->variable->name << "=";
     n->value->accept(this);
-    stream << ";";
 }
 
 void CompileToBash::visit(const BinOp *n) {

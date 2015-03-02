@@ -51,11 +51,12 @@ public:
     Variable(const std::string &n) : name(n) {}
 };
 
-class NameList : public BaseASTNode<NameList> {
+class NodeList : public BaseASTNode<NodeList> {
 public:
-    std::vector<Variable *> variables;
-    NameList(const std::vector<Variable *> &v) {
-        variables.insert(variables.begin(), v.begin(), v.end());
+    std::vector<ASTNode *> nodes;
+    NodeList() {}
+    NodeList(const std::vector<ASTNode *> &v) {
+        nodes.insert(nodes.begin(), v.begin(), v.end());
     }
 };
 
@@ -79,6 +80,13 @@ public:
     ASTNode *args;
     ASTNode *body;
     Function(Variable *n, ASTNode *a, ASTNode *b) : name(n), args(a), body(b) {}
+};
+
+class FunctionCall : public BaseASTNode<FunctionCall> {
+public:
+    Variable *name;
+    NodeList *args;
+    FunctionCall(Variable *n, NodeList *a) : name(n), args(a) {}
 };
 
 class Comparison : public BaseASTNode<Comparison> {

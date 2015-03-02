@@ -332,10 +332,27 @@ ASTNode *Parser::stmt() {
     case Token::DefType:
         return functiondef();
     default:
-        ASTNode *a = assignment();
-        expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
-        return a;
+        return otherstmt();
     }
+}
+
+ASTNode *Parser::otherstmt() {
+    Variable *v = var();
+    ASTNode *s = NULL;
+    switch (tokenizer->peek().type()) {
+    case Token::EqualsType:
+        s = assignment(v);
+        break;
+    case Token::LParenType:
+        s = funcall(v);
+        break;
+    default:
+        abort("Unexpected token in statement.");
+        s = NULL;
+        break;
+    }
+    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    return s;
 }
 
 ASTNode *Parser::ifstmt() {
@@ -349,17 +366,33 @@ ASTNode *Parser::ifstmt() {
 
 ASTNode *Parser::functiondef() {
     expect(tokenizer->peek(), Token::DefType, "Expected def statement");
-    ASTNode *name = var();
+    Variable *name = var();
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
-    ASTNode *args = namelist();
+    NodeList *args;
+    if (tokenizer->peek().isa(Token::RParenType)) {
+        args = new NodeList();
+    } else {
+        args = nodelist();
+    }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     ASTNode *body = block();
     return new Function(name, args, body);
 }
 
-ASTNode *Parser::assignment() {
-    Variable *v = var();
-    expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator.");
+ASTNode *Parser::funcall(Variable *v) {
+    expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
+    NodeList *args;
+    if (tokenizer->peek().isa(Token::RParenType)) {
+        args = new NodeList();
+    } else {
+        args = nodelist();
+    }
+    expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
+    return new FunctionCall(v, args);
+}
+
+ASTNode *Parser::assignment(Variable *v) {
+    expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
     ASTNode *e = expr();
     Type t = get_primitive_type(e);
     if (t != UndefinedTy) {
@@ -374,14 +407,14 @@ Variable *Parser::var() {
     return new Variable(name);
 }
 
-ASTNode *Parser::namelist() {
-    std::vector<Variable *> vars;
-    vars.push_back(var());
+NodeList *Parser::nodelist() {
+    std::vector<ASTNode *> atoms;
+    atoms.push_back(atom());
     while (tokenizer->peek().isa(Token::CommaType)) {
         tokenizer->next();
-        vars.push_back(var());
+        atoms.push_back(atom());
     }
-    return new NameList(vars);
+    return new NodeList(atoms);
 }
 
 ASTNode *Parser::expr() {

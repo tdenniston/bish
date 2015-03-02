@@ -6,9 +6,10 @@ namespace Bish {
 class ASTNode;
 class Block;
 class Variable;
-class NameList;
+class NodeList;
 class IfStatement;
 class Function;
+class FunctionCall;
 class Comparison;
 class Assignment;
 class BinOp;
@@ -23,8 +24,9 @@ public:
     virtual ~ASTVisitor();
     virtual void visit(const Block *);
     virtual void visit(const Variable *);
-    virtual void visit(const NameList *);
+    virtual void visit(const NodeList *);
     virtual void visit(const Function *);
+    virtual void visit(const FunctionCall *);
     virtual void visit(const IfStatement *);
     virtual void visit(const Comparison *);
     virtual void visit(const Assignment *);
