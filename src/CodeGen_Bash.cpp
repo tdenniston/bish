@@ -3,8 +3,8 @@
 using namespace Bish;
 
 void CodeGen_Bash::visit(const Block *n) {
-    indent_level++;
     if (should_print_block_braces()) stream << "{\n";
+    indent_level++;
     for (std::vector<ASTNode *>::const_iterator I = n->nodes.begin(), E = n->nodes.end();
          I != E; ++I) {
         for (unsigned i = 0; i < indent_level - 1; i++) {
@@ -13,8 +13,8 @@ void CodeGen_Bash::visit(const Block *n) {
         (*I)->accept(this);
         stream << ";\n";
     }
-    if (should_print_block_braces()) stream << "}";
     indent_level--;
+    if (should_print_block_braces()) stream << "}";
 }
 
 void CodeGen_Bash::visit(const Variable *n) {
