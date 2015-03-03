@@ -214,26 +214,26 @@ std::string Parser::read_file(const std::string &path) {
     return buffer.str();
 }
 
-// Parse the given file into a Bish AST.
-AST *Parser::parse(const std::string &path) {
+// Parse the given file into Bish IR.
+Module *Parser::parse(const std::string &path) {
     std::string contents = read_file(path);
     return parse_string(contents);
 }
 
-// Parse the given string into a Bish AST.
-AST *Parser::parse_string(const std::string &text) {
+// Parse the given string into Bish IR.
+Module *Parser::parse_string(const std::string &text) {
     if (tokenizer) delete tokenizer;
 
     // Insert a dummy block for root scope.
     std::string preprocessed = "{" + text + "}";
     tokenizer = new Tokenizer(preprocessed);
-    
-    AST *ast = new AST(block());
+
+    Module *m = module();
     expect(tokenizer->peek(), Token::EOSType, "Expected end of string.");
     // Type checking
     TypeChecker types;
-    ast->accept(&types);
-    return ast;
+    m->accept(&types);
+    return m;
 }
 
 // Assert that the given token is of the given type. If true, advance
@@ -292,8 +292,8 @@ UnaryOp::Operator Parser::get_unaryop_operator(const Token &t) {
     }
 }
 
-// Return the Bish Type to represent the given AST node.
-Type Parser::get_primitive_type(const ASTNode *n) {
+// Return the Bish Type to represent the given IR node.
+Type Parser::get_primitive_type(const IRNode *n) {
     if (const Integer *v = dynamic_cast<const Integer*>(n)) {
         return IntegerTy;
     } else if (const Fractional *v = dynamic_cast<const Fractional*>(n)) {
@@ -307,14 +307,37 @@ Type Parser::get_primitive_type(const ASTNode *n) {
     }
 }
 
+void Parser::push_module(Module *m) {
+    module_stack.push(m);
+}
+
+Module *Parser::pop_module() {
+    Module *m = module_stack.top();
+    module_stack.pop();
+    return m;
+}
+
+Module *Parser::module() {
+    Module *m = new Module();
+    push_module(m);
+    // The pre-main function has all module-level statements. If the
+    // user also defined a main function, a call to pre_main will be
+    // inserted as the first statement in the user main.
+    Function *pre_main = new Function("bish_main", block());
+    m->set_main(pre_main);
+    pop_module();
+    return m;
+}
+
 // Parse a Bish block.
 Block *Parser::block() {
     SymbolTable *old = current_symbol_table;
     current_symbol_table = new SymbolTable(old);
-    std::vector<ASTNode *> statements;
+    std::vector<IRNode *> statements;
     expect(tokenizer->peek(), Token::LBraceType, "Expected block to begin with '{'");
     do {
-        statements.push_back(stmt());
+        IRNode *s = stmt();
+        if (s) statements.push_back(s);
     } while (!tokenizer->peek().isa(Token::RBraceType));
     expect(tokenizer->peek(), Token::RBraceType, "Expected block to end with '}'");
     Block *result = new Block(statements, current_symbol_table);
@@ -322,23 +345,26 @@ Block *Parser::block() {
     return result;
 }
 
-ASTNode *Parser::stmt() {
+IRNode *Parser::stmt() {
     Token t = tokenizer->peek();
     switch (t.type()) {
     case Token::LBraceType:
         return block();
     case Token::IfType:
         return ifstmt();
-    case Token::DefType:
-        return functiondef();
+    case Token::DefType: {
+        Function *f = functiondef();
+        module_stack.top()->add_function(f);
+        return NULL;
+    }
     default:
         return otherstmt();
     }
 }
 
-ASTNode *Parser::otherstmt() {
+IRNode *Parser::otherstmt() {
     Variable *v = var();
-    ASTNode *s = NULL;
+    IRNode *s = NULL;
     switch (tokenizer->peek().type()) {
     case Token::EqualsType:
         s = assignment(v);
@@ -355,45 +381,51 @@ ASTNode *Parser::otherstmt() {
     return s;
 }
 
-ASTNode *Parser::ifstmt() {
+IRNode *Parser::ifstmt() {
     expect(tokenizer->peek(), Token::IfType, "Expected if statement");
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
-    ASTNode *cond = expr();
+    IRNode *cond = expr();
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
-    ASTNode *body = block();
+    IRNode *body = block();
     return new IfStatement(cond, body);
 }
 
-ASTNode *Parser::functiondef() {
+Function *Parser::functiondef() {
     expect(tokenizer->peek(), Token::DefType, "Expected def statement");
-    Variable *name = var();
+    Variable *tmp = var();
+    std::string name = tmp->name;
+    delete tmp;
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
-    NodeList *args;
-    if (tokenizer->peek().isa(Token::RParenType)) {
-        args = new NodeList();
-    } else {
-        args = nodelist();
+    std::vector<Variable *> args;
+    if (!tokenizer->peek().isa(Token::RParenType)) {
+        args.push_back(var());
+        while (tokenizer->peek().isa(Token::CommaType)) {
+            tokenizer->next();
+            args.push_back(var());
+        }
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
-    ASTNode *body = block();
+    Block *body = block();
     return new Function(name, args, body);
 }
 
-ASTNode *Parser::funcall(Variable *v) {
+IRNode *Parser::funcall(Variable *v) {
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
-    NodeList *args;
-    if (tokenizer->peek().isa(Token::RParenType)) {
-        args = new NodeList();
-    } else {
-        args = nodelist();
+    std::vector<IRNode *> args;
+    if (!tokenizer->peek().isa(Token::RParenType)) {
+        args.push_back(atom());
+        while (tokenizer->peek().isa(Token::CommaType)) {
+            tokenizer->next();
+            args.push_back(atom());
+        }
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
-    return new FunctionCall(v, args);
+    return new FunctionCall(v->name, args);
 }
 
-ASTNode *Parser::assignment(Variable *v) {
+IRNode *Parser::assignment(Variable *v) {
     expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
-    ASTNode *e = expr();
+    IRNode *e = expr();
     Type t = get_primitive_type(e);
     if (t != UndefinedTy) {
         current_symbol_table->insert(v->name, t);
@@ -407,18 +439,8 @@ Variable *Parser::var() {
     return new Variable(name);
 }
 
-NodeList *Parser::nodelist() {
-    std::vector<ASTNode *> atoms;
-    atoms.push_back(atom());
-    while (tokenizer->peek().isa(Token::CommaType)) {
-        tokenizer->next();
-        atoms.push_back(atom());
-    }
-    return new NodeList(atoms);
-}
-
-ASTNode *Parser::expr() {
-    ASTNode *a = arith();
+IRNode *Parser::expr() {
+    IRNode *a = arith();
     if (tokenizer->peek().isa(Token::DoubleEqualsType)) {
         tokenizer->next();
         a = new Comparison(a, arith());
@@ -426,8 +448,8 @@ ASTNode *Parser::expr() {
     return a;
 }
 
-ASTNode *Parser::arith() {
-    ASTNode *a = term();
+IRNode *Parser::arith() {
+    IRNode *a = term();
     Token t = tokenizer->peek();
     while (t.isa(Token::PlusType) || t.isa(Token::MinusType)) {
         tokenizer->next();
@@ -437,8 +459,8 @@ ASTNode *Parser::arith() {
     return a;
 }
 
-ASTNode *Parser::term() {
-    ASTNode *a = unary();
+IRNode *Parser::term() {
+    IRNode *a = unary();
     Token t = tokenizer->peek();
     while (t.isa(Token::StarType) || t.isa(Token::SlashType)) {
         tokenizer->next();
@@ -448,7 +470,7 @@ ASTNode *Parser::term() {
     return a;
 }
 
-ASTNode *Parser::unary() {
+IRNode *Parser::unary() {
     Token t = tokenizer->peek();
     if (is_unop_token(t)) {
         tokenizer->next();
@@ -458,10 +480,10 @@ ASTNode *Parser::unary() {
     }
 }
 
-ASTNode *Parser::factor() {
+IRNode *Parser::factor() {
     if (tokenizer->peek().isa(Token::LParenType)) {
         tokenizer->next();
-        ASTNode *e = expr();
+        IRNode *e = expr();
         expect(tokenizer->peek(), Token::RParenType, "Unmatched '('");
         return e;
     } else {
@@ -469,7 +491,7 @@ ASTNode *Parser::factor() {
     }
 }
 
-ASTNode *Parser::atom() {
+IRNode *Parser::atom() {
     Token t = tokenizer->peek();
     tokenizer->next();
     

@@ -1,20 +1,20 @@
 #ifndef __BISH_TYPE_CHECKER_H__
 #define __BISH_TYPE_CHECKER_H__
 
-#include "ASTVisitor.h"
+#include "IRVisitor.h"
 #include "SymbolTable.h"
 
 namespace Bish {
 
-class ASTNodeSymbolTable {
+class IRNodeSymbolTable {
 public:
-    void insert(const ASTNode *node, Type ty);
-    SymbolTableEntry *lookup(const ASTNode *node) const;
+    void insert(const IRNode *node, Type ty);
+    SymbolTableEntry *lookup(const IRNode *node) const;
 private:
-    std::map<const ASTNode *, SymbolTableEntry *> table;
+    std::map<const IRNode *, SymbolTableEntry *> table;
 };
 
-class TypeChecker : public ASTVisitor {
+class TypeChecker : public IRVisitor {
 public:
     TypeChecker() : current_symtab(NULL), current_astnode_symtab(NULL) {}
     virtual void visit(const Block *);
@@ -29,9 +29,9 @@ public:
     virtual void visit(const Boolean *);
 private:
     SymbolTable *current_symtab;
-    ASTNodeSymbolTable *current_astnode_symtab;
+    IRNodeSymbolTable *current_astnode_symtab;
 
-    SymbolTableEntry *lookup(const ASTNode *n,
+    SymbolTableEntry *lookup(const IRNode *n,
                              bool assert_non_null=true);
 };
 

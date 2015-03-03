@@ -2,14 +2,15 @@
 #define __BISH_CODEGEN_BASH_H__
 
 #include <iostream>
-#include "AST.h"
-#include "ASTVisitor.h"
+#include "IR.h"
+#include "IRVisitor.h"
 
 namespace Bish {
   
-class CodeGen_Bash : public ASTVisitor {
+class CodeGen_Bash : public IRVisitor {
 public:
     CodeGen_Bash(std::ostream &os) : stream(os), indent_level(0) {}
+    virtual void visit(const Module *);
     virtual void visit(const Block *);
     virtual void visit(const Variable *);
     virtual void visit(const IfStatement *);

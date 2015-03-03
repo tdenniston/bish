@@ -2,10 +2,10 @@
 #include "CodeGen_Bash.h"
 #include "Parser.h"
 
-void compile_to_bash(std::ostream &os, Bish::AST *ast) {
+void compile_to_bash(std::ostream &os, Bish::Module *m) {
     os << "#!/bin/bash\n";
     Bish::CodeGen_Bash compile(os);
-    ast->accept(&compile);
+    m->accept(&compile);
 }
 
 int main(int argc, char **argv) {
@@ -17,9 +17,9 @@ int main(int argc, char **argv) {
     
     std::string path(argv[1]);
     Bish::Parser p;
-    Bish::AST *ast = p.parse(path);
+    Bish::Module *m = p.parse(path);
 
-    compile_to_bash(std::cout, ast);
+    compile_to_bash(std::cout, m);
     
     return 0;
 }

@@ -2,10 +2,17 @@
 
 using namespace Bish;
 
+void CodeGen_Bash::visit(const Module *n) {
+    for (std::vector<Function *>::const_iterator I = n->functions.begin(),
+             E = n->functions.end(); I != E; ++I) {
+        (*I)->accept(this);
+    }
+}
+
 void CodeGen_Bash::visit(const Block *n) {
     if (should_print_block_braces()) stream << "{\n";
     indent_level++;
-    for (std::vector<ASTNode *>::const_iterator I = n->nodes.begin(), E = n->nodes.end();
+    for (std::vector<IRNode *>::const_iterator I = n->nodes.begin(), E = n->nodes.end();
          I != E; ++I) {
         for (unsigned i = 0; i < indent_level - 1; i++) {
             stream << "    ";
@@ -34,7 +41,7 @@ void CodeGen_Bash::visit(const IfStatement *n) {
 }
 
 void CodeGen_Bash::visit(const Function *n) {
-    stream << "function " << n->name->name << " ";
+    stream << "function " << n->name << " ";
     // Bash doesn't allow named arguments to functions.
     // We'll have to translate to positional arguments.
     stream << "() ";
@@ -42,11 +49,11 @@ void CodeGen_Bash::visit(const Function *n) {
 }
 
 void CodeGen_Bash::visit(const FunctionCall *n) {
-    const int nargs = n->args->nodes.size();
-    stream << n->name->name;
+    const int nargs = n->args.size();
+    stream << n->name;
     for (int i = 0; i < nargs; i++) {
         stream << " ";
-        n->args->nodes[i]->accept(this);
+        n->args[i]->accept(this);
     }
 }
 

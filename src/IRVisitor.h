@@ -1,12 +1,12 @@
-#ifndef __BISH_AST_VISITOR_H__
-#define __BISH_AST_VISITOR_H__
+#ifndef __BISH_IR_VISITOR_H__
+#define __BISH_IR_VISITOR_H__
 
 namespace Bish {
 
-class ASTNode;
+class IRNode;
+class Module;
 class Block;
 class Variable;
-class NodeList;
 class IfStatement;
 class Function;
 class FunctionCall;
@@ -19,12 +19,12 @@ class Fractional;
 class String;
 class Boolean;
 
-class ASTVisitor {
+class IRVisitor {
 public:
-    virtual ~ASTVisitor();
+    virtual ~IRVisitor();
+    virtual void visit(const Module *);
     virtual void visit(const Block *);
     virtual void visit(const Variable *);
-    virtual void visit(const NodeList *);
     virtual void visit(const Function *);
     virtual void visit(const FunctionCall *);
     virtual void visit(const IfStatement *);

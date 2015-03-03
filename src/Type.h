@@ -4,7 +4,7 @@
 namespace Bish {
 
 typedef enum {
-    IntegerTy, FractionalTy, StringTy, BooleanTy, UndefinedTy
+  UndefinedTy, IntegerTy, FractionalTy, StringTy, BooleanTy
 } Type;
 
 }

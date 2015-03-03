@@ -1,13 +1,15 @@
 #ifndef __BISH_PARSER_H__
 #define __BISH_PARSER_H__
 
+#include <stack>
 #include <string>
-#include "AST.h"
+#include "IR.h"
 #include "SymbolTable.h"
 
 /*
 Grammar:
 
+module ::= block
 block ::= '{' { stmt } '}'
 stmt ::= assign ';'
        | funcall ';'
@@ -147,11 +149,12 @@ class Parser {
 public:
     Parser() : tokenizer(NULL), current_symbol_table(NULL) {}
     ~Parser();
-    AST *parse(const std::string &path);
-    AST *parse_string(const std::string &text);
+    Module *parse(const std::string &path);
+    Module *parse_string(const std::string &text);
 private:
     Tokenizer *tokenizer;
     SymbolTable *current_symbol_table;
+    std::stack<Module *> module_stack;
     
     std::string read_file(const std::string &path);
     void abort(const std::string &msg);
@@ -159,24 +162,26 @@ private:
     bool is_binop_token(const Token &t);
     BinOp::Operator get_binop_operator(const Token &t);
     UnaryOp::Operator get_unaryop_operator(const Token &t);
-    Type get_primitive_type(const ASTNode *n);
+    Type get_primitive_type(const IRNode *n);
     void expect(const Token &t, Token::Type ty, const std::string &msg);
+    void push_module(Module *m);
+    Module *pop_module();
 
+    Module *module();
     Block *block();
-    ASTNode *stmt();
-    ASTNode *otherstmt();
-    ASTNode *ifstmt();
-    ASTNode *functiondef();
-    ASTNode *funcall(Variable *a);
-    ASTNode *assignment(Variable *a);
+    IRNode *stmt();
+    IRNode *otherstmt();
+    IRNode *ifstmt();
+    Function *functiondef();
+    IRNode *funcall(Variable *a);
+    IRNode *assignment(Variable *a);
     Variable *var();
-    NodeList *nodelist();
-    ASTNode *expr();
-    ASTNode *arith();
-    ASTNode *term();
-    ASTNode *unary();
-    ASTNode *factor();
-    ASTNode *atom();
+    IRNode *expr();
+    IRNode *arith();
+    IRNode *term();
+    IRNode *unary();
+    IRNode *factor();
+    IRNode *atom();
     
 };
 

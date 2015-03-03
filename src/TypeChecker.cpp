@@ -1,16 +1,16 @@
 #include <iostream>
 #include <cassert>
-#include "AST.h"
+#include "IR.h"
 #include "TypeChecker.h"
 
 using namespace Bish;
 
-void ASTNodeSymbolTable::insert(const ASTNode *n, Type ty) {
+void IRNodeSymbolTable::insert(const IRNode *n, Type ty) {
     table[n] = new SymbolTableEntry(ty);
 }
 
-SymbolTableEntry *ASTNodeSymbolTable::lookup(const ASTNode *n) const {
-    std::map<const ASTNode *, SymbolTableEntry *>::const_iterator I = table.find(n);
+SymbolTableEntry *IRNodeSymbolTable::lookup(const IRNode *n) const {
+    std::map<const IRNode *, SymbolTableEntry *>::const_iterator I = table.find(n);
     if (I == table.end()) {
         return NULL;
     }
@@ -19,10 +19,10 @@ SymbolTableEntry *ASTNodeSymbolTable::lookup(const ASTNode *n) const {
 
 void TypeChecker::visit(const Block *node) {
     SymbolTable *old_symtab = current_symtab;
-    ASTNodeSymbolTable *old_ast_symtab = current_astnode_symtab;
+    IRNodeSymbolTable *old_ast_symtab = current_astnode_symtab;
     current_symtab = node->symbol_table;
-    current_astnode_symtab = new ASTNodeSymbolTable();
-    for (std::vector<ASTNode *>::const_iterator I = node->nodes.begin(),
+    current_astnode_symtab = new IRNodeSymbolTable();
+    for (std::vector<IRNode *>::const_iterator I = node->nodes.begin(),
              E = node->nodes.end(); I != E; ++I) {
         (*I)->accept(this);
     }
@@ -94,7 +94,7 @@ void TypeChecker::visit(const Boolean *node) {
     current_astnode_symtab->insert(node, BooleanTy);
 }
 
-SymbolTableEntry *TypeChecker::lookup(const ASTNode *n, bool assert_non_null) {
+SymbolTableEntry *TypeChecker::lookup(const IRNode *n, bool assert_non_null) {
     SymbolTableEntry *e = NULL;
     if (const Variable *v = dynamic_cast<const Variable*>(n)) {
         e = current_symtab->lookup(v->name);
