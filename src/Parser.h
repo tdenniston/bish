@@ -168,6 +168,7 @@ private:
     Module *pop_module();
     void push_symbol_table(SymbolTable *s);
     SymbolTable *pop_symbol_table();
+    IRNode *lookup(const std::string &name);
     Variable *lookup_or_new_var(const std::string &name);
       
     Module *module();

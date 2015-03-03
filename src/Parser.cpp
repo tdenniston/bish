@@ -539,29 +539,34 @@ std::string Parser::symbol() {
 }
 
 Variable *Parser::lookup_or_new_var(const std::string &name) {
-    Variable *result = NULL;
+    IRNode *result = lookup(name);
+    if (result) {
+        Variable *v = dynamic_cast<Variable*>(result);
+        assert(v);
+        return v;
+    } else {
+        Variable *v = new Variable(name);
+        symbol_table_stack.top()->insert(name, v, UndefinedTy);
+        return v;
+    }
+}
+
+IRNode *Parser::lookup(const std::string &name) {
+    IRNode *result = NULL;
     std::stack<SymbolTable *> aux;
     while (!symbol_table_stack.empty()) {
         SymbolTableEntry *e = symbol_table_stack.top()->lookup(name);
         if (e) {
-            if (Variable *v = dynamic_cast<Variable*>(e->node)) {
-                if (name.compare(v->name) == 0) {
-                    result = v;
-                    goto end; // Deal with it
-                }
-            }
+            result = e->node;
+            break;
         }
         aux.push(symbol_table_stack.top());
         symbol_table_stack.pop();
     }
-    result = new Variable(name);
-  end:
     while (!aux.empty()) {
         symbol_table_stack.push(aux.top());
         aux.pop();
     }
-    assert(result);
-    symbol_table_stack.top()->insert(name, result, UndefinedTy);
     return result;
 }
 
