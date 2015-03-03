@@ -147,14 +147,14 @@ private:
 
 class Parser {
 public:
-    Parser() : tokenizer(NULL), current_symbol_table(NULL) {}
+ Parser() : tokenizer(NULL) {}
     ~Parser();
     Module *parse(const std::string &path);
     Module *parse_string(const std::string &text);
 private:
     Tokenizer *tokenizer;
-    SymbolTable *current_symbol_table;
     std::stack<Module *> module_stack;
+    std::stack<SymbolTable *> symbol_table_stack;
     
     std::string read_file(const std::string &path);
     void abort(const std::string &msg);
@@ -166,22 +166,27 @@ private:
     void expect(const Token &t, Token::Type ty, const std::string &msg);
     void push_module(Module *m);
     Module *pop_module();
-
+    void push_symbol_table(SymbolTable *s);
+    SymbolTable *pop_symbol_table();
+    Variable *lookup_or_new_var(const std::string &name);
+      
     Module *module();
     Block *block();
     IRNode *stmt();
     IRNode *otherstmt();
     IRNode *ifstmt();
     Function *functiondef();
-    IRNode *funcall(Variable *a);
-    IRNode *assignment(Variable *a);
+    IRNode *funcall(const std::string &name);
+    IRNode *assignment(const std::string &name);
     Variable *var();
+    Variable *arg();
     IRNode *expr();
     IRNode *arith();
     IRNode *term();
     IRNode *unary();
     IRNode *factor();
     IRNode *atom();
+    std::string symbol();
     
 };
 

@@ -231,8 +231,8 @@ Module *Parser::parse_string(const std::string &text) {
     Module *m = module();
     expect(tokenizer->peek(), Token::EOSType, "Expected end of string.");
     // Type checking
-    TypeChecker types;
-    m->accept(&types);
+    // TypeChecker types;
+    // m->accept(&types);
     return m;
 }
 
@@ -317,6 +317,16 @@ Module *Parser::pop_module() {
     return m;
 }
 
+void Parser::push_symbol_table(SymbolTable *s) {
+    symbol_table_stack.push(s);
+}
+
+SymbolTable *Parser::pop_symbol_table() {
+    SymbolTable *s = symbol_table_stack.top();
+    symbol_table_stack.pop();
+    return s;
+}
+
 Module *Parser::module() {
     Module *m = new Module();
     push_module(m);
@@ -331,17 +341,16 @@ Module *Parser::module() {
 
 // Parse a Bish block.
 Block *Parser::block() {
-    SymbolTable *old = current_symbol_table;
-    current_symbol_table = new SymbolTable(old);
     std::vector<IRNode *> statements;
+    push_symbol_table(new SymbolTable());
     expect(tokenizer->peek(), Token::LBraceType, "Expected block to begin with '{'");
     do {
         IRNode *s = stmt();
         if (s) statements.push_back(s);
     } while (!tokenizer->peek().isa(Token::RBraceType));
     expect(tokenizer->peek(), Token::RBraceType, "Expected block to end with '}'");
-    Block *result = new Block(statements, current_symbol_table);
-    current_symbol_table = old;
+    Block *result = new Block(statements);
+    delete pop_symbol_table();
     return result;
 }
 
@@ -363,14 +372,14 @@ IRNode *Parser::stmt() {
 }
 
 IRNode *Parser::otherstmt() {
-    Variable *v = var();
+    std::string sym = symbol();
     IRNode *s = NULL;
     switch (tokenizer->peek().type()) {
     case Token::EqualsType:
-        s = assignment(v);
+        s = assignment(sym);
         break;
     case Token::LParenType:
-        s = funcall(v);
+        s = funcall(sym);
         break;
     default:
         abort("Unexpected token in statement.");
@@ -392,24 +401,24 @@ IRNode *Parser::ifstmt() {
 
 Function *Parser::functiondef() {
     expect(tokenizer->peek(), Token::DefType, "Expected def statement");
-    Variable *tmp = var();
-    std::string name = tmp->name;
-    delete tmp;
+    std::string name = symbol();
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     std::vector<Variable *> args;
+    push_symbol_table(new SymbolTable());
     if (!tokenizer->peek().isa(Token::RParenType)) {
-        args.push_back(var());
+        args.push_back(arg());
         while (tokenizer->peek().isa(Token::CommaType)) {
             tokenizer->next();
-            args.push_back(var());
+            args.push_back(arg());
         }
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     Block *body = block();
+    delete pop_symbol_table();
     return new Function(name, args, body);
 }
 
-IRNode *Parser::funcall(Variable *v) {
+IRNode *Parser::funcall(const std::string &name) {
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     std::vector<IRNode *> args;
     if (!tokenizer->peek().isa(Token::RParenType)) {
@@ -420,15 +429,16 @@ IRNode *Parser::funcall(Variable *v) {
         }
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
-    return new FunctionCall(v->name, args);
+    return new FunctionCall(name, args);
 }
 
-IRNode *Parser::assignment(Variable *v) {
+IRNode *Parser::assignment(const std::string &name) {
     expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
+    Variable *v = lookup_or_new_var(name);
     IRNode *e = expr();
     Type t = get_primitive_type(e);
     if (t != UndefinedTy) {
-        current_symbol_table->insert(v->name, t);
+        symbol_table_stack.top()->insert(name, v, t);
     }
     return new Assignment(v, e);
 }
@@ -436,7 +446,16 @@ IRNode *Parser::assignment(Variable *v) {
 Variable *Parser::var() {
     std::string name = tokenizer->peek().value();
     expect(tokenizer->peek(), Token::SymbolType, "Expected variable to be a symbol");
-    return new Variable(name);
+    return lookup_or_new_var(name);//new Variable(name);
+}
+
+Variable *Parser::arg() {
+    // Similar to var() but this always creates a new symbol.
+    std::string name = tokenizer->peek().value();
+    expect(tokenizer->peek(), Token::SymbolType, "Expected argument to be a symbol");
+    Variable *arg = new Variable(name);
+    symbol_table_stack.top()->insert(name, arg, UndefinedTy);
+    return arg;
 }
 
 IRNode *Parser::expr() {
@@ -497,7 +516,7 @@ IRNode *Parser::atom() {
     
     switch(t.type()) {
     case Token::SymbolType:
-        return new Variable(t.value());
+        return lookup_or_new_var(t.value());
     case Token::IntType:
         return new Integer(t.value());
     case Token::FractionalType:
@@ -511,6 +530,39 @@ IRNode *Parser::atom() {
         abort("Invalid token type for atom.");
         return NULL;
     }
+}
+
+std::string Parser::symbol() {
+    Token t = tokenizer->peek();
+    expect(t, Token::SymbolType, "Expected symbol.");
+    return t.value();
+}
+
+Variable *Parser::lookup_or_new_var(const std::string &name) {
+    Variable *result = NULL;
+    std::stack<SymbolTable *> aux;
+    while (!symbol_table_stack.empty()) {
+        SymbolTableEntry *e = symbol_table_stack.top()->lookup(name);
+        if (e) {
+            if (Variable *v = dynamic_cast<Variable*>(e->node)) {
+                if (name.compare(v->name) == 0) {
+                    result = v;
+                    goto end; // Deal with it
+                }
+            }
+        }
+        aux.push(symbol_table_stack.top());
+        symbol_table_stack.pop();
+    }
+    result = new Variable(name);
+  end:
+    while (!aux.empty()) {
+        symbol_table_stack.push(aux.top());
+        aux.pop();
+    }
+    assert(result);
+    symbol_table_stack.top()->insert(name, result, UndefinedTy);
+    return result;
 }
 
 }

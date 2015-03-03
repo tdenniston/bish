@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include "IRVisitor.h"
-#include "SymbolTable.h"
 #include "Type.h"
 
 namespace {
@@ -44,12 +43,10 @@ public:
 
 class Block : public BaseIRNode<Block> {
 public:
-    SymbolTable *symbol_table;
     typedef std::vector<IRNode *>::iterator iterator;
     std::vector<IRNode *> nodes;
-    Block(const std::vector<IRNode *> &n, SymbolTable *tab) {
+    Block(const std::vector<IRNode *> &n) {
         nodes.insert(nodes.begin(), n.begin(), n.end());
-        symbol_table = tab;
     }
 };
 

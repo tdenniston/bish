@@ -4,8 +4,8 @@
 
 using namespace Bish;
 
-void SymbolTable::insert(const std::string &v, Type ty) {
-    table[v] = new SymbolTableEntry(ty);
+void SymbolTable::insert(const std::string &v, IRNode *n, Type ty) {
+    table[v] = new SymbolTableEntry(n, ty);
 }
 
 SymbolTableEntry *SymbolTable::lookup(const std::string &v) const {
@@ -23,7 +23,7 @@ SymbolTableEntry *SymbolTable::lookup(const std::string &v) const {
 void SymbolTable::propagate(const std::string &a, const std::string &b) {
     SymbolTableEntry *e = lookup(b);
     if (e) {
-        insert(a, e->type);
+        insert(a, e->node, e->type);
     }
 }
 
