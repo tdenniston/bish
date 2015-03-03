@@ -9,7 +9,7 @@ namespace Bish {
   
 class CodeGen_Bash : public IRVisitor {
 public:
-    CodeGen_Bash(std::ostream &os) : stream(os), indent_level(0) {}
+    CodeGen_Bash(std::ostream &os) : stream(os), indent_level(0), block_print_braces(true) {}
     virtual void visit(const Module *);
     virtual void visit(const Block *);
     virtual void visit(const Variable *);
@@ -32,10 +32,11 @@ private:
 
     inline void disable_block_braces() { block_print_braces = false; }
     inline void enable_block_braces() { block_print_braces = true; }
-    inline bool should_print_block_braces() const { return indent_level > 0 && block_print_braces; }
+    inline bool should_print_block_braces() const { return block_print_braces; }
     inline void disable_variable_dollar() { variable_print_dollar = false; }
     inline void enable_variable_dollar() { variable_print_dollar = true; }
     inline bool should_print_variable_dollar() const { return variable_print_dollar; }
+    void indent();
 };
 
 }

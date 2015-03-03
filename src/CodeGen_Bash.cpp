@@ -2,6 +2,12 @@
 
 using namespace Bish;
 
+void CodeGen_Bash::indent() {
+    for (unsigned i = 0; i < indent_level; i++) {
+        stream << "    ";
+    }
+}
+
 void CodeGen_Bash::visit(const Module *n) {
     for (std::vector<Function *>::const_iterator I = n->functions.begin(),
              E = n->functions.end(); I != E; ++I) {
@@ -14,14 +20,12 @@ void CodeGen_Bash::visit(const Block *n) {
     indent_level++;
     for (std::vector<IRNode *>::const_iterator I = n->nodes.begin(), E = n->nodes.end();
          I != E; ++I) {
-        for (unsigned i = 0; i < indent_level - 1; i++) {
-            stream << "    ";
-        }
+        indent();
         (*I)->accept(this);
         stream << ";\n";
     }
     indent_level--;
-    if (should_print_block_braces()) stream << "}";
+    if (should_print_block_braces()) stream << "}\n";
 }
 
 void CodeGen_Bash::visit(const Variable *n) {
@@ -37,6 +41,7 @@ void CodeGen_Bash::visit(const IfStatement *n) {
     disable_block_braces();
     n->body->accept(this);
     enable_block_braces();
+    indent();
     stream << "fi";
 }
 
