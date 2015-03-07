@@ -85,6 +85,17 @@ public:
         return text.substr(start, len);
     }
 
+    // Return the substring beginning at the current index and
+    // continuing until the first occurrence of a character of the
+    // given value.
+    std::string scan_until(char c) {
+        unsigned start = idx;
+        while (curchar() != c) {
+            idx++;
+        }
+        return text.substr(start, idx - start);
+    }
+
     // Return a human-readable representation of the current position
     // in the string.
     std::string position() const {
@@ -140,6 +151,8 @@ private:
             return ResultState(Token::At(), idx + 1);
         } else if (c == '$') {
             return ResultState(Token::Dollar(), idx + 1);
+        } else if (c == '#') {
+            return ResultState(Token::Sharp(), idx + 1);
         } else if (c == ';') {
             return ResultState(Token::Semicolon(), idx + 1);
         } else if (c == ',') {
@@ -364,6 +377,9 @@ Block *Parser::block() {
     push_symbol_table(new SymbolTable());
     expect(tokenizer->peek(), Token::LBraceType, "Expected block to begin with '{'");
     do {
+        if (tokenizer->peek().isa(Token::SharpType)) {
+            tokenizer->scan_until('\n');
+        }
         IRNode *s = stmt();
         if (s) statements.push_back(s);
     } while (!tokenizer->peek().isa(Token::RBraceType));

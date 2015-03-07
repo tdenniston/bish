@@ -14,6 +14,7 @@ block ::= '{' { stmt } '}'
 stmt ::= assign ';'
        | funcall ';'
        | externcall ';'
+       | '#' any NEWLINE
        | 'if' '(' expr ')' block
        | 'def' var '(' varlist ')' block
        | block
@@ -44,6 +45,7 @@ public:
                    RBraceType,
                    AtType,
                    DollarType,
+                   SharpType,
                    SemicolonType,
                    CommaType,
                    IfType,
@@ -92,6 +94,10 @@ public:
 
     static Token Dollar() {
         return Token(DollarType, "$");
+    }
+
+    static Token Sharp() {
+        return Token(SharpType, "#");
     }
     
     static Token Semicolon() {
