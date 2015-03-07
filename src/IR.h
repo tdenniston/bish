@@ -99,6 +99,9 @@ class FunctionCall : public BaseIRNode<FunctionCall> {
 public:
     std::string name;
     std::vector<IRNode *> args;
+    FunctionCall(const std::string &n) {
+        name = n;
+    }
     FunctionCall(const std::string &n, const std::vector<IRNode *> &a) {
         name = n;
         args.insert(args.begin(), a.begin(), a.end());

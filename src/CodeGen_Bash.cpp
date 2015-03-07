@@ -1,3 +1,4 @@
+#include <cassert>
 #include "CodeGen_Bash.h"
 
 using namespace Bish;
@@ -13,6 +14,12 @@ void CodeGen_Bash::visit(const Module *n) {
              E = n->functions.end(); I != E; ++I) {
         (*I)->accept(this);
     }
+    // Insert a call to bish_main().
+    assert(n->main);
+    FunctionCall *call_main = new FunctionCall(n->main->name);
+    visit(call_main);
+    stream << ";\n";
+    delete call_main;
 }
 
 void CodeGen_Bash::visit(const Block *n) {
