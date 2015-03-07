@@ -39,6 +39,11 @@ void CodeGen_Bash::visit(const Variable *n) {
     stream << "$" << lookup_name(n);
 }
 
+void CodeGen_Bash::visit(const ReturnStatement *n) {
+    stream << "echo ";
+    n->value->accept(this);
+}
+
 void CodeGen_Bash::visit(const IfStatement *n) {
     stream << "if ";
     stream << "[[ ";
@@ -82,11 +87,13 @@ void CodeGen_Bash::visit(const Function *n) {
 
 void CodeGen_Bash::visit(const FunctionCall *n) {
     const int nargs = n->args.size();
+    if (should_functioncall_wrap()) stream << "$(";
     stream << n->name;
     for (int i = 0; i < nargs; i++) {
         stream << " ";
         n->args[i]->accept(this);
     }
+    if (should_functioncall_wrap()) stream << ")";
 }
 
 void CodeGen_Bash::visit(const ExternCall *n) {
@@ -109,7 +116,9 @@ void CodeGen_Bash::visit(const Comparison *n) {
 
 void CodeGen_Bash::visit(const Assignment *n) {
     stream << lookup_name(n->variable) << "=";
+    enable_functioncall_wrap();
     n->value->accept(this);
+    disable_functioncall_wrap();
 }
 
 void CodeGen_Bash::visit(const BinOp *n) {

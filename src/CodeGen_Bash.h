@@ -30,10 +30,15 @@ private:
   
 class CodeGen_Bash : public IRVisitor {
 public:
-    CodeGen_Bash(std::ostream &os) : stream(os), indent_level(0), block_print_braces(true) {}
+    CodeGen_Bash(std::ostream &os) : stream(os) {
+        indent_level = 0;
+        block_print_braces = true;
+        functioncall_wrap = false;
+    }
     virtual void visit(const Module *);
     virtual void visit(const Block *);
     virtual void visit(const Variable *);
+    virtual void visit(const ReturnStatement *);
     virtual void visit(const IfStatement *);
     virtual void visit(const ForLoop *);
     virtual void visit(const Function *);
@@ -52,14 +57,14 @@ private:
     std::ostream &stream;
     unsigned indent_level;
     bool block_print_braces;
-    bool variable_print_dollar;
+    bool functioncall_wrap;
 
     inline void disable_block_braces() { block_print_braces = false; }
     inline void enable_block_braces() { block_print_braces = true; }
     inline bool should_print_block_braces() const { return block_print_braces; }
-    inline void disable_variable_dollar() { variable_print_dollar = false; }
-    inline void enable_variable_dollar() { variable_print_dollar = true; }
-    inline bool should_print_variable_dollar() const { return variable_print_dollar; }
+    inline void disable_functioncall_wrap() { functioncall_wrap = false; }
+    inline void enable_functioncall_wrap() { functioncall_wrap = true; }
+    inline bool should_functioncall_wrap() const { return functioncall_wrap; }
     void indent();
     void push_let_scope(LetScope *s) { let_stack.push(s); }
     LetScope *pop_let_scope() { LetScope *s = let_stack.top(); let_stack.pop(); return s; }

@@ -222,7 +222,9 @@ private:
     // Return the correct token type for a string of letters. This
     // checks for reserved keywords.
     Token get_multichar_token(const std::string &s) {
-        if (s.compare(Token::If().value()) == 0) {
+        if (s.compare(Token::Return().value()) == 0) {
+            return Token::Return();
+        } else if (s.compare(Token::If().value()) == 0) {
             return Token::If();
         } else if (s.compare(Token::Def().value()) == 0) {
             return Token::Def();
@@ -406,6 +408,8 @@ IRNode *Parser::stmt() {
         return block();
     case Token::AtType:
         return externcall();
+    case Token::ReturnType:
+        return returnstmt();
     case Token::IfType:
         return ifstmt();
     case Token::ForType:
@@ -455,6 +459,13 @@ IRNode *Parser::externcall() {
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     return new ExternCall(body);
+}
+
+IRNode *Parser::returnstmt() {
+    expect(tokenizer->peek(), Token::ReturnType, "Expected return statement");
+    IRNode *ret = expr();
+    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    return new ReturnStatement(ret);
 }
 
 IRNode *Parser::ifstmt() {

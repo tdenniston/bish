@@ -23,6 +23,10 @@ void IRVisitor::visit(const Variable *node) {
 
 }
 
+void IRVisitor::visit(const ReturnStatement *node) {
+    node->value->accept(this);
+}
+
 void IRVisitor::visit(const IfStatement *node) {
     node->condition->accept(this);
     node->body->accept(this);

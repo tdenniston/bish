@@ -14,6 +14,7 @@ block ::= '{' { stmt } '}'
 stmt ::= assign ';'
        | funcall ';'
        | externcall ';'
+       | 'return' expr ';'
        | '#' any NEWLINE
        | 'if' '(' expr ')' block
        | 'for' '(' var 'in' num '..' num ')' block
@@ -49,6 +50,7 @@ public:
                    SharpType,
                    SemicolonType,
                    CommaType,
+                   ReturnType,
                    IfType,
                    DefType,
                    ForType,
@@ -114,6 +116,10 @@ public:
         return Token(CommaType, ",");
     }
 
+    static Token Return() {
+        return Token(ReturnType, "return");
+    }
+    
     static Token If() {
         return Token(IfType, "if");
     }
@@ -222,6 +228,7 @@ private:
     IRNode *stmt();
     IRNode *otherstmt();
     IRNode *ifstmt();
+    IRNode *returnstmt();
     IRNode *forloop();
     Function *functiondef();
     IRNode *externcall();

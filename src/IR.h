@@ -88,6 +88,12 @@ public:
     Assignment(Variable *var, IRNode *val) : variable(var), value(val) {}
 };
 
+class ReturnStatement : public BaseIRNode<ReturnStatement> {
+public:
+    IRNode *value;
+    ReturnStatement(IRNode *v) : value(v) {}
+};
+
 class IfStatement : public BaseIRNode<IfStatement> {
 public:
     IRNode *condition;
