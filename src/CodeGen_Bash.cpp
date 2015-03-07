@@ -139,22 +139,22 @@ void CodeGen_Bash::visit(const BinOp *n) {
     n->a->accept(this);
     switch (n->op) {
     case BinOp::Eq:
-        stream << " == ";
+        stream << " -eq ";
         break;
     case BinOp::NotEq:
-        stream << " != ";
+        stream << " -ne ";
         break;
     case BinOp::LT:
-        stream << " < ";
+        stream << " -lt ";
         break;
     case BinOp::LTE:
-        stream << " <= ";
+        stream << " -lte ";
         break;
     case BinOp::GT:
-        stream << " > ";
+        stream << " -gt ";
         break;
     case BinOp::GTE:
-        stream << " >= ";
+        stream << " -gte ";
         break;
     case BinOp::Add:
         stream << " + ";
