@@ -48,13 +48,26 @@ void CodeGen_Bash::visit(const ReturnStatement *n) {
 }
 
 void CodeGen_Bash::visit(const IfStatement *n) {
-    stream << "if ";
-    stream << "[[ ";
-    n->condition->accept(this);
-    stream << " ]]";
-    stream << "; then\n";
+    stream << "if [[ ";
+    n->pblock->condition->accept(this);
+    stream << " ]]; then\n";
     disable_block_braces();
-    n->body->accept(this);
+    n->pblock->body->accept(this);
+
+    for (std::vector<PredicatedBlock *>::const_iterator I = n->elses.begin(),
+             E = n->elses.end(); I != E; ++I) {
+        indent();
+        stream << "elif [[ ";
+        (*I)->condition->accept(this);
+        stream << " ]]; then\n";
+        (*I)->body->accept(this);
+    }
+    if (n->elseblock) {
+        indent();
+        stream << "else\n";
+        n->elseblock->accept(this);
+    }
+    
     enable_block_braces();
     indent();
     stream << "fi";

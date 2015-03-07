@@ -240,6 +240,8 @@ private:
             return Token::Return();
         } else if (s.compare(Token::If().value()) == 0) {
             return Token::If();
+        } else if (s.compare(Token::Else().value()) == 0) {
+            return Token::Else();
         } else if (s.compare(Token::Def().value()) == 0) {
             return Token::Def();
         } else if (s.compare(Token::For().value()) == 0) {
@@ -500,7 +502,22 @@ IRNode *Parser::ifstmt() {
     IRNode *cond = expr();
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     IRNode *body = block();
-    return new IfStatement(cond, body);
+    std::vector<PredicatedBlock *> elses;
+    IRNode *elseblock = NULL;
+    while (tokenizer->peek().isa(Token::ElseType)) {
+        tokenizer->next();
+        if (tokenizer->peek().isa(Token::IfType)) {
+            tokenizer->next();
+            expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
+            IRNode *econd = expr();
+            expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
+            IRNode *ebody = block();
+            elses.push_back(new PredicatedBlock(econd, ebody));
+        } else {
+            elseblock = block();
+        }
+    }
+    return new IfStatement(cond, body, elses, elseblock);
 }
 
 IRNode *Parser::forloop() {

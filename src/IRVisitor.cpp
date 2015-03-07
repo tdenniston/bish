@@ -28,8 +28,14 @@ void IRVisitor::visit(const ReturnStatement *node) {
 }
 
 void IRVisitor::visit(const IfStatement *node) {
-    node->condition->accept(this);
-    node->body->accept(this);
+    node->pblock->condition->accept(this);
+    node->pblock->body->accept(this);
+    for (std::vector<PredicatedBlock *>::const_iterator I = node->elses.begin(),
+             E = node->elses.end(); I != E; ++I) {
+        (*I)->condition->accept(this);
+        (*I)->body->accept(this);
+    }
+    if (node->elseblock) node->elseblock->accept(this);
 }
 
 void IRVisitor::visit(const ForLoop *node) {

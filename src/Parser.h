@@ -17,6 +17,7 @@ stmt ::= assign ';'
        | 'return' expr ';'
        | '#' any NEWLINE
        | 'if' '(' expr ')' block
+       | 'if' '(' expr ')' block { 'else if' '(' expr ')' block } 'else' block
        | 'for' '(' var 'in' num '..' num ')' block
        | 'def' var '(' varlist ')' block
        | block
@@ -55,6 +56,7 @@ public:
                    CommaType,
                    ReturnType,
                    IfType,
+                   ElseType,
                    DefType,
                    ForType,
                    InType,
@@ -130,6 +132,10 @@ public:
     
     static Token If() {
         return Token(IfType, "if");
+    }
+
+    static Token Else() {
+        return Token(ElseType, "else");
     }
 
     static Token Def() {

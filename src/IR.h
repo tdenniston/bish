@@ -94,11 +94,38 @@ public:
     ReturnStatement(IRNode *v) : value(v) {}
 };
 
-class IfStatement : public BaseIRNode<IfStatement> {
+// Helper class for IfStatement
+class PredicatedBlock {
 public:
     IRNode *condition;
     IRNode *body;
-    IfStatement(IRNode *c, IRNode *b) : condition(c), body(b) {}
+    PredicatedBlock(IRNode *c, IRNode *b) : condition(c), body(b) {}
+    PredicatedBlock(PredicatedBlock *p) {
+        condition = p->condition;
+        body = p->body;
+    }
+};
+
+class IfStatement : public BaseIRNode<IfStatement> {
+public:
+    PredicatedBlock *pblock;
+    std::vector<PredicatedBlock *> elses;
+    IRNode *elseblock;
+    IfStatement(IRNode *c, IRNode *b) {
+        pblock = new PredicatedBlock(c, b);
+        elseblock = NULL;
+    }
+    
+    IfStatement(IRNode *c, IRNode *b, IRNode *e) {
+        pblock = new PredicatedBlock(c, b);
+        elseblock = e;
+    }
+    
+    IfStatement(IRNode *c, IRNode *b, const std::vector<PredicatedBlock *> &es, IRNode *e) {
+        pblock = new PredicatedBlock(c, b);
+        elseblock = e;
+        elses.insert(elses.begin(), es.begin(), es.end());
+    }
 };
 
 class ForLoop : public BaseIRNode<ForLoop> {
