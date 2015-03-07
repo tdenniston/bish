@@ -539,10 +539,10 @@ IRNode *Parser::funcall(const std::string &name) {
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     std::vector<IRNode *> args;
     if (!tokenizer->peek().isa(Token::RParenType)) {
-        args.push_back(atom());
+        args.push_back(expr());
         while (tokenizer->peek().isa(Token::CommaType)) {
             tokenizer->next();
-            args.push_back(atom());
+            args.push_back(expr());
         }
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");

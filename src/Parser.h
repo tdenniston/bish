@@ -29,12 +29,12 @@ arith ::= arith '+' term | arith '-' term | term
 term ::= term '*' unary | term '/' unary | unary
 unary ::= '-' unary | factor
 factor ::= '( expr ')' | funcall | atom
-funcall ::= var '(' atomlist ')'
+funcall ::= var '(' exprlist ')'
 externcall ::= '@' '(' any ')'
 atom ::= var | NUMBER | '"' STRING '"' | 'true' | 'false'
 var ::= ALPHANUM
 varlist ::= var { ',' var }
-atomlist ::= atom { ',' atom }
+atomlist ::= expr { ',' expr }
 interp ::= { str | '$' var }
 */
 
