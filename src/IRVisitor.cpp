@@ -58,11 +58,6 @@ void IRVisitor::visit(const ExternCall *node) {
 
 }
 
-void IRVisitor::visit(const Comparison *node) {
-    node->a->accept(this);
-    node->b->accept(this);
-}
-
 void IRVisitor::visit(const Assignment *node) {
     node->variable->accept(this);
     node->value->accept(this);

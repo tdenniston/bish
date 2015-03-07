@@ -165,6 +165,20 @@ private:
             } else {
                 return ResultState(Token::Equals(), idx + 1);
             }
+        } else if (c == '!' && nextchar() == '=') {
+            return ResultState(Token::NotEquals(), idx + 2);
+        } else if (c == '<') {
+            if (nextchar() == '=') {
+                return ResultState(Token::LAngleEquals(), idx + 1);
+            } else {
+                return ResultState(Token::LAngle(), idx + 1);
+            }
+        } else if (c == '>') {
+            if (nextchar() == '=') {
+                return ResultState(Token::RAngleEquals(), idx + 2);
+            } else {            
+                return ResultState(Token::RAngle(), idx + 1);
+            }
         } else if (c == '+') {
             return ResultState(Token::Plus(), idx + 1);
         } else if (c == '-') {
@@ -311,6 +325,18 @@ bool Parser::is_binop_token(const Token &t) {
 // Return the binary Operator corresponding to the given token.
 BinOp::Operator Parser::get_binop_operator(const Token &t) {
     switch (t.type()) {
+    case Token::DoubleEqualsType:
+        return BinOp::Eq;
+    case Token::NotEqualsType:
+        return BinOp::NotEq;
+    case Token::LAngleType:
+        return BinOp::LT;
+    case Token::LAngleEqualsType:
+        return BinOp::LTE;
+    case Token::RAngleType:
+        return BinOp::GT;
+    case Token::RAngleEqualsType:
+        return BinOp::GTE;
     case Token::PlusType:
         return BinOp::Add;
     case Token::MinusType:
@@ -550,10 +576,24 @@ Variable *Parser::arg() {
 }
 
 IRNode *Parser::expr() {
-    IRNode *a = arith();
-    if (tokenizer->peek().isa(Token::DoubleEqualsType)) {
+    IRNode *a = relative();
+    Token t = tokenizer->peek();
+    if (t.isa(Token::DoubleEqualsType) || t.isa(Token::NotEqualsType)) {
         tokenizer->next();
-        a = new Comparison(a, arith());
+        a = new BinOp(get_binop_operator(t), a, relative());
+        t = tokenizer->peek();
+    }
+    return a;
+}
+
+IRNode *Parser::relative() {
+    IRNode *a = arith();
+    Token t = tokenizer->peek();
+    if (t.isa(Token::LAngleType) || t.isa(Token::LAngleEqualsType) ||
+        t.isa(Token::RAngleType) || t.isa(Token::RAngleEqualsType)) {
+        tokenizer->next();
+        a = new BinOp(get_binop_operator(t), a, arith());
+        t = tokenizer->peek();
     }
     return a;
 }

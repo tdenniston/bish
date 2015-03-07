@@ -20,7 +20,6 @@ public:
     virtual void visit(const Block *);
     virtual void visit(const Assignment *);
     virtual void visit(const IfStatement *);
-    virtual void visit(const Comparison *);
     virtual void visit(const BinOp *);
     virtual void visit(const UnaryOp *);
     virtual void visit(const Integer *);

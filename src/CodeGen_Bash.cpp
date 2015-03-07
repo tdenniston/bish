@@ -108,12 +108,6 @@ void CodeGen_Bash::visit(const ExternCall *n) {
     }
 }
 
-void CodeGen_Bash::visit(const Comparison *n) {
-    n->a->accept(this);
-    stream << " == ";
-    n->b->accept(this);
-}
-
 void CodeGen_Bash::visit(const Assignment *n) {
     stream << lookup_name(n->variable) << "=";
     enable_functioncall_wrap();
@@ -122,9 +116,45 @@ void CodeGen_Bash::visit(const Assignment *n) {
 }
 
 void CodeGen_Bash::visit(const BinOp *n) {
-    stream << "$((";
+    bool comparison = false;
+    switch (n->op) {
+    case BinOp::Eq:
+    case BinOp::NotEq:
+    case BinOp::LT:
+    case BinOp::LTE:
+    case BinOp::GT:
+    case BinOp::GTE:
+        comparison = true;
+        break;
+    case BinOp::Add:
+    case BinOp::Sub:
+    case BinOp::Mul:
+    case BinOp::Div:
+        comparison = false;
+        break;
+    }
+        
+    if (!comparison) stream << "$((";
     n->a->accept(this);
     switch (n->op) {
+    case BinOp::Eq:
+        stream << " == ";
+        break;
+    case BinOp::NotEq:
+        stream << " != ";
+        break;
+    case BinOp::LT:
+        stream << " < ";
+        break;
+    case BinOp::LTE:
+        stream << " <= ";
+        break;
+    case BinOp::GT:
+        stream << " > ";
+        break;
+    case BinOp::GTE:
+        stream << " >= ";
+        break;
     case BinOp::Add:
         stream << " + ";
         break;
@@ -139,7 +169,7 @@ void CodeGen_Bash::visit(const BinOp *n) {
         break;
     }
     n->b->accept(this);
-    stream << "))";
+    if (!comparison) stream << "))";
 }
 
 void CodeGen_Bash::visit(const UnaryOp *n) {

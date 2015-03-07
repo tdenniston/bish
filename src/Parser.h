@@ -21,7 +21,10 @@ stmt ::= assign ';'
        | 'def' var '(' varlist ')' block
        | block
 assign ::= var '=' expr
-expr ::= expr '==' arith | arith
+expr ::= expr '==' relative | expr '!=' relative | relative
+relative ::= relative '<' arith | relative '>' arith
+           | relative '<=' arith | relative '>=' arith
+           | arith
 arith ::= arith '+' term | arith '-' term | term
 term ::= term '*' unary | term '/' unary | unary
 unary ::= '-' unary | factor
@@ -58,6 +61,11 @@ public:
                    DoubleDotType,
                    EqualsType,
                    DoubleEqualsType,
+                   NotEqualsType,
+                   LAngleType,
+                   LAngleEqualsType,
+                   RAngleType,
+                   RAngleEqualsType,
                    PlusType,
                    MinusType,
                    StarType,
@@ -146,6 +154,26 @@ public:
 
     static Token DoubleEquals() {
         return Token(DoubleEqualsType, "==");
+    }
+
+    static Token NotEquals() {
+        return Token(NotEqualsType, "!=");
+    }
+
+    static Token LAngle() {
+        return Token(LAngleType, "<");
+    }
+
+    static Token LAngleEquals() {
+        return Token(LAngleEqualsType, "<=");
+    }
+
+    static Token RAngle() {
+        return Token(RAngleType, ">");
+    }
+
+    static Token RAngleEquals() {
+        return Token(DoubleEqualsType, ">=");
     }
     
     static Token Plus() {
@@ -237,6 +265,7 @@ private:
     Variable *var();
     Variable *arg();
     IRNode *expr();
+    IRNode *relative();
     IRNode *arith();
     IRNode *term();
     IRNode *unary();

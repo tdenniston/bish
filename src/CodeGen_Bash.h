@@ -44,7 +44,6 @@ public:
     virtual void visit(const Function *);
     virtual void visit(const FunctionCall *);
     virtual void visit(const ExternCall *);
-    virtual void visit(const Comparison *);
     virtual void visit(const Assignment *);
     virtual void visit(const BinOp *);
     virtual void visit(const UnaryOp *);

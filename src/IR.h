@@ -168,16 +168,9 @@ public:
     ExternCall(InterpolatedString *b) : body(b) {}
 };
 
-class Comparison : public BaseIRNode<Comparison> {
-public:
-    IRNode *a;
-    IRNode *b;
-    Comparison(IRNode *a_, IRNode *b_) : a(a_), b(b_) {}
-};
- 
 class BinOp : public BaseIRNode<BinOp> {
 public:
-    typedef enum { Add, Sub, Mul, Div } Operator;
+    typedef enum { Add, Sub, Mul, Div, Eq, NotEq, LT, LTE, GT, GTE } Operator;
     Operator op;
     IRNode *a, *b;
     BinOp(Operator op_, IRNode *a_, IRNode *b_) : op(op_), a(a_), b(b_) {}

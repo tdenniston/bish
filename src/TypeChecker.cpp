@@ -51,15 +51,6 @@ using namespace Bish;
 //     node->body->accept(this);
 // }
 
-// void TypeChecker::visit(const Comparison *node) {
-//     node->a->accept(this);
-//     node->b->accept(this);
-//     SymbolTableEntry *ea = lookup(node->a);
-//     SymbolTableEntry *eb = lookup(node->b);
-//     assert(ea && eb);
-//     assert(ea->type == eb->type);
-// }
-
 // void TypeChecker::visit(const BinOp *node) {
 //     node->a->accept(this);
 //     node->b->accept(this);

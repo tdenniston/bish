@@ -13,7 +13,6 @@ class ForLoop;
 class Function;
 class FunctionCall;
 class ExternCall;
-class Comparison;
 class Assignment;
 class BinOp;
 class UnaryOp;
@@ -34,7 +33,6 @@ public:
     virtual void visit(const IfStatement *);
     virtual void visit(const ReturnStatement *);
     virtual void visit(const ForLoop *);
-    virtual void visit(const Comparison *);
     virtual void visit(const Assignment *);
     virtual void visit(const BinOp *);
     virtual void visit(const UnaryOp *);
