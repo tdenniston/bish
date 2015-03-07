@@ -41,7 +41,9 @@ void CodeGen_Bash::visit(const Variable *n) {
 
 void CodeGen_Bash::visit(const ReturnStatement *n) {
     stream << "echo ";
+    enable_functioncall_wrap();
     n->value->accept(this);
+    disable_functioncall_wrap();
     stream << "; exit";
 }
 
