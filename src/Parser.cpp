@@ -415,7 +415,7 @@ Block *Parser::block() {
     push_symbol_table(new SymbolTable());
     expect(tokenizer->peek(), Token::LBraceType, "Expected block to begin with '{'");
     do {
-        if (tokenizer->peek().isa(Token::SharpType)) {
+        while (tokenizer->peek().isa(Token::SharpType)) {
             tokenizer->scan_until('\n');
         }
         IRNode *s = stmt();
