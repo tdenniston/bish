@@ -42,6 +42,7 @@ void CodeGen_Bash::visit(const Variable *n) {
 void CodeGen_Bash::visit(const ReturnStatement *n) {
     stream << "echo ";
     n->value->accept(this);
+    stream << "; exit";
 }
 
 void CodeGen_Bash::visit(const IfStatement *n) {
