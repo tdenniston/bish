@@ -18,7 +18,7 @@ stmt ::= assign ';'
        | '#' any NEWLINE
        | 'if' '(' expr ')' block
        | 'if' '(' expr ')' block { 'else if' '(' expr ')' block } 'else' block
-       | 'for' '(' var 'in' num '..' num ')' block
+       | 'for' '(' var 'in' atom '..' atom ')' block
        | 'def' var '(' varlist ')' block
        | block
 assign ::= var '=' expr

@@ -131,9 +131,9 @@ public:
 class ForLoop : public BaseIRNode<ForLoop> {
 public:
     Variable *variable;
-    Integer *lower, *upper;
+    IRNode *lower, *upper;
     IRNode *body;
-    ForLoop(Variable *v, Integer *l, Integer *u, IRNode *b) :
+    ForLoop(Variable *v, IRNode *l, IRNode *u, IRNode *b) :
         variable(v), lower(l), upper(u), body(b) {}
 };
 

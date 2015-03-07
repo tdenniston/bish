@@ -75,9 +75,11 @@ void CodeGen_Bash::visit(const IfStatement *n) {
 
 void CodeGen_Bash::visit(const ForLoop *n) {
     stream << "for " << lookup_name(n->variable) << " in ";
-    for (int i = n->lower->value; i < n->upper->value; i++) {
-      stream << i << " ";
-    }
+    stream << "$(seq ";
+    n->lower->accept(this);
+    stream << " ";
+    n->upper->accept(this);
+    stream << ")";
     stream << "; do\n";
     disable_block_braces();
     n->body->accept(this);
