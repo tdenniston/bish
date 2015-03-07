@@ -435,8 +435,11 @@ IRNode *Parser::stmt() {
     switch (t.type()) {
     case Token::LBraceType:
         return block();
-    case Token::AtType:
-        return externcall();
+    case Token::AtType: {
+        IRNode *a = externcall();
+        expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+        return a;
+    }
     case Token::ReturnType:
         return returnstmt();
     case Token::IfType:
@@ -486,7 +489,6 @@ IRNode *Parser::externcall() {
         }
     } while (!tokenizer->peek().isa(Token::RParenType));
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
-    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     return new ExternCall(body);
 }
 
@@ -654,6 +656,8 @@ IRNode *Parser::factor() {
         IRNode *e = expr();
         expect(tokenizer->peek(), Token::RParenType, "Unmatched '('");
         return e;
+    } else if (tokenizer->peek().isa(Token::AtType)) {
+        return externcall();
     } else {
         IRNode *a = atom();
         if (tokenizer->peek().isa(Token::LParenType)) {

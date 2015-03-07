@@ -117,6 +117,7 @@ void CodeGen_Bash::visit(const FunctionCall *n) {
 }
 
 void CodeGen_Bash::visit(const ExternCall *n) {
+    if (should_functioncall_wrap()) stream << "$(";
     for (InterpolatedString::const_iterator I = n->body->begin(), E = n->body->end();
          I != E; ++I) {
         if ((*I).is_str()) {
@@ -126,6 +127,7 @@ void CodeGen_Bash::visit(const ExternCall *n) {
             visit((*I).var());
         }
     }
+    if (should_functioncall_wrap()) stream << ")";
 }
 
 void CodeGen_Bash::visit(const Assignment *n) {
