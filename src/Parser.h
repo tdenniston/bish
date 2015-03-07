@@ -26,7 +26,7 @@ unary ::= '-' unary | factor
 factor ::= '( expr ')' | funcall | atom
 funcall ::= var '(' atomlist ')'
 externcall ::= '@' '(' any ')'
-atom ::= var | NUMBER | '"' STRING '"'
+atom ::= var | NUMBER | '"' STRING '"' | 'true' | 'false'
 var ::= ALPHANUM
 varlist ::= var { ',' var }
 atomlist ::= atom { ',' atom }
@@ -58,6 +58,8 @@ public:
                    SlashType,
                    QuoteType,
                    SymbolType,
+                   TrueType,
+                   FalseType,
                    IntType,
                    FractionalType,
                    EOSType,
@@ -143,7 +145,15 @@ public:
     static Token Quote() {
       return Token(QuoteType, "\"");
     }
-    
+
+    static Token True() {
+        return Token(TrueType, "true");
+    }
+
+    static Token False() {
+        return Token(FalseType, "false");
+    }
+
     static Token Symbol(const std::string &s) {
         return Token(SymbolType, s);
     }

@@ -224,6 +224,10 @@ private:
             return Token::If();
         } else if (s.compare(Token::Def().value()) == 0) {
             return Token::Def();
+        } else if (s.compare(Token::True().value()) == 0) {
+            return Token::True();
+        }  else if (s.compare(Token::False().value()) == 0) {
+            return Token::False();
         } else {
             return Token::Symbol(s);
         }
@@ -572,6 +576,10 @@ IRNode *Parser::atom() {
     switch(t.type()) {
     case Token::SymbolType:
         return lookup_or_new_var(t.value());
+    case Token::TrueType:
+        return new Boolean(true);
+    case Token::FalseType:
+        return new Boolean(false);
     case Token::IntType:
         return new Integer(t.value());
     case Token::FractionalType:
