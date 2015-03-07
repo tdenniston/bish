@@ -32,7 +32,7 @@ void CodeGen_Bash::visit(const Block *n) {
         stream << ";\n";
     }
     indent_level--;
-    if (should_print_block_braces()) stream << "}\n";
+    if (should_print_block_braces()) stream << "}\n\n";
 }
 
 void CodeGen_Bash::visit(const Variable *n) {
