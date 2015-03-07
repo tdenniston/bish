@@ -5,16 +5,8 @@
 #include <string>
 #include <vector>
 #include "IRVisitor.h"
+#include "Util.h"
 #include "Type.h"
-
-namespace {
-template <typename T>
-T convert_string(const std::string &s) {
-    T t;
-    std::istringstream(s) >> t;
-    return t;
-}
-};
 
 namespace Bish {
 

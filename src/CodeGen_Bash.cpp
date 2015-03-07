@@ -29,7 +29,7 @@ void CodeGen_Bash::visit(const Block *n) {
 }
 
 void CodeGen_Bash::visit(const Variable *n) {
-    stream << "$" << n->name;
+    stream << "$" << lookup_name(n);
 }
 
 void CodeGen_Bash::visit(const IfStatement *n) {
@@ -47,10 +47,17 @@ void CodeGen_Bash::visit(const IfStatement *n) {
 
 void CodeGen_Bash::visit(const Function *n) {
     stream << "function " << n->name << " ";
-    // Bash doesn't allow named arguments to functions.
-    // We'll have to translate to positional arguments.
     stream << "() ";
+    LetScope *s = new LetScope();
+    push_let_scope(s);
+    // Bash doesn't allow named arguments to functions.
+    // We have to translate to positional arguments.
+    unsigned i = 1;
+    for (std::vector<Variable *>::const_iterator I = n->args.begin(), E = n->args.end(); I != E; ++I, ++i) {
+      s->add(*I, convert_string(i));
+    }
     n->body->accept(this);
+    pop_let_scope();
 }
 
 void CodeGen_Bash::visit(const FunctionCall *n) {
@@ -69,7 +76,7 @@ void CodeGen_Bash::visit(const Comparison *n) {
 }
 
 void CodeGen_Bash::visit(const Assignment *n) {
-    stream << n->variable->name << "=";
+    stream << lookup_name(n->variable) << "=";
     n->value->accept(this);
 }
 

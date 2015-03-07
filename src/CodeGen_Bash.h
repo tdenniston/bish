@@ -1,11 +1,32 @@
 #ifndef __BISH_CODEGEN_BASH_H__
 #define __BISH_CODEGEN_BASH_H__
 
+#include <stack>
+#include <map>
 #include <iostream>
 #include "IR.h"
 #include "IRVisitor.h"
 
 namespace Bish {
+
+class LetScope {
+public:
+    void add(const Variable *v, const std::string &newname) {
+        rename[v] = newname;
+    }
+
+    bool lookup(const Variable *v, std::string &out) {
+        std::map<const Variable *, std::string>::iterator I = rename.find(v);
+        if (I != rename.end()) {
+            out = I->second;
+            return true;
+        } else {
+            return false;
+        }
+    }
+private:
+    std::map<const Variable *, std::string> rename;
+};
   
 class CodeGen_Bash : public IRVisitor {
 public:
@@ -25,6 +46,7 @@ public:
     virtual void visit(const String *);
     virtual void visit(const Boolean *);
 private:
+    std::stack<LetScope *> let_stack;
     std::ostream &stream;
     unsigned indent_level;
     bool block_print_braces;
@@ -37,6 +59,37 @@ private:
     inline void enable_variable_dollar() { variable_print_dollar = true; }
     inline bool should_print_variable_dollar() const { return variable_print_dollar; }
     void indent();
+    void push_let_scope(LetScope *s) { let_stack.push(s); }
+    LetScope *pop_let_scope() { LetScope *s = let_stack.top(); let_stack.pop(); return s; }
+
+    bool lookup_let(const Variable *v, std::string &out) {
+        std::stack<LetScope *> aux;
+        std::string tmp;
+        bool found = false;
+        while (!let_stack.empty()) {
+            if (let_stack.top()->lookup(v, tmp)) {
+                out = tmp;
+                found = true;
+                break;
+            }
+            aux.push(let_stack.top());
+            let_stack.pop();
+        }
+        while (!aux.empty()) {
+            let_stack.push(aux.top());
+            aux.pop();
+        }
+        return found;
+    }
+
+    std::string lookup_name(const Variable *v) {
+        std::string tmp;
+        if (lookup_let(v, tmp)) {
+            return tmp;
+        } else {
+            return v->name;
+        }
+    }
 };
 
 }

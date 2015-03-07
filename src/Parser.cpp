@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iostream>
 
+#include "Util.h"
 #include "Parser.h"
 #include "TypeChecker.h"
 
