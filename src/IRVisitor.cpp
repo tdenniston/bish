@@ -28,6 +28,13 @@ void IRVisitor::visit(const IfStatement *node) {
     node->body->accept(this);
 }
 
+void IRVisitor::visit(const ForLoop *node) {
+    node->variable->accept(this);
+    node->lower->accept(this);
+    node->upper->accept(this);
+    node->body->accept(this);
+}
+
 void IRVisitor::visit(const Function *node) {
     for (std::vector<Variable *>::const_iterator I = node->args.begin(),
              E = node->args.end(); I != E; ++I) {

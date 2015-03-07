@@ -95,6 +95,15 @@ public:
     IfStatement(IRNode *c, IRNode *b) : condition(c), body(b) {}
 };
 
+class ForLoop : public BaseIRNode<ForLoop> {
+public:
+    Variable *variable;
+    Integer *lower, *upper;
+    IRNode *body;
+    ForLoop(Variable *v, Integer *l, Integer *u, IRNode *b) :
+        variable(v), lower(l), upper(u), body(b) {}
+};
+
 class FunctionCall : public BaseIRNode<FunctionCall> {
 public:
     std::string name;

@@ -35,6 +35,7 @@ public:
     virtual void visit(const Block *);
     virtual void visit(const Variable *);
     virtual void visit(const IfStatement *);
+    virtual void visit(const ForLoop *);
     virtual void visit(const Function *);
     virtual void visit(const FunctionCall *);
     virtual void visit(const ExternCall *);

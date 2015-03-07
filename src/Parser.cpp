@@ -155,6 +155,8 @@ private:
             return ResultState(Token::Sharp(), idx + 1);
         } else if (c == ';') {
             return ResultState(Token::Semicolon(), idx + 1);
+        } else if (c == '.' && nextchar() == '.') {
+            return ResultState(Token::DoubleDot(), idx + 2);
         } else if (c == ',') {
             return ResultState(Token::Comma(), idx + 1);
         } else if (c == '=') {
@@ -224,6 +226,10 @@ private:
             return Token::If();
         } else if (s.compare(Token::Def().value()) == 0) {
             return Token::Def();
+        } else if (s.compare(Token::For().value()) == 0) {
+            return Token::For();
+        } else if (s.compare(Token::In().value()) == 0) {
+            return Token::In();
         } else if (s.compare(Token::True().value()) == 0) {
             return Token::True();
         }  else if (s.compare(Token::False().value()) == 0) {
@@ -402,6 +408,8 @@ IRNode *Parser::stmt() {
         return externcall();
     case Token::IfType:
         return ifstmt();
+    case Token::ForType:
+        return forloop();
     case Token::DefType: {
         Function *f = functiondef();
         module_stack.top()->add_function(f);
@@ -456,6 +464,19 @@ IRNode *Parser::ifstmt() {
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     IRNode *body = block();
     return new IfStatement(cond, body);
+}
+
+IRNode *Parser::forloop() {
+    expect(tokenizer->peek(), Token::ForType, "Expected for statement");
+    expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
+    Variable *v = var();
+    expect(tokenizer->peek(), Token::InType, "Expected keyword 'in'");
+    Integer *lower = static_cast<Integer*>(atom());
+    expect(tokenizer->peek(), Token::DoubleDotType, "Expected '..' range indicator");
+    Integer *upper = static_cast<Integer*>(atom());
+    expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
+    IRNode *body = block();
+    return new ForLoop(v, lower, upper, body);
 }
 
 Function *Parser::functiondef() {

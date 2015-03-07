@@ -16,6 +16,7 @@ stmt ::= assign ';'
        | externcall ';'
        | '#' any NEWLINE
        | 'if' '(' expr ')' block
+       | 'for' '(' var 'in' num '..' num ')' block
        | 'def' var '(' varlist ')' block
        | block
 assign ::= var '=' expr
@@ -50,6 +51,9 @@ public:
                    CommaType,
                    IfType,
                    DefType,
+                   ForType,
+                   InType,
+                   DoubleDotType,
                    EqualsType,
                    DoubleEqualsType,
                    PlusType,
@@ -116,6 +120,18 @@ public:
 
     static Token Def() {
         return Token(DefType, "def");
+    }
+
+    static Token For() {
+        return Token(ForType, "for");
+    }
+
+    static Token In() {
+        return Token(InType, "in");
+    }
+
+    static Token DoubleDot() {
+        return Token(DoubleDotType, "..");
     }
 
     static Token Equals() {
@@ -205,6 +221,7 @@ private:
     IRNode *stmt();
     IRNode *otherstmt();
     IRNode *ifstmt();
+    IRNode *forloop();
     Function *functiondef();
     IRNode *externcall();
     IRNode *funcall(const std::string &name);

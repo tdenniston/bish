@@ -8,6 +8,7 @@ class Module;
 class Block;
 class Variable;
 class IfStatement;
+class ForLoop;
 class Function;
 class FunctionCall;
 class ExternCall;
@@ -30,6 +31,7 @@ public:
     virtual void visit(const FunctionCall *);
     virtual void visit(const ExternCall *);
     virtual void visit(const IfStatement *);
+    virtual void visit(const ForLoop *);
     virtual void visit(const Comparison *);
     virtual void visit(const Assignment *);
     virtual void visit(const BinOp *);
