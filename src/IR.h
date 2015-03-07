@@ -108,10 +108,49 @@ public:
     }
 };
 
+// Helper class to represent interpolated strings.
+class InterpolatedString {
+public:
+    class Item {
+    public:
+        Item(const std::string &s) : str_(s), var_(NULL), ty(STR) {}
+        Item(const Variable *v) : var_(v), ty(VAR) {}
+        bool is_str() const { return ty == STR; }
+        bool is_var() const { return ty == VAR; }
+        const std::string &str() const { return str_; }
+        const Variable *var() const { return var_; }
+    private:
+        typedef enum { STR, VAR } Type;
+        Type ty;
+        std::string str_;
+        const Variable *var_;
+    };
+    
+    void push_str(const std::string &s) {
+        items.push_back(Item(s));
+    }
+
+    void push_var(const Variable *v) {
+        items.push_back(Item(v));
+    }
+    
+    std::string interpolate() {
+        return "";
+    }
+
+    typedef std::vector<Item>::const_iterator const_iterator;
+    const_iterator begin() { return items.begin(); }
+    const_iterator end() { return items.end(); }
+private:
+    std::string body;
+    std::vector<const Variable *> to_interpolate;
+    std::vector<Item> items;
+};
+
 class ExternCall : public BaseIRNode<ExternCall> {
 public:
-    std::string argstr;
-    ExternCall(const std::string &a) : argstr(a) {}
+    InterpolatedString *body;
+    ExternCall(InterpolatedString *b) : body(b) {}
 };
 
 class Comparison : public BaseIRNode<Comparison> {

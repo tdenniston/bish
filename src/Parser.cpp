@@ -59,6 +59,20 @@ public:
 
     // Return the substring beginning at the current index and
     // continuing  until the first occurrence of a token of type
+    // a or b.
+    std::string scan_until(Token::Type type_a, Token::Type type_b) {
+        unsigned start = idx;
+        Token t = peek();
+        while (!(t.isa(type_a) || t.isa(type_b)) && !eos()) {
+            next();
+            t = peek();
+        }
+        unsigned len = idx - start;
+        return text.substr(start, len);
+    }
+    
+    // Return the substring beginning at the current index and
+    // continuing  until the first occurrence of a token of type
     // 'type'.
     std::string scan_until(Token::Type type) {
         unsigned start = idx;
@@ -124,6 +138,8 @@ private:
             return ResultState(Token::RBrace(), idx + 1);
         } else if (c == '@') {
             return ResultState(Token::At(), idx + 1);
+        } else if (c == '$') {
+            return ResultState(Token::Dollar(), idx + 1);
         } else if (c == ';') {
             return ResultState(Token::Semicolon(), idx + 1);
         } else if (c == ',') {
@@ -398,10 +414,19 @@ IRNode *Parser::otherstmt() {
 IRNode *Parser::externcall() {
     expect(tokenizer->peek(), Token::AtType, "Expected '@' to begin extern call.");
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
-    std::string str = tokenizer->scan_until(Token::RParenType);
+    InterpolatedString *body = new InterpolatedString();
+    do {
+        std::string str = tokenizer->scan_until(Token::DollarType, Token::RParenType);
+        body->push_str(str);
+        if (tokenizer->peek().isa(Token::DollarType)) {
+            tokenizer->next();
+            Variable *v = var();
+            body->push_var(v);
+        }
+    } while (!tokenizer->peek().isa(Token::RParenType));
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
-    return new ExternCall(str);
+    return new ExternCall(body);
 }
 
 IRNode *Parser::ifstmt() {

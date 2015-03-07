@@ -13,7 +13,7 @@ module ::= block
 block ::= '{' { stmt } '}'
 stmt ::= assign ';'
        | funcall ';'
-       | '@' '(' any ')' ';'
+       | externcall ';'
        | 'if' '(' expr ')' block
        | 'def' var '(' varlist ')' block
        | block
@@ -24,11 +24,12 @@ term ::= term '*' unary | term '/' unary | unary
 unary ::= '-' unary | factor
 factor ::= '( expr ')' | funcall | atom
 funcall ::= var '(' atomlist ')'
+externcall ::= '@' '(' any ')'
 atom ::= var | NUMBER | '"' STRING '"'
-var ::= STRING
+var ::= ALPHANUM
 varlist ::= var { ',' var }
 atomlist ::= atom { ',' atom }
-any ::= { * }
+interp ::= { str | '$' var }
 */
 
 namespace Bish {
@@ -42,6 +43,7 @@ public:
                    LBraceType,
                    RBraceType,
                    AtType,
+                   DollarType,
                    SemicolonType,
                    CommaType,
                    IfType,
@@ -86,6 +88,10 @@ public:
 
     static Token At() {
         return Token(AtType, "@");
+    }
+
+    static Token Dollar() {
+        return Token(DollarType, "$");
     }
     
     static Token Semicolon() {

@@ -77,7 +77,15 @@ void CodeGen_Bash::visit(const FunctionCall *n) {
 }
 
 void CodeGen_Bash::visit(const ExternCall *n) {
-    stream << n->argstr;
+    for (InterpolatedString::const_iterator I = n->body->begin(), E = n->body->end();
+         I != E; ++I) {
+        if ((*I).is_str()) {
+            stream << (*I).str();
+        } else {
+            assert((*I).is_var());
+            visit((*I).var());
+        }
+    }
 }
 
 void CodeGen_Bash::visit(const Comparison *n) {
