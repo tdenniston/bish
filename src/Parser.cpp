@@ -122,6 +122,8 @@ private:
             return ResultState(Token::LBrace(), idx + 1);
         } else if (c == '}') {
             return ResultState(Token::RBrace(), idx + 1);
+        } else if (c == '@') {
+            return ResultState(Token::At(), idx + 1);
         } else if (c == ';') {
             return ResultState(Token::Semicolon(), idx + 1);
         } else if (c == ',') {
@@ -360,6 +362,8 @@ IRNode *Parser::stmt() {
     switch (t.type()) {
     case Token::LBraceType:
         return block();
+    case Token::AtType:
+        return externcall();
     case Token::IfType:
         return ifstmt();
     case Token::DefType: {
@@ -389,6 +393,15 @@ IRNode *Parser::otherstmt() {
     }
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     return s;
+}
+
+IRNode *Parser::externcall() {
+    expect(tokenizer->peek(), Token::AtType, "Expected '@' to begin extern call.");
+    expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
+    std::string str = tokenizer->scan_until(Token::RParenType);
+    expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
+    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    return new ExternCall(str);
 }
 
 IRNode *Parser::ifstmt() {

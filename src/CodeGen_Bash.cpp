@@ -69,6 +69,10 @@ void CodeGen_Bash::visit(const FunctionCall *n) {
     }
 }
 
+void CodeGen_Bash::visit(const ExternCall *n) {
+    stream << n->argstr;
+}
+
 void CodeGen_Bash::visit(const Comparison *n) {
     n->a->accept(this);
     stream << " == ";

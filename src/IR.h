@@ -105,6 +105,12 @@ public:
     }
 };
 
+class ExternCall : public BaseIRNode<ExternCall> {
+public:
+    std::string argstr;
+    ExternCall(const std::string &a) : argstr(a) {}
+};
+
 class Comparison : public BaseIRNode<Comparison> {
 public:
     IRNode *a;

@@ -43,6 +43,10 @@ void IRVisitor::visit(const FunctionCall *node) {
     }
 }
 
+void IRVisitor::visit(const ExternCall *node) {
+
+}
+
 void IRVisitor::visit(const Comparison *node) {
     node->a->accept(this);
     node->b->accept(this);

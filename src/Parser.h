@@ -13,6 +13,7 @@ module ::= block
 block ::= '{' { stmt } '}'
 stmt ::= assign ';'
        | funcall ';'
+       | '@' '(' any ')' ';'
        | 'if' '(' expr ')' block
        | 'def' var '(' varlist ')' block
        | block
@@ -27,6 +28,7 @@ atom ::= var | NUMBER | '"' STRING '"'
 var ::= STRING
 varlist ::= var { ',' var }
 atomlist ::= atom { ',' atom }
+any ::= { * }
 */
 
 namespace Bish {
@@ -39,6 +41,7 @@ public:
                    RParenType,
                    LBraceType,
                    RBraceType,
+                   AtType,
                    SemicolonType,
                    CommaType,
                    IfType,
@@ -81,6 +84,10 @@ public:
         return Token(RBraceType, "}");
     }
 
+    static Token At() {
+        return Token(AtType, "@");
+    }
+    
     static Token Semicolon() {
         return Token(SemicolonType, ";");
     }
@@ -177,6 +184,7 @@ private:
     IRNode *otherstmt();
     IRNode *ifstmt();
     Function *functiondef();
+    IRNode *externcall();
     IRNode *funcall(const std::string &name);
     IRNode *assignment(const std::string &name);
     Variable *var();
