@@ -215,6 +215,7 @@ private:
     SymbolTable *pop_symbol_table();
     IRNode *lookup(const std::string &name);
     Variable *lookup_or_new_var(const std::string &name);
+    void remove_from_symbol_table(const std::string &name);
       
     Module *module();
     Block *block();

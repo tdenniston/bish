@@ -19,6 +19,7 @@ public:
     SymbolTable() : parent(NULL) {}
     SymbolTable(SymbolTable *p) : parent(p) {}
     void insert(const std::string &name, IRNode *n, Type ty);
+    void remove(const std::string &name);
     SymbolTableEntry *lookup(const std::string &name) const;
     void propagate(const std::string &a, const std::string &b);
     bool contains(const std::string &v) const;

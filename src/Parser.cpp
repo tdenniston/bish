@@ -586,7 +586,13 @@ IRNode *Parser::factor() {
         expect(tokenizer->peek(), Token::RParenType, "Unmatched '('");
         return e;
     } else {
-        return atom();
+        IRNode *a = atom();
+        if (tokenizer->peek().isa(Token::LParenType)) {
+            Variable *v = static_cast<Variable*>(a);
+            a = funcall(v->name);
+            remove_from_symbol_table(v->name);
+        }
+        return a;
     }
 }
 
@@ -652,6 +658,10 @@ IRNode *Parser::lookup(const std::string &name) {
         aux.pop();
     }
     return result;
+}
+
+void Parser::remove_from_symbol_table(const std::string &name) {
+    symbol_table_stack.top()->remove(name);
 }
 
 }
