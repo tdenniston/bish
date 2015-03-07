@@ -109,7 +109,9 @@ void CodeGen_Bash::visit(const FunctionCall *n) {
     stream << n->name;
     for (int i = 0; i < nargs; i++) {
         stream << " ";
+        bool old = enable_functioncall_wrap();
         n->args[i]->accept(this);
+        set_functioncall_wrap(old);
     }
     if (should_functioncall_wrap()) stream << ")";
 }
