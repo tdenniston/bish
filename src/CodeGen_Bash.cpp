@@ -36,7 +36,9 @@ void CodeGen_Bash::visit(const Block *n) {
 }
 
 void CodeGen_Bash::visit(const Variable *n) {
+    if (should_quote_variable()) stream << "\"";
     stream << "$" << lookup_name(n);
+    if (should_quote_variable()) stream << "\"";
 }
 
 void CodeGen_Bash::visit(const ReturnStatement *n) {
@@ -157,6 +159,7 @@ void CodeGen_Bash::visit(const BinOp *n) {
     }
         
     if (!comparison) stream << "$((";
+    disable_quote_variable();
     n->a->accept(this);
     switch (n->op) {
     case BinOp::Eq:
@@ -192,6 +195,7 @@ void CodeGen_Bash::visit(const BinOp *n) {
     }
     n->b->accept(this);
     if (!comparison) stream << "))";
+    enable_quote_variable();
 }
 
 void CodeGen_Bash::visit(const UnaryOp *n) {

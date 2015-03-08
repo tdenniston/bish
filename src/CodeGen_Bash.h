@@ -34,6 +34,7 @@ public:
         indent_level = 0;
         block_print_braces = true;
         functioncall_wrap = false;
+        quote_variable = true;
     }
     virtual void visit(const Module *);
     virtual void visit(const Block *);
@@ -57,6 +58,7 @@ private:
     unsigned indent_level;
     bool block_print_braces;
     bool functioncall_wrap;
+    bool quote_variable;
 
     inline void disable_block_braces() { block_print_braces = false; }
     inline void enable_block_braces() { block_print_braces = true; }
@@ -65,6 +67,10 @@ private:
     inline bool enable_functioncall_wrap() { bool v = functioncall_wrap; functioncall_wrap = true; return v; }
     inline void set_functioncall_wrap(bool v) { functioncall_wrap = v; }
     inline bool should_functioncall_wrap() const { return functioncall_wrap; }
+    inline void disable_quote_variable() { quote_variable = false; }
+    inline void enable_quote_variable() { quote_variable = true; }
+    inline bool should_quote_variable() const { return quote_variable; }
+
     void indent();
     void push_let_scope(LetScope *s) { let_stack.push(s); }
     LetScope *pop_let_scope() { LetScope *s = let_stack.top(); let_stack.pop(); return s; }
