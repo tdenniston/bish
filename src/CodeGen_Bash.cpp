@@ -51,7 +51,9 @@ void CodeGen_Bash::visit(const ReturnStatement *n) {
 
 void CodeGen_Bash::visit(const IfStatement *n) {
     stream << "if [[ ";
+    enable_functioncall_wrap();
     n->pblock->condition->accept(this);
+    disable_functioncall_wrap();
     stream << " ]]; then\n";
     disable_block_braces();
     n->pblock->body->accept(this);
@@ -60,7 +62,9 @@ void CodeGen_Bash::visit(const IfStatement *n) {
              E = n->elses.end(); I != E; ++I) {
         indent();
         stream << "elif [[ ";
+        enable_functioncall_wrap();
         (*I)->condition->accept(this);
+        disable_functioncall_wrap();
         stream << " ]]; then\n";
         (*I)->body->accept(this);
     }
