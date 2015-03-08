@@ -79,6 +79,15 @@ public:
 
     void set_main(Function *f);
     void add_function(Function *f);
+    Function *get_function(const std::string &name) const {
+        for (std::vector<Function *>::const_iterator I = functions.begin(),
+                 E = functions.end(); I != E; ++I) {
+            if (name.compare((*I)->name) == 0) {
+                return *I;
+            }
+        }
+        return NULL;
+    }
 };
 
 class Assignment : public BaseIRNode<Assignment> {

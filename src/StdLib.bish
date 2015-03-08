@@ -1,0 +1,7 @@
+def print(s) {
+  @(echo $s);
+}
+
+def exists(file) {
+  return @([[ -e $file ]]);
+}
