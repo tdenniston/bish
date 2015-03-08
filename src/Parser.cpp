@@ -52,29 +52,42 @@ public:
     // Return the substring beginning at the current index and
     // continuing  until the first occurrence of a token of type
     // a or b.
-    std::string scan_until(Token::Type type_a, Token::Type type_b) {
+    std::string scan_until(Token a, Token b) {
         unsigned start = idx;
-        Token t = peek();
-        while (!(t.isa(type_a) || t.isa(type_b)) && !eos()) {
-            next();
-            t = peek();
+        char ca = a.value()[0], cb = b.value()[0];
+        unsigned lena = a.value().size(), lenb = b.value().size();
+        while (!eos()) {
+            while (!eos() && curchar() != ca && curchar() != cb) {
+                idx++;
+            }
+            if (lookahead(lena).compare(a.value()) == 0) {
+                idx += lena - 1;
+                break;
+            } else if (lookahead(lenb).compare(b.value()) == 0) {
+                idx += lenb - 1;
+                break;
+            }
         }
-        unsigned len = idx - start;
-        return text.substr(start, len);
+        return text.substr(start, idx - start);
     }
     
     // Return the substring beginning at the current index and
     // continuing  until the first occurrence of a token of type
-    // 'type'.
-    std::string scan_until(Token::Type type) {
+    // t.
+    std::string scan_until(Token t) {
         unsigned start = idx;
-        Token t = peek();
-        while (!t.isa(type) && !eos()) {
-            next();
-            t = peek();
+        char c = t.value()[0];
+        unsigned len = t.value().size();
+        while (!eos()) {
+            while (!eos() && curchar() != c) {
+                idx++;
+            }
+            if (lookahead(len).compare(t.value()) == 0) {
+                idx += len - 1;
+                break;
+            }
         }
-        unsigned len = idx - start;
-        return text.substr(start, len);
+        return text.substr(start, idx - start);
     }
 
     // Return the substring beginning at the current index and
@@ -109,6 +122,11 @@ private:
 
     inline char nextchar() const {
         return text[idx + 1];
+    }
+
+    inline std::string lookahead(int n) const {
+        if (idx + n >= text.length()) return "";
+        return text.substr(idx, n);
     }
 
     // Return true if the tokenizer is at "end of string".
@@ -481,7 +499,7 @@ IRNode *Parser::externcall() {
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     InterpolatedString *body = new InterpolatedString();
     do {
-        std::string str = tokenizer->scan_until(Token::DollarType, Token::RParenType);
+        std::string str = tokenizer->scan_until(Token::Dollar(), Token::RParen());
         body->push_str(str);
         if (tokenizer->peek().isa(Token::DollarType)) {
             tokenizer->next();
@@ -686,7 +704,7 @@ IRNode *Parser::atom() {
     case Token::FractionalType:
         return new Fractional(t.value());
     case Token::QuoteType: {
-        std::string str = tokenizer->scan_until(Token::QuoteType);
+        std::string str = tokenizer->scan_until(Token::Quote());
         expect(tokenizer->peek(), Token::QuoteType, "Unmatched '\"'");
         return new String(str);
     }
