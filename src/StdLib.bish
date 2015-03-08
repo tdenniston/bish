@@ -19,6 +19,11 @@ def success() {
     }
 }
 
+# List files.
+def ls() {
+    return @(ls);
+}
+
 # Change directories.
 def cd(path) {
     @(cd $path);
