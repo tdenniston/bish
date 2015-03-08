@@ -40,6 +40,7 @@ void link_stdlib(Bish::Module *m) {
     }
     FindFunctionCalls find(stdlib_functions);
     m->accept(&find);
+    stdlib->accept(&find);
     std::set<std::string> to_link = find.names();
     for (std::set<std::string>::iterator I = to_link.begin(), E = to_link.end();
          I != E; ++I) {
