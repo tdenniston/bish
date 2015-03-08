@@ -7,7 +7,7 @@
 #include "IRVisitor.h"
 
 const std::string BISH_VERSION = "0.1";
-const std::string BISH_URL = "BISH-URL";
+const std::string BISH_URL = "https://github.com/tdenniston/bish";
 const std::string STDLIB_PATH = "src/StdLib.bish";
 
 class FindFunctionCalls : public Bish::IRVisitor {
@@ -44,8 +44,11 @@ void link_stdlib(Bish::Module *m) {
     }
     FindFunctionCalls find(stdlib_functions);
     m->accept(&find);
-    stdlib->accept(&find);
+    FindFunctionCalls find_stdlib(find.names());
+    stdlib->accept(&find_stdlib);
     std::set<std::string> to_link = find.names();
+    std::set<std::string> to_link_stdlib = find_stdlib.names();
+    to_link.insert(to_link_stdlib.begin(), to_link_stdlib.end());
     for (std::set<std::string>::iterator I = to_link.begin(), E = to_link.end();
          I != E; ++I) {
         Bish::Function *f = stdlib->get_function(*I);
