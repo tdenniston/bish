@@ -95,7 +95,7 @@ void CodeGen_Bash::visit(const ForLoop *n) {
 }
 
 void CodeGen_Bash::visit(const Function *n) {
-    stream << "function " << n->name << " ";
+    stream << "function bish_" << n->name << " ";
     stream << "() ";
     LetScope *s = new LetScope();
     push_let_scope(s);
@@ -112,7 +112,7 @@ void CodeGen_Bash::visit(const Function *n) {
 void CodeGen_Bash::visit(const FunctionCall *n) {
     const int nargs = n->args.size();
     if (should_functioncall_wrap()) stream << "$(";
-    stream << n->name;
+    stream << "bish_" << n->name;
     for (int i = 0; i < nargs; i++) {
         stream << " ";
         bool old = enable_functioncall_wrap();

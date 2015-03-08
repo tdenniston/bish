@@ -18,3 +18,13 @@ def success() {
         return false;
     }
 }
+
+# Change directories.
+def cd(path) {
+    @(cd $path);
+}
+
+# Get current directory.
+def cwd() {
+    return @(pwd);
+}
