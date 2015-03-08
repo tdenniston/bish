@@ -36,6 +36,16 @@ Currently, Bish is still a very new language. I am adding new features as fast a
     print("Files in root directory:");
     printall(files);
 
+## How
+
+Just clone and build with 'make'. There are no dependencies other than the C++ standard library. Compile bish to bash with the command:
+
+    $ ./bish input.bish > output.bash
+    
+Then run the compiled file:
+
+    $ bash output.bash
+
 ## Why
 
 I can't count the number of times when I wanted to write a quick shell script to automate an easy task, only to waste hours tracking down idiosyncracies in Bash syntax and semantics. Bish tries to fill this niche: when you want a lightweight shell scripting language and don't wish to break out the larger hammer of Python, Perl, etc...
