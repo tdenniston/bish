@@ -192,7 +192,12 @@ private:
         } else if (is_digit(c)) {
             return read_number();
         } else {
-            return read_symbol();
+            ResultState result = read_symbol();
+            if (result.second == idx) {
+                std::cerr << "Unhandled token character at " << position() << "\n";
+                assert(false);
+            }
+            return result;
         }
     }
 
