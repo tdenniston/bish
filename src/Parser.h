@@ -17,7 +17,7 @@ stmt ::= assign ';'
        | 'return' expr ';'
        | '#' any NEWLINE
        | 'if' '(' expr ')' block
-       | 'if' '(' expr ')' block { 'else if' '(' expr ')' block } 'else' block
+       | 'if' '(' expr ')' block { 'else' 'if' '(' expr ')' block } 'else' block
        | 'for' '(' var 'in' atom '..' atom ')' block
        | 'def' var '(' varlist ')' block
        | block
@@ -31,12 +31,12 @@ term ::= term '*' unary | term '/' unary | unary
 unary ::= '-' unary | factor
 factor ::= '( expr ')' | funcall | externcall | atom
 funcall ::= var '(' exprlist ')'
-externcall ::= '@' '(' any ')'
+externcall ::= '@' '(' interp ')'
 atom ::= var | NUMBER | '"' STRING '"' | 'true' | 'false'
 var ::= ALPHANUM
 varlist ::= var { ',' var }
 atomlist ::= expr { ',' expr }
-interp ::= { str | '$' var }
+interp ::= { str | '$' var | '$' '(' any ')'}
 */
 
 namespace Bish {
