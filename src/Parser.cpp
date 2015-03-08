@@ -21,14 +21,6 @@ inline bool is_digit(char c) {
     return c >= 0x30 && c <= 0x39;
 }
 
-inline bool is_paren(char c) {
-    return c == '(' || c == ')';
-}
-
-inline bool is_brace(char c) {
-    return c == '{' || c == '}';
-}
-
 inline bool is_alphanumeric(char c) {
     return is_digit(c) || (c >= 0x41 && c <= 0x5a) || (c >= 0x61 && c <= 0x7a);
 }
@@ -147,6 +139,10 @@ private:
             return ResultState(Token::LBrace(), idx + 1);
         } else if (c == '}') {
             return ResultState(Token::RBrace(), idx + 1);
+        } else if (c == '[') {
+            return ResultState(Token::LBracket(), idx + 1);
+        } else if (c == ']') {
+            return ResultState(Token::RBracket(), idx + 1);
         } else if (c == '@') {
             return ResultState(Token::At(), idx + 1);
         } else if (c == '$') {

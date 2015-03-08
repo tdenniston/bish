@@ -49,6 +49,8 @@ public:
                    RParenType,
                    LBraceType,
                    RBraceType,
+                   LBracketType,
+                   RBracketType,
                    AtType,
                    DollarType,
                    SharpType,
@@ -106,6 +108,14 @@ public:
         return Token(RBraceType, "}");
     }
 
+    static Token LBracket() {
+        return Token(LBracketType, "[");
+    }
+
+    static Token RBracket() {
+        return Token(RBracketType, "]");
+    }
+    
     static Token At() {
         return Token(AtType, "@");
     }
