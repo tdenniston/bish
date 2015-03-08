@@ -32,9 +32,8 @@ Currently, Bish is still a very new language. I am adding new features as fast a
     print("Files in current directory $dir:");
     printall(files);
     cd("/");
-    files = ls();
     print("Files in root directory:");
-    printall(files);
+    printall(ls());
 
 ## How
 
