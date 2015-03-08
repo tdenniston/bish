@@ -514,10 +514,17 @@ IRNode *Parser::externcall() {
         body->push_str(str);
         if (tokenizer->peek().isa(Token::DollarType)) {
             tokenizer->next();
-            Variable *v = var();
-            body->push_var(v);
+            if (tokenizer->peek().isa(Token::LParenType)) {
+                tokenizer->next();
+                str = tokenizer->scan_until(Token::RParen());
+                tokenizer->next();
+                body->push_str("$" + str);
+            } else {
+                Variable *v = var();
+                body->push_var(v);
+                body->push_str(tokenizer->scan_whitespace());
+            }
         }
-        body->push_str(tokenizer->scan_whitespace());
     } while (!tokenizer->peek().isa(Token::RParenType));
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     return new ExternCall(body);

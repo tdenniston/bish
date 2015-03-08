@@ -3,5 +3,8 @@ def print(s) {
 }
 
 def exists(file) {
-  return @([[ -e $file ]]);
+  @(test -e $file);
+  rc = @(echo $(?));
+  if (rc == 0) { return true; }
+  else { return false; }
 }
