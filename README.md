@@ -52,3 +52,10 @@ I can't count the number of times when I wanted to write a quick shell script to
 
 However, I created this language first and foremost as an exercise in writing a compiler from scratch. I've dealt with pieces of compilers before, but have never written one from start to finish. Thus, I hope this project can also serve as a good teaching tool. I tried to design it with clarity in mind, so it should be simple to extend the language, or write a new back end.
 
+## To do
+
+The language and compiler are pretty bare-bones as of now. A selection of things I intend to do:
+- Improve parsing error messages
+- Implement type checking
+- Figure out what to do about floats
+- Expand standard library of builtin functions
