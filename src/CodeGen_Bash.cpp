@@ -88,7 +88,9 @@ void CodeGen_Bash::visit(const ForLoop *n) {
         n->upper->accept(this);
         stream << ")";
     } else {
+        disable_quote_variable();
         n->lower->accept(this);
+        enable_quote_variable();
     }
     stream << "; do\n";
     disable_block_braces();
@@ -134,6 +136,7 @@ void CodeGen_Bash::visit(const FunctionCall *n) {
 
 void CodeGen_Bash::visit(const ExternCall *n) {
     if (should_functioncall_wrap()) stream << "$(";
+    disable_quote_variable();
     for (InterpolatedString::const_iterator I = n->body->begin(), E = n->body->end();
          I != E; ++I) {
         if ((*I).is_str()) {
@@ -143,6 +146,7 @@ void CodeGen_Bash::visit(const ExternCall *n) {
             visit((*I).var());
         }
     }
+    enable_quote_variable();
     if (should_functioncall_wrap()) stream << ")";
 }
 
