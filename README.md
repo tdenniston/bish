@@ -8,6 +8,8 @@ Bish is a lightweight language created to bring shell scripting into the 21st ce
 
 Currently, Bish is still a very new language. I am adding new features as fast as I can, but it is bound not to support something you might like. In that case, see if you can implement it and submit a pull request!
 
+As a side note, I won't stop you, but you would probably be crazy to use Bish in any sort of production environment until it stabilizes a bit more.
+
 ## Examples
 
 ##### Function calls
