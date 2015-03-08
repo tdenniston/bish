@@ -566,9 +566,11 @@ IRNode *Parser::forloop() {
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     Variable *v = var();
     expect(tokenizer->peek(), Token::InType, "Expected keyword 'in'");
-    IRNode *lower = atom();
-    expect(tokenizer->peek(), Token::DoubleDotType, "Expected '..' range indicator");
-    IRNode *upper = atom();
+    IRNode *lower = atom(), *upper = NULL;
+    if (tokenizer->peek().isa(Token::DoubleDotType)) {
+        tokenizer->next();
+        upper = atom();
+    }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     IRNode *body = block();
     return new ForLoop(v, lower, upper, body);

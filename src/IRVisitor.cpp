@@ -41,7 +41,7 @@ void IRVisitor::visit(const IfStatement *node) {
 void IRVisitor::visit(const ForLoop *node) {
     node->variable->accept(this);
     node->lower->accept(this);
-    node->upper->accept(this);
+    if (node->upper) node->upper->accept(this);
     node->body->accept(this);
 }
 
