@@ -172,6 +172,7 @@ void CodeGen_Bash::visit(const BinOp *n) {
     case BinOp::Sub:
     case BinOp::Mul:
     case BinOp::Div:
+    case BinOp::Mod:
         comparison = false;
         break;
     }
@@ -210,6 +211,8 @@ void CodeGen_Bash::visit(const BinOp *n) {
     case BinOp::Div:
         stream << " / ";
         break;
+    case BinOp::Mod:
+        stream << " % ";
     }
     n->b->accept(this);
     if (!comparison) stream << "))";

@@ -74,6 +74,7 @@ public:
                    MinusType,
                    StarType,
                    SlashType,
+                   PercentType,
                    QuoteType,
                    SymbolType,
                    TrueType,
@@ -206,6 +207,10 @@ public:
 
     static Token Slash() {
         return Token(SlashType, "/");
+    }
+
+    static Token Percent() {
+        return Token(PercentType, "%");
     }
 
     static Token Quote() {
