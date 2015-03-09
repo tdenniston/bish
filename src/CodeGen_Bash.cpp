@@ -73,7 +73,7 @@ void CodeGen_Bash::visit(const IfStatement *n) {
         stream << "else\n";
         n->elseblock->accept(this);
     }
-    
+
     enable_block_braces();
     indent();
     stream << "fi";
@@ -175,7 +175,7 @@ void CodeGen_Bash::visit(const BinOp *n) {
         comparison = false;
         break;
     }
-        
+
     if (!comparison) stream << "$((";
     disable_quote_variable();
     n->a->accept(this);

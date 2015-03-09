@@ -124,12 +124,12 @@ public:
         pblock = new PredicatedBlock(c, b);
         elseblock = NULL;
     }
-    
+
     IfStatement(IRNode *c, IRNode *b, IRNode *e) {
         pblock = new PredicatedBlock(c, b);
         elseblock = e;
     }
-    
+
     IfStatement(IRNode *c, IRNode *b, const std::vector<PredicatedBlock *> &es, IRNode *e) {
         pblock = new PredicatedBlock(c, b);
         elseblock = e;
@@ -176,7 +176,7 @@ public:
         std::string str_;
         const Variable *var_;
     };
-    
+
     void push_str(const std::string &s) {
         items.push_back(Item(s));
     }
@@ -184,7 +184,7 @@ public:
     void push_var(const Variable *v) {
         items.push_back(Item(v));
     }
-    
+
     std::string interpolate() {
         return "";
     }

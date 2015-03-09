@@ -70,7 +70,7 @@ public:
         }
         return text.substr(start, idx - start);
     }
-    
+
     // Return the substring beginning at the current index and
     // continuing  until the first occurrence of a token of type
     // t.
@@ -201,7 +201,7 @@ private:
         } else if (c == '>') {
             if (nextchar() == '=') {
                 return ResultState(Token::RAngleEquals(), idx + 2);
-            } else {            
+            } else {
                 return ResultState(Token::RAngle(), idx + 1);
             }
         } else if (c == '+') {
@@ -712,7 +712,7 @@ IRNode *Parser::factor() {
 IRNode *Parser::atom() {
     Token t = tokenizer->peek();
     tokenizer->next();
-    
+
     switch(t.type()) {
     case Token::SymbolType:
         return lookup_or_new_var(t.value());

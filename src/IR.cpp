@@ -11,5 +11,5 @@ void Module::set_main(Function *f) {
 void Module::add_function(Function *f) {
     functions.push_back(f);
 }
-  
+
 }

@@ -115,7 +115,7 @@ public:
     static Token RBracket() {
         return Token(RBracketType, "]");
     }
-    
+
     static Token At() {
         return Token(AtType, "@");
     }
@@ -127,7 +127,7 @@ public:
     static Token Sharp() {
         return Token(SharpType, "#");
     }
-    
+
     static Token Semicolon() {
         return Token(SemicolonType, ";");
     }
@@ -139,7 +139,7 @@ public:
     static Token Return() {
         return Token(ReturnType, "return");
     }
-    
+
     static Token If() {
         return Token(IfType, "if");
     }
@@ -191,19 +191,19 @@ public:
     static Token RAngleEquals() {
         return Token(DoubleEqualsType, ">=");
     }
-    
+
     static Token Plus() {
         return Token(PlusType, "+");
     }
-    
+
     static Token Minus() {
         return Token(MinusType, "-");
     }
-    
+
     static Token Star() {
         return Token(StarType, "*");
     }
-    
+
     static Token Slash() {
         return Token(SlashType, "/");
     }
@@ -250,7 +250,7 @@ private:
     Tokenizer *tokenizer;
     std::stack<Module *> module_stack;
     std::stack<SymbolTable *> symbol_table_stack;
-    
+
     std::string read_file(const std::string &path);
     void abort(const std::string &msg);
     bool is_unop_token(const Token &t);
@@ -266,7 +266,7 @@ private:
     IRNode *lookup(const std::string &name);
     Variable *lookup_or_new_var(const std::string &name);
     void remove_from_symbol_table(const std::string &name);
-      
+
     Module *module();
     Block *block();
     IRNode *stmt();
@@ -288,7 +288,7 @@ private:
     IRNode *factor();
     IRNode *atom();
     std::string symbol();
-    
+
 };
 
 }
