@@ -7,6 +7,7 @@
 #include "Util.h"
 #include "Parser.h"
 #include "TypeChecker.h"
+#include "IRAncestorsPass.h"
 
 namespace {
 inline bool is_newline(char c) {
@@ -322,10 +323,20 @@ Module *Parser::parse_string(const std::string &text) {
 
     Module *m = module();
     expect(tokenizer->peek(), Token::EOSType, "Expected end of string.");
+
+    post_parse_passes(m);
+    return m;
+}
+
+// Run an ordered list of postprocessing passes over the IR.
+void Parser::post_parse_passes(Module *m) {
+    // Construct IRNode hierarchy
+    IRAncestorsPass ancestors;
+    m->accept(&ancestors);
+
     // Type checking
     // TypeChecker types;
     // m->accept(&types);
-    return m;
 }
 
 // Assert that the given token is of the given type. If true, advance

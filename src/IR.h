@@ -17,6 +17,7 @@ public:
     virtual void accept(IRVisitor *v) = 0;
     Type type() const { return type_; }
     IRNode *parent() const { return parent_; }
+    void set_parent(IRNode *p) { parent_ = p; }
 protected:
     Type type_;
     IRNode *parent_;

@@ -271,6 +271,7 @@ private:
     IRNode *lookup(const std::string &name);
     Variable *lookup_or_new_var(const std::string &name);
     void remove_from_symbol_table(const std::string &name);
+    void post_parse_passes(Module *m);
 
     Module *module();
     Block *block();
