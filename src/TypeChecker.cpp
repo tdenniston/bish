@@ -52,7 +52,23 @@ void TypeChecker::visit(BinOp *node) {
     node->b->accept(this);
     propagate_if_undef(node->a, node->b);
     assert(node->a->type() == node->b->type());
-    node->set_type(node->a->type());
+    switch (node->op) {
+    case BinOp::Eq:
+    case BinOp::NotEq:
+    case BinOp::LT:
+    case BinOp::LTE:
+    case BinOp::GT:
+    case BinOp::GTE:
+        node->set_type(BooleanTy);
+        break;
+    case BinOp::Add:
+    case BinOp::Sub:
+    case BinOp::Mul:
+    case BinOp::Div:
+    case BinOp::Mod:
+        node->set_type(node->a->type());
+        break;
+    }
 }
 
 void TypeChecker::visit(UnaryOp *node) {
