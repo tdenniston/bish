@@ -55,6 +55,11 @@ public:
     std::vector<Variable *> args;
     Block *body;
 
+    Function(const std::string &n) {
+        name = n;
+        body = NULL;
+    }
+
     Function(const std::string &n, Block *b) {
         name = n;
         body = b;
@@ -63,6 +68,15 @@ public:
     Function(const std::string &n, const std::vector<Variable *> &a, Block *b) {
         name = n;
         args.insert(args.begin(), a.begin(), a.end());
+        body = b;
+    }
+
+    void set_args(const std::vector<Variable *> &a) {
+        args.clear();
+        args.insert(args.begin(), a.begin(), a.end());
+    }
+
+    void set_body(Block *b) {
         body = b;
     }
 };
@@ -149,13 +163,13 @@ public:
 
 class FunctionCall : public BaseIRNode<FunctionCall> {
 public:
-    std::string name;
+    Function *function;
     std::vector<IRNode *> args;
-    FunctionCall(const std::string &n) {
-        name = n;
+    FunctionCall(Function *f) {
+        function = f;
     }
-    FunctionCall(const std::string &n, const std::vector<IRNode *> &a) {
-        name = n;
+    FunctionCall(Function *f, const std::vector<IRNode *> &a) {
+        function = f;
         args.insert(args.begin(), a.begin(), a.end());
     }
 };

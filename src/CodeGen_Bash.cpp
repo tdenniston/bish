@@ -16,7 +16,7 @@ void CodeGen_Bash::visit(Module *n) {
     }
     // Insert a call to bish_main().
     assert(n->main);
-    FunctionCall *call_main = new FunctionCall(n->main->name);
+    FunctionCall *call_main = new FunctionCall(n->main);
     visit(call_main);
     stream << ";\n";
     delete call_main;
@@ -111,14 +111,14 @@ void CodeGen_Bash::visit(Function *n) {
     for (std::vector<Variable *>::const_iterator I = n->args.begin(), E = n->args.end(); I != E; ++I, ++i) {
       s->add(*I, convert_string(i));
     }
-    n->body->accept(this);
+    if (n->body) n->body->accept(this);
     pop_let_scope();
 }
 
 void CodeGen_Bash::visit(FunctionCall *n) {
     const int nargs = n->args.size();
     if (should_functioncall_wrap()) stream << "$(";
-    stream << "bish_" << n->name;
+    stream << "bish_" << n->function->name;
     for (int i = 0; i < nargs; i++) {
         stream << " ";
         bool old = enable_functioncall_wrap();

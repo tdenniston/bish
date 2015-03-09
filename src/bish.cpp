@@ -23,8 +23,8 @@ public:
                  E = call->args.end(); I != E; ++I) {
             (*I)->accept(this);
         }
-        if (to_find.count(call->name)) {
-            names_.insert(call->name);
+        if (to_find.count(call->function->name)) {
+            names_.insert(call->function->name);
         }
     }
 private:

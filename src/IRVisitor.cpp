@@ -50,10 +50,11 @@ void IRVisitor::visit(Function *node) {
              E = node->args.end(); I != E; ++I) {
         (*I)->accept(this);
     }
-    node->body->accept(this);
+    if (node->body) node->body->accept(this);
 }
 
 void IRVisitor::visit(FunctionCall *node) {
+    node->function->accept(this);
     for (std::vector<IRNode *>::const_iterator I = node->args.begin(),
              E = node->args.end(); I != E; ++I) {
         (*I)->accept(this);

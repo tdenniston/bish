@@ -448,12 +448,14 @@ SymbolTable *Parser::pop_symbol_table() {
 Module *Parser::module() {
     Module *m = new Module();
     push_module(m);
+    function_symbol_table = new SymbolTable();
     // The pre-main function has all module-level statements. If the
     // user also defined a main function, a call to pre_main will be
     // inserted as the first statement in the user main.
     Function *pre_main = new Function("main", block());
     m->set_main(pre_main);
     pop_module();
+    delete function_symbol_table;
     return m;
 }
 
@@ -608,7 +610,10 @@ Function *Parser::functiondef() {
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     Block *body = block();
     delete pop_symbol_table();
-    return new Function(name, args, body);
+    Function *f = lookup_or_new_function(name);
+    f->set_args(args);
+    f->set_body(body);
+    return f;
 }
 
 IRNode *Parser::funcall(const std::string &name) {
@@ -622,7 +627,8 @@ IRNode *Parser::funcall(const std::string &name) {
         }
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
-    return new FunctionCall(name, args);
+    Function *f = lookup_or_new_function(name);
+    return new FunctionCall(f, args);
 }
 
 IRNode *Parser::assignment(const std::string &name) {
@@ -718,8 +724,9 @@ IRNode *Parser::factor() {
         IRNode *a = atom();
         if (tokenizer->peek().isa(Token::LParenType)) {
             Variable *v = static_cast<Variable*>(a);
-            a = funcall(v->name);
+            // The symbol will be reinserted as a Function, not a Variable.
             remove_from_symbol_table(v->name);
+            a = funcall(v->name);
         }
         return a;
     }
@@ -770,6 +777,19 @@ Variable *Parser::lookup_or_new_var(const std::string &name) {
     }
 }
 
+Function *Parser::lookup_or_new_function(const std::string &name) {
+    SymbolTableEntry *e = function_symbol_table->lookup(name);
+    Function *f = NULL;
+    if (e) {
+        f = dynamic_cast<Function*>(e->node);
+    } else {
+        f = new Function(name);
+        function_symbol_table->insert(name, f, UndefinedTy);
+    }
+    assert(f);
+    return f;
+}
+  
 IRNode *Parser::lookup(const std::string &name) {
     IRNode *result = NULL;
     std::stack<SymbolTable *> aux;

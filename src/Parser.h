@@ -255,6 +255,7 @@ private:
     Tokenizer *tokenizer;
     std::stack<Module *> module_stack;
     std::stack<SymbolTable *> symbol_table_stack;
+    SymbolTable *function_symbol_table;
 
     std::string read_file(const std::string &path);
     void abort(const std::string &msg);
@@ -270,6 +271,7 @@ private:
     SymbolTable *pop_symbol_table();
     IRNode *lookup(const std::string &name);
     Variable *lookup_or_new_var(const std::string &name);
+    Function *lookup_or_new_function(const std::string &name);
     void remove_from_symbol_table(const std::string &name);
     void post_parse_passes(Module *m);
 
