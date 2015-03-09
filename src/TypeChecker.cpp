@@ -5,96 +5,81 @@
 
 using namespace Bish;
 
-// void IRNodeSymbolTable::insert(const IRNode *n, Type ty) {
-//     table[n] = new SymbolTableEntry(ty);
-// }
+void TypeChecker::visit(ReturnStatement *node) {
+    if (node->type() != UndefinedTy) return;
+    node->value->accept(this);
+    node->set_type(node->value->type());
+    assert(node->parent()->type() == UndefinedTy);
+    propagate_if_undef(node->parent(), node);
+}
 
-// SymbolTableEntry *IRNodeSymbolTable::lookup(const IRNode *n) const {
-//     std::map<const IRNode *, SymbolTableEntry *>::const_iterator I = table.find(n);
-//     if (I == table.end()) {
-//         return NULL;
-//     }
-//     return I->second;
-// }
+void TypeChecker::visit(Function *node) {
+    if (node->type() != UndefinedTy) return;
+    for (std::vector<Variable *>::const_iterator I = node->args.begin(),
+             E = node->args.end(); I != E; ++I) {
+        (*I)->accept(this);
+    }
+    if (node->body) node->body->accept(this);
+}
 
-// void TypeChecker::visit(const Block *node) {
-//     SymbolTable *old_symtab = current_symtab;
-//     IRNodeSymbolTable *old_ast_symtab = current_astnode_symtab;
-//     current_symtab = node->symbol_table;
-//     current_astnode_symtab = new IRNodeSymbolTable();
-//     for (std::vector<IRNode *>::const_iterator I = node->nodes.begin(),
-//              E = node->nodes.end(); I != E; ++I) {
-//         (*I)->accept(this);
-//     }
-//     delete current_astnode_symtab;
-//     current_symtab = old_symtab;
-//     current_astnode_symtab = old_ast_symtab;
-// }
+void TypeChecker::visit(FunctionCall *node) {
+    if (node->type() != UndefinedTy) return;
+    node->function->accept(this);
+    node->set_type(node->function->type());
+}
 
-// void TypeChecker::visit(const Assignment *node) {
-//     node->variable->accept(this);
-//     node->value->accept(this);
+void TypeChecker::visit(ExternCall *node) {
+    if (node->type() != UndefinedTy) return;
+    node->set_type(UndefinedTy);
+}
 
-//     SymbolTableEntry *evar = lookup(node->variable, false);
-//     SymbolTableEntry *eval = lookup(node->value);
-//     assert(eval);
-//     if (evar) {
-//         assert(evar->type == eval->type);
-//     } else {
-//         current_symtab->insert(node->variable->name, eval->type);
-//     }
-// }
+void TypeChecker::visit(Assignment *node) {
+    if (node->type() != UndefinedTy) return;
+    node->variable->accept(this);
+    node->value->accept(this);
+    if (node->variable->type() != UndefinedTy && node->value->type() != UndefinedTy) {
+        assert(node->variable->type() == node->value->type() &&
+               "Invalid type in assignment.");
+    } else {
+        node->variable->set_type(node->value->type());
+    }
+    node->set_type(node->variable->type());
+}
 
-// void TypeChecker::visit(const IfStatement *node) {
-//     // XXX: ensure condition is boolean
-//     node->condition->accept(this);
-//     node->body->accept(this);
-// }
+void TypeChecker::visit(BinOp *node) {
+    if (node->type() != UndefinedTy) return;
+    node->a->accept(this);
+    node->b->accept(this);
+    propagate_if_undef(node->a, node->b);
+    assert(node->a->type() == node->b->type());
+    node->set_type(node->a->type());
+}
 
-// void TypeChecker::visit(const BinOp *node) {
-//     node->a->accept(this);
-//     node->b->accept(this);
+void TypeChecker::visit(UnaryOp *node) {
+    node->a->accept(this);
+    node->set_type(node->a->type());
+}
 
-//     SymbolTableEntry *ea = lookup(node->a);
-//     SymbolTableEntry *eb = lookup(node->b);
-//     assert(ea && eb);
-//     assert(ea->type == eb->type && "Type mismatch to binary operator.");
-//     current_astnode_symtab->insert(node, ea->type);
-// }
+void TypeChecker::visit(Integer *node) {
+    node->set_type(IntegerTy);
+}
 
-// void TypeChecker::visit(const UnaryOp *node) {
-//     node->a->accept(this);
-//     SymbolTableEntry *e = lookup(node->a);
-//     assert(e);
-//     current_astnode_symtab->insert(node, e->type);
-// }
+void TypeChecker::visit(Fractional *node) {
+    node->set_type(FractionalTy);
+}
 
-// void TypeChecker::visit(const Integer *node) {
-//     current_astnode_symtab->insert(node, IntegerTy);
-// }
+void TypeChecker::visit(String *node) {
+    node->set_type(StringTy);
+}
 
-// void TypeChecker::visit(const Fractional *node) {
-//     current_astnode_symtab->insert(node, FractionalTy);
-// }
+void TypeChecker::visit(Boolean *node) {
+    node->set_type(BooleanTy);
+}
 
-// void TypeChecker::visit(const String *node) {
-//     current_astnode_symtab->insert(node, StringTy);
-// }
-
-// void TypeChecker::visit(const Boolean *node) {
-//     current_astnode_symtab->insert(node, BooleanTy);
-// }
-
-// SymbolTableEntry *TypeChecker::lookup(const IRNode *n, bool assert_non_null) {
-//     SymbolTableEntry *e = NULL;
-//     if (const Variable *v = dynamic_cast<const Variable*>(n)) {
-//         e = current_symtab->lookup(v->name);
-//         if (assert_non_null && e == NULL) {
-//             std::cerr << "Unknown symbol '" << v->name << "'\n";
-//             assert(false);
-//         }
-//     } else {
-//         e = current_astnode_symtab->lookup(n);
-//     }
-//     return e;
-// }
+void TypeChecker::propagate_if_undef(IRNode *a, IRNode *b) {
+    if (a->type() == UndefinedTy) {
+        a->set_type(b->type());
+    } else if (b->type() == UndefinedTy) {
+        b->set_type(a->type());
+    }
+}

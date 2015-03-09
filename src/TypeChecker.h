@@ -2,36 +2,24 @@
 #define __BISH_TYPE_CHECKER_H__
 
 #include "IRVisitor.h"
-#include "SymbolTable.h"
 
 namespace Bish {
 
-class IRNodeSymbolTable {
-public:
-    void insert(const IRNode *node, Type ty);
-    SymbolTableEntry *lookup(const IRNode *node) const;
-private:
-    std::map<const IRNode *, SymbolTableEntry *> table;
-};
-
 class TypeChecker : public IRVisitor {
 public:
-    TypeChecker() : current_symtab(NULL), current_astnode_symtab(NULL) {}
-    virtual void visit(const Block *);
-    virtual void visit(const Assignment *);
-    virtual void visit(const IfStatement *);
-    virtual void visit(const BinOp *);
-    virtual void visit(const UnaryOp *);
-    virtual void visit(const Integer *);
-    virtual void visit(const Fractional *);
-    virtual void visit(const String *);
-    virtual void visit(const Boolean *);
+    virtual void visit(ReturnStatement *);
+    virtual void visit(Function *);
+    virtual void visit(FunctionCall *);
+    virtual void visit(ExternCall *);
+    virtual void visit(Assignment *);
+    virtual void visit(BinOp *);
+    virtual void visit(UnaryOp *);
+    virtual void visit(Integer *);
+    virtual void visit(Fractional *);
+    virtual void visit(String *);
+    virtual void visit(Boolean *);
 private:
-    SymbolTable *current_symtab;
-    IRNodeSymbolTable *current_astnode_symtab;
-
-    SymbolTableEntry *lookup(const IRNode *n,
-                             bool assert_non_null=true);
+    void propagate_if_undef(IRNode *a, IRNode *b);
 };
 
 }

@@ -335,8 +335,8 @@ void Parser::post_parse_passes(Module *m) {
     m->accept(&ancestors);
 
     // Type checking
-    // TypeChecker types;
-    // m->accept(&types);
+    TypeChecker types;
+    m->accept(&types);
 }
 
 // Assert that the given token is of the given type. If true, advance
