@@ -3,6 +3,7 @@
 #include <string>
 #include <queue>
 #include <iostream>
+#include "CallGraph.h"
 #include "CodeGen_Bash.h"
 #include "Parser.h"
 #include "IRVisitor.h"
@@ -10,53 +11,6 @@
 const std::string BISH_VERSION = "0.1";
 const std::string BISH_URL = "https://github.com/tdenniston/bish";
 const std::string STDLIB_PATH = "src/StdLib.bish";
-
-class CallGraphBuilder : public Bish::IRVisitor {
-public:
-    virtual void visit(Bish::FunctionCall *call) {
-        Bish::Block *b = dynamic_cast<Bish::Block *>(call->parent());
-        assert(b);
-        Bish::Function *f = dynamic_cast<Bish::Function *>(b->parent());
-        assert(f);
-        calls_map[f].push_back(call->function);
-        callers_map[call->function].push_back(f);
-    }
-
-    // Return a list of direct calls from f.
-    std::vector<Bish::Function *> calls(Bish::Function *f) {
-        return calls_map[f];
-    }
-
-    // Return a list of all calls (recursively) from root.
-    std::vector<Bish::Function *> transitive_calls(Bish::Function *root) {
-        std::vector<Bish::Function *> result;
-        std::set<Bish::Function *> visited;
-        std::queue<Bish::Function *> worklist;
-        worklist.push(root);
-        visited.insert(root);
-        while (!worklist.empty()) {
-            Bish::Function *f = worklist.front();
-            worklist.pop();
-            std::vector<Bish::Function *> direct = calls(f);
-            for (std::vector<Bish::Function *>::iterator I = direct.begin(), E = direct.end(); I != E; ++I) {
-                if (visited.find(*I) == visited.end()) {
-                    visited.insert(*I);
-                    worklist.push(*I);
-                    result.push_back(*I);
-                }
-            }
-        }
-        return result;
-    }
-
-    std::vector<Bish::Function *> callers(Bish::Function *f) {
-        return callers_map[f];
-    }
-
-private:
-    std::map<Bish::Function *, std::vector<Bish::Function *> > calls_map;
-    std::map<Bish::Function *, std::vector<Bish::Function *> > callers_map;
-};
 
 class FindFunctionCalls : public Bish::IRVisitor {
 public:
@@ -73,12 +27,6 @@ public:
         }
         if (to_find.count(call->function->name)) {
             names_.insert(call->function->name);
-            Bish::Block *b = dynamic_cast<Bish::Block *>(call->parent());
-            assert(b);
-            Bish::Function *f = dynamic_cast<Bish::Function *>(b->parent());
-            assert(f);
-            names_.insert(f->name);
-            to_find.insert(f->name);
         }
     }
 private:
@@ -86,6 +34,7 @@ private:
     std::set<std::string> names_;
 };
 
+// Add necessary stdlib functions to the given module.
 void link_stdlib(Bish::Module *m) {
     Bish::Parser p;
     Bish::Module *stdlib = p.parse(STDLIB_PATH);
@@ -98,8 +47,8 @@ void link_stdlib(Bish::Module *m) {
     }
     FindFunctionCalls find(stdlib_functions);
     m->accept(&find);
-    CallGraphBuilder cg;
-    stdlib->accept(&cg);
+    Bish::CallGraphBuilder cgb;
+    Bish::CallGraph cg = cgb.build(stdlib);
     
     std::set<std::string> to_link = find.names();
     for (std::set<std::string>::iterator I = to_link.begin(), E = to_link.end(); I != E; ++I) {
