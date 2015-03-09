@@ -158,62 +158,54 @@ void CodeGen_Bash::visit(Assignment *n) {
 }
 
 void CodeGen_Bash::visit(BinOp *n) {
+    std::string bash_op;
     bool comparison = false;
     switch (n->op) {
     case BinOp::Eq:
+        bash_op = n->type() == StringTy ? "==" : "-eq";
+        comparison = true;
+        break;
     case BinOp::NotEq:
+        bash_op = n->type() == StringTy ? "!=" : "-ne";
+        comparison = true;
+        break;
     case BinOp::LT:
+        bash_op = "<";
+        comparison = true;
+        break;
     case BinOp::LTE:
+        bash_op = "<=";
+        comparison = true;
+        break;
     case BinOp::GT:
+        bash_op = ">";
+        comparison = true;
+        break;
     case BinOp::GTE:
+        bash_op = ">=";
         comparison = true;
         break;
     case BinOp::Add:
+        bash_op = "+";
+        break;
     case BinOp::Sub:
+        bash_op = "-";
+        break;
     case BinOp::Mul:
+        bash_op = "*";
+        break;
     case BinOp::Div:
+        bash_op = "/";
+        break;
     case BinOp::Mod:
-        comparison = false;
+        bash_op = "%";
         break;
     }
 
     if (!comparison) stream << "$((";
     disable_quote_variable();
     n->a->accept(this);
-    switch (n->op) {
-    case BinOp::Eq:
-        stream << " -eq ";
-        break;
-    case BinOp::NotEq:
-        stream << " -ne ";
-        break;
-    case BinOp::LT:
-        stream << " -lt ";
-        break;
-    case BinOp::LTE:
-        stream << " -lte ";
-        break;
-    case BinOp::GT:
-        stream << " -gt ";
-        break;
-    case BinOp::GTE:
-        stream << " -gte ";
-        break;
-    case BinOp::Add:
-        stream << " + ";
-        break;
-    case BinOp::Sub:
-        stream << " - ";
-        break;
-    case BinOp::Mul:
-        stream << " * ";
-        break;
-    case BinOp::Div:
-        stream << " / ";
-        break;
-    case BinOp::Mod:
-        stream << " % ";
-    }
+    stream << " " << bash_op << " ";
     n->b->accept(this);
     if (!comparison) stream << "))";
     enable_quote_variable();
