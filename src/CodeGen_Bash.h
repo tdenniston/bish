@@ -36,22 +36,22 @@ public:
         functioncall_wrap = false;
         quote_variable = true;
     }
-    virtual void visit(const Module *);
-    virtual void visit(const Block *);
-    virtual void visit(const Variable *);
-    virtual void visit(const ReturnStatement *);
-    virtual void visit(const IfStatement *);
-    virtual void visit(const ForLoop *);
-    virtual void visit(const Function *);
-    virtual void visit(const FunctionCall *);
-    virtual void visit(const ExternCall *);
-    virtual void visit(const Assignment *);
-    virtual void visit(const BinOp *);
-    virtual void visit(const UnaryOp *);
-    virtual void visit(const Integer *);
-    virtual void visit(const Fractional *);
-    virtual void visit(const String *);
-    virtual void visit(const Boolean *);
+    virtual void visit(Module *);
+    virtual void visit(Block *);
+    virtual void visit(Variable *);
+    virtual void visit(ReturnStatement *);
+    virtual void visit(IfStatement *);
+    virtual void visit(ForLoop *);
+    virtual void visit(Function *);
+    virtual void visit(FunctionCall *);
+    virtual void visit(ExternCall *);
+    virtual void visit(Assignment *);
+    virtual void visit(BinOp *);
+    virtual void visit(UnaryOp *);
+    virtual void visit(Integer *);
+    virtual void visit(Fractional *);
+    virtual void visit(String *);
+    virtual void visit(Boolean *);
 private:
     std::stack<LetScope *> let_stack;
     std::ostream &stream;

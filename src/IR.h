@@ -14,7 +14,7 @@ class IRNode {
 public:
     IRNode() : type_(UndefinedTy), parent_(NULL) {}
     virtual ~IRNode() {}
-    virtual void accept(IRVisitor *v) const = 0;
+    virtual void accept(IRVisitor *v) = 0;
     Type type() const { return type_; }
     IRNode *parent() const { return parent_; }
 protected:
@@ -28,8 +28,8 @@ protected:
 template<typename T>
 class BaseIRNode : public IRNode {
 public:
-    void accept(IRVisitor *v) const {
-        v->visit((const T *)this);
+    void accept(IRVisitor *v) {
+        v->visit((T *)this);
     }
 };
 
@@ -165,23 +165,23 @@ public:
     class Item {
     public:
         Item(const std::string &s) : str_(s), var_(NULL), ty(STR) {}
-        Item(const Variable *v) : var_(v), ty(VAR) {}
+        Item(Variable *v) : var_(v), ty(VAR) {}
         bool is_str() const { return ty == STR; }
         bool is_var() const { return ty == VAR; }
         const std::string &str() const { return str_; }
-        const Variable *var() const { return var_; }
+        Variable *var() const { return var_; }
     private:
         typedef enum { STR, VAR } Type;
         Type ty;
         std::string str_;
-        const Variable *var_;
+        Variable *var_;
     };
 
     void push_str(const std::string &s) {
         items.push_back(Item(s));
     }
 
-    void push_var(const Variable *v) {
+    void push_var(Variable *v) {
         items.push_back(Item(v));
     }
 
@@ -194,7 +194,7 @@ public:
     const_iterator end() { return items.end(); }
 private:
     std::string body;
-    std::vector<const Variable *> to_interpolate;
+    std::vector<Variable *> to_interpolate;
     std::vector<Item> items;
 };
 

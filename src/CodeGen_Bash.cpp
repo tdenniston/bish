@@ -9,7 +9,7 @@ void CodeGen_Bash::indent() {
     }
 }
 
-void CodeGen_Bash::visit(const Module *n) {
+void CodeGen_Bash::visit(Module *n) {
     for (std::vector<Function *>::const_iterator I = n->functions.begin(),
              E = n->functions.end(); I != E; ++I) {
         (*I)->accept(this);
@@ -22,7 +22,7 @@ void CodeGen_Bash::visit(const Module *n) {
     delete call_main;
 }
 
-void CodeGen_Bash::visit(const Block *n) {
+void CodeGen_Bash::visit(Block *n) {
     if (should_print_block_braces()) stream << "{\n";
     indent_level++;
     for (std::vector<IRNode *>::const_iterator I = n->nodes.begin(), E = n->nodes.end();
@@ -35,13 +35,13 @@ void CodeGen_Bash::visit(const Block *n) {
     if (should_print_block_braces()) stream << "}\n\n";
 }
 
-void CodeGen_Bash::visit(const Variable *n) {
+void CodeGen_Bash::visit(Variable *n) {
     if (should_quote_variable()) stream << "\"";
     stream << "$" << lookup_name(n);
     if (should_quote_variable()) stream << "\"";
 }
 
-void CodeGen_Bash::visit(const ReturnStatement *n) {
+void CodeGen_Bash::visit(ReturnStatement *n) {
     stream << "echo ";
     enable_functioncall_wrap();
     n->value->accept(this);
@@ -49,7 +49,7 @@ void CodeGen_Bash::visit(const ReturnStatement *n) {
     stream << "; exit";
 }
 
-void CodeGen_Bash::visit(const IfStatement *n) {
+void CodeGen_Bash::visit(IfStatement *n) {
     stream << "if [[ ";
     enable_functioncall_wrap();
     n->pblock->condition->accept(this);
@@ -79,7 +79,7 @@ void CodeGen_Bash::visit(const IfStatement *n) {
     stream << "fi";
 }
 
-void CodeGen_Bash::visit(const ForLoop *n) {
+void CodeGen_Bash::visit(ForLoop *n) {
     stream << "for " << lookup_name(n->variable) << " in ";
     if (n->upper) {
         stream << "$(seq ";
@@ -100,7 +100,7 @@ void CodeGen_Bash::visit(const ForLoop *n) {
     stream << "done";
 }
 
-void CodeGen_Bash::visit(const Function *n) {
+void CodeGen_Bash::visit(Function *n) {
     stream << "function bish_" << n->name << " ";
     stream << "() ";
     LetScope *s = new LetScope();
@@ -115,7 +115,7 @@ void CodeGen_Bash::visit(const Function *n) {
     pop_let_scope();
 }
 
-void CodeGen_Bash::visit(const FunctionCall *n) {
+void CodeGen_Bash::visit(FunctionCall *n) {
     const int nargs = n->args.size();
     if (should_functioncall_wrap()) stream << "$(";
     stream << "bish_" << n->name;
@@ -134,7 +134,7 @@ void CodeGen_Bash::visit(const FunctionCall *n) {
     if (should_functioncall_wrap()) stream << ")";
 }
 
-void CodeGen_Bash::visit(const ExternCall *n) {
+void CodeGen_Bash::visit(ExternCall *n) {
     if (should_functioncall_wrap()) stream << "$(";
     disable_quote_variable();
     for (InterpolatedString::const_iterator I = n->body->begin(), E = n->body->end();
@@ -150,14 +150,14 @@ void CodeGen_Bash::visit(const ExternCall *n) {
     if (should_functioncall_wrap()) stream << ")";
 }
 
-void CodeGen_Bash::visit(const Assignment *n) {
+void CodeGen_Bash::visit(Assignment *n) {
     stream << lookup_name(n->variable) << "=";
     enable_functioncall_wrap();
     n->value->accept(this);
     disable_functioncall_wrap();
 }
 
-void CodeGen_Bash::visit(const BinOp *n) {
+void CodeGen_Bash::visit(BinOp *n) {
     bool comparison = false;
     switch (n->op) {
     case BinOp::Eq:
@@ -219,7 +219,7 @@ void CodeGen_Bash::visit(const BinOp *n) {
     enable_quote_variable();
 }
 
-void CodeGen_Bash::visit(const UnaryOp *n) {
+void CodeGen_Bash::visit(UnaryOp *n) {
     switch (n->op) {
     case UnaryOp::Negate:
         stream << "-";
@@ -228,18 +228,18 @@ void CodeGen_Bash::visit(const UnaryOp *n) {
     n->a->accept(this);
 }
 
-void CodeGen_Bash::visit(const Integer *n) {
+void CodeGen_Bash::visit(Integer *n) {
     stream << n->value;
 }
 
-void CodeGen_Bash::visit(const Fractional *n) {
+void CodeGen_Bash::visit(Fractional *n) {
     stream << n->value;
 }
 
-void CodeGen_Bash::visit(const String *n) {
+void CodeGen_Bash::visit(String *n) {
     stream << "\"" << n->value << "\"";
 }
 
-void CodeGen_Bash::visit(const Boolean *n) {
+void CodeGen_Bash::visit(Boolean *n) {
     stream << n->value;
 }
