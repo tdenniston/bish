@@ -27,7 +27,7 @@ relative ::= relative '<' arith | relative '>' arith
            | relative '<=' arith | relative '>=' arith
            | arith
 arith ::= arith '+' term | arith '-' term | term
-term ::= term '*' unary | term '/' unary | unary
+term ::= term '*' unary | term '/' unary | term '%' unary | unary
 unary ::= '-' unary | factor
 factor ::= '( expr ')' | funcall | externcall | atom
 funcall ::= var '(' exprlist ')'
