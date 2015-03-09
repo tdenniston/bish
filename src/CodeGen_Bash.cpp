@@ -53,6 +53,9 @@ void CodeGen_Bash::visit(IfStatement *n) {
     stream << "if [[ ";
     enable_functioncall_wrap();
     n->pblock->condition->accept(this);
+    if (dynamic_cast<BinOp*>(n->pblock->condition) == NULL) {
+        stream << " -eq 1";
+    }
     disable_functioncall_wrap();
     stream << " ]]; then\n";
     disable_block_braces();
