@@ -154,6 +154,17 @@ void CodeGen_Bash::visit(ExternCall *n) {
 }
 
 void CodeGen_Bash::visit(Assignment *n) {
+    if (BinOp *binop = dynamic_cast<BinOp*>(n->value)) {
+        if (binop->op == BinOp::Eq) {
+            // Special case for comparisons.
+            stream << "[ ";
+            n->value->accept(this);
+            stream << " ];\n";
+            indent();
+            stream << lookup_name(n->variable) << "=$((!$?))";
+            return;
+        }
+    }
     stream << lookup_name(n->variable) << "=";
     enable_functioncall_wrap();
     n->value->accept(this);
