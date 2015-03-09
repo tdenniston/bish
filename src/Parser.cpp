@@ -70,7 +70,7 @@ public:
         }
         return text.substr(start, idx - start);
     }
-    
+
     // Return the substring beginning at the current index and
     // continuing  until the first occurrence of a token of type
     // t.
@@ -201,7 +201,7 @@ private:
         } else if (c == '>') {
             if (nextchar() == '=') {
                 return ResultState(Token::RAngleEquals(), idx + 2);
-            } else {            
+            } else {
                 return ResultState(Token::RAngle(), idx + 1);
             }
         } else if (c == '+') {
@@ -212,6 +212,8 @@ private:
             return ResultState(Token::Star(), idx + 1);
         } else if (c == '/') {
             return ResultState(Token::Slash(), idx + 1);
+        } else if (c == '%') {
+            return ResultState(Token::Percent(), idx + 1);
         } else if (c == '"') {
             return ResultState(Token::Quote(), idx + 1);
         } else if (is_digit(c)) {
@@ -351,7 +353,8 @@ bool Parser::is_unop_token(const Token &t) {
 // Return true if the given token is a binary operator.
 bool Parser::is_binop_token(const Token &t) {
     return t.isa(Token::PlusType) || t.isa(Token::MinusType) ||
-        t.isa(Token::StarType) || t.isa(Token::SlashType);
+        t.isa(Token::StarType) || t.isa(Token::SlashType) ||
+        t.isa(Token::PercentType);
 }
 
 // Return the binary Operator corresponding to the given token.
@@ -377,6 +380,8 @@ BinOp::Operator Parser::get_binop_operator(const Token &t) {
         return BinOp::Mul;
     case Token::SlashType:
         return BinOp::Div;
+    case Token::PercentType:
+        return BinOp::Mod;
     default:
         abort("Invalid operator for binary operation.");
         return BinOp::Add;
@@ -672,7 +677,7 @@ IRNode *Parser::arith() {
 IRNode *Parser::term() {
     IRNode *a = unary();
     Token t = tokenizer->peek();
-    while (t.isa(Token::StarType) || t.isa(Token::SlashType)) {
+    while (t.isa(Token::StarType) || t.isa(Token::SlashType) || t.isa(Token::PercentType)) {
         tokenizer->next();
         a = new BinOp(get_binop_operator(t), a, unary());
         t = tokenizer->peek();
@@ -712,7 +717,7 @@ IRNode *Parser::factor() {
 IRNode *Parser::atom() {
     Token t = tokenizer->peek();
     tokenizer->next();
-    
+
     switch(t.type()) {
     case Token::SymbolType:
         return lookup_or_new_var(t.value());

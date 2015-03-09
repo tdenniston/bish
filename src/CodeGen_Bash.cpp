@@ -73,7 +73,7 @@ void CodeGen_Bash::visit(const IfStatement *n) {
         stream << "else\n";
         n->elseblock->accept(this);
     }
-    
+
     enable_block_braces();
     indent();
     stream << "fi";
@@ -172,10 +172,11 @@ void CodeGen_Bash::visit(const BinOp *n) {
     case BinOp::Sub:
     case BinOp::Mul:
     case BinOp::Div:
+    case BinOp::Mod:
         comparison = false;
         break;
     }
-        
+
     if (!comparison) stream << "$((";
     disable_quote_variable();
     n->a->accept(this);
@@ -210,6 +211,8 @@ void CodeGen_Bash::visit(const BinOp *n) {
     case BinOp::Div:
         stream << " / ";
         break;
+    case BinOp::Mod:
+        stream << " % ";
     }
     n->b->accept(this);
     if (!comparison) stream << "))";

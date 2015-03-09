@@ -17,7 +17,7 @@ public:
     }
 
     std::set<std::string> names() { return names_; }
-    
+
     virtual void visit(const Bish::FunctionCall *call) {
         for (std::vector<Bish::IRNode *>::const_iterator I = call->args.begin(),
                  E = call->args.end(); I != E; ++I) {
@@ -73,12 +73,12 @@ int main(int argc, char **argv) {
         std::cerr << "  Compiles Bish file <INPUT> to bash.\n";
         return 1;
     }
-    
+
     std::string path(argv[1]);
     Bish::Parser p;
     Bish::Module *m = p.parse(path);
 
     compile_to_bash(std::cout, m);
-    
+
     return 0;
 }

@@ -27,7 +27,7 @@ public:
 private:
     std::map<const Variable *, std::string> rename;
 };
-  
+
 class CodeGen_Bash : public IRVisitor {
 public:
     CodeGen_Bash(std::ostream &os) : stream(os) {

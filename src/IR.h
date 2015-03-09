@@ -124,12 +124,12 @@ public:
         pblock = new PredicatedBlock(c, b);
         elseblock = NULL;
     }
-    
+
     IfStatement(IRNode *c, IRNode *b, IRNode *e) {
         pblock = new PredicatedBlock(c, b);
         elseblock = e;
     }
-    
+
     IfStatement(IRNode *c, IRNode *b, const std::vector<PredicatedBlock *> &es, IRNode *e) {
         pblock = new PredicatedBlock(c, b);
         elseblock = e;
@@ -176,7 +176,7 @@ public:
         std::string str_;
         const Variable *var_;
     };
-    
+
     void push_str(const std::string &s) {
         items.push_back(Item(s));
     }
@@ -184,7 +184,7 @@ public:
     void push_var(const Variable *v) {
         items.push_back(Item(v));
     }
-    
+
     std::string interpolate() {
         return "";
     }
@@ -206,7 +206,7 @@ public:
 
 class BinOp : public BaseIRNode<BinOp> {
 public:
-    typedef enum { Add, Sub, Mul, Div, Eq, NotEq, LT, LTE, GT, GTE } Operator;
+    typedef enum { Add, Sub, Mul, Div, Mod, Eq, NotEq, LT, LTE, GT, GTE } Operator;
     Operator op;
     IRNode *a, *b;
     BinOp(Operator op_, IRNode *a_, IRNode *b_) : op(op_), a(a_), b(b_) {}
