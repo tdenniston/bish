@@ -294,7 +294,7 @@ Parser::~Parser() {
 
 // Return the entire contents of the file at the given path.
 std::string Parser::read_file(const std::string &path) {
-    std::ifstream t(path);
+    std::ifstream t(path.c_str());
     if (!t.is_open()) {
         std::string msg = "Failed to open file at " + path;
         abort(msg);
