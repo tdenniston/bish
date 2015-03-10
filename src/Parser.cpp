@@ -318,7 +318,7 @@ Module *Parser::parse_string(const std::string &text) {
     if (tokenizer) delete tokenizer;
 
     // Insert a dummy block for root scope.
-    std::string preprocessed = "{" + text + "}";
+    std::string preprocessed = "{\n" + text + "\n}";
     tokenizer = new Tokenizer(preprocessed);
 
     Module *m = module();
