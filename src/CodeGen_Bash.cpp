@@ -174,14 +174,17 @@ void CodeGen_Bash::visit(Assignment *n) {
 
 void CodeGen_Bash::visit(BinOp *n) {
     std::string bash_op;
-    bool comparison = false;
+    bool comparison = false, string = false;
+    if (n->a->type() == StringTy || n->b->type() == StringTy) {
+        string = true;
+    }
     switch (n->op) {
     case BinOp::Eq:
-        bash_op = n->type() == StringTy ? "==" : "-eq";
+        bash_op = string ? "==" : "-eq";
         comparison = true;
         break;
     case BinOp::NotEq:
-        bash_op = n->type() == StringTy ? "!=" : "-ne";
+        bash_op = string ? "!=" : "-ne";
         comparison = true;
         break;
     case BinOp::LT:
