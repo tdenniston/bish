@@ -130,7 +130,10 @@ void CodeGen_Bash::visit(FunctionCall *n) {
           n->args[i]->accept(this);
           if (should_quote_variable()) stream << "\"";
         } else {
-          n->args[i]->accept(this);
+            if (is_equals_op(n->args[i])) {
+                assert(false && "Using comparison statements as arguments is not yet supported.");
+            }
+            n->args[i]->accept(this);
         }
         set_functioncall_wrap(old);
     }
@@ -154,16 +157,14 @@ void CodeGen_Bash::visit(ExternCall *n) {
 }
 
 void CodeGen_Bash::visit(Assignment *n) {
-    if (BinOp *binop = dynamic_cast<BinOp*>(n->value)) {
-        if (binop->op == BinOp::Eq) {
-            // Special case for comparisons.
-            stream << "[ ";
-            n->value->accept(this);
-            stream << " ];\n";
-            indent();
-            stream << lookup_name(n->variable) << "=$((!$?))";
-            return;
-        }
+    if (is_equals_op(n->value)) {
+        // Special case for comparisons.
+        stream << "[ ";
+        n->value->accept(this);
+        stream << " ];\n";
+        indent();
+        stream << lookup_name(n->variable) << "=$((!$?))";
+        return;
     }
     stream << lookup_name(n->variable) << "=";
     enable_functioncall_wrap();

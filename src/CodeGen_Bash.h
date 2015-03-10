@@ -71,6 +71,13 @@ private:
     inline void enable_quote_variable() { quote_variable = true; }
     inline bool should_quote_variable() const { return quote_variable; }
 
+    bool is_equals_op(IRNode *n) const {
+        if (BinOp *b = dynamic_cast<BinOp*>(n)) {
+            return b->op == BinOp::Eq;
+        }
+        return false;
+    }
+
     void indent();
     void push_let_scope(LetScope *s) { let_stack.push(s); }
     LetScope *pop_let_scope() { LetScope *s = let_stack.top(); let_stack.pop(); return s; }
