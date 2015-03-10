@@ -6,7 +6,8 @@
 using namespace Bish;
 
 void TypeChecker::visit(ReturnStatement *node) {
-    if (node->type() != UndefinedTy) return;
+    if (visited(node) || node->type() != UndefinedTy) return;
+    visited_set.insert(node);
     node->value->accept(this);
     node->set_type(node->value->type());
     assert(node->parent()->type() == UndefinedTy);
@@ -14,7 +15,8 @@ void TypeChecker::visit(ReturnStatement *node) {
 }
 
 void TypeChecker::visit(Function *node) {
-    if (node->type() != UndefinedTy) return;
+    if (visited(node) || node->type() != UndefinedTy) return;
+    visited_set.insert(node);
     for (std::vector<Variable *>::const_iterator I = node->args.begin(),
              E = node->args.end(); I != E; ++I) {
         (*I)->accept(this);
@@ -23,18 +25,21 @@ void TypeChecker::visit(Function *node) {
 }
 
 void TypeChecker::visit(FunctionCall *node) {
-    if (node->type() != UndefinedTy) return;
+    if (visited(node) || node->type() != UndefinedTy) return;
+    visited_set.insert(node);
     node->function->accept(this);
     node->set_type(node->function->type());
 }
 
 void TypeChecker::visit(ExternCall *node) {
-    if (node->type() != UndefinedTy) return;
+    if (visited(node) || node->type() != UndefinedTy) return;
+    visited_set.insert(node);
     node->set_type(UndefinedTy);
 }
 
 void TypeChecker::visit(Assignment *node) {
-    if (node->type() != UndefinedTy) return;
+    if (visited(node) || node->type() != UndefinedTy) return;
+    visited_set.insert(node);
     node->variable->accept(this);
     node->value->accept(this);
     if (node->variable->type() != UndefinedTy && node->value->type() != UndefinedTy) {
@@ -47,7 +52,8 @@ void TypeChecker::visit(Assignment *node) {
 }
 
 void TypeChecker::visit(BinOp *node) {
-    if (node->type() != UndefinedTy) return;
+    if (visited(node) || node->type() != UndefinedTy) return;
+    visited_set.insert(node);
     node->a->accept(this);
     node->b->accept(this);
     propagate_if_undef(node->a, node->b);
@@ -72,6 +78,8 @@ void TypeChecker::visit(BinOp *node) {
 }
 
 void TypeChecker::visit(UnaryOp *node) {
+    if (visited(node)) return;
+    visited_set.insert(node);
     node->a->accept(this);
     node->set_type(node->a->type());
 }

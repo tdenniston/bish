@@ -1,6 +1,7 @@
 #ifndef __BISH_TYPE_CHECKER_H__
 #define __BISH_TYPE_CHECKER_H__
 
+#include <set>
 #include "IRVisitor.h"
 
 namespace Bish {
@@ -19,7 +20,9 @@ public:
     virtual void visit(String *);
     virtual void visit(Boolean *);
 private:
+    std::set<IRNode *> visited_set;
     void propagate_if_undef(IRNode *a, IRNode *b);
+    bool visited(IRNode *n) { return visited_set.find(n) != visited_set.end(); }
 };
 
 }
