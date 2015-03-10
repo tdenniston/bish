@@ -188,19 +188,19 @@ void CodeGen_Bash::visit(BinOp *n) {
         comparison = true;
         break;
     case BinOp::LT:
-        bash_op = "<";
+        bash_op = string ? "<" : "-lt";
         comparison = true;
         break;
     case BinOp::LTE:
-        bash_op = "<=";
+        bash_op = "-le";
         comparison = true;
         break;
     case BinOp::GT:
-        bash_op = ">";
+        bash_op = string ? ">" : "-gt";
         comparison = true;
         break;
     case BinOp::GTE:
-        bash_op = ">=";
+        bash_op = "-ge";
         comparison = true;
         break;
     case BinOp::Add:
