@@ -1,12 +1,5 @@
 # Test the I/O redirection features.
 
-def assert(v) {
-    if (v == false) {
-      print("Assertion failed.");
-      @(exit 1);
-    }
-}
-
 # Simple wrapper function for testing.
 def grep(args) {
   return @(grep $args);

@@ -33,3 +33,11 @@ def cd(path) {
 def cwd() {
     return @(pwd);
 }
+
+# Terminate the shell if 'v' is false.
+def assert(v) {
+    if (v == false) {
+      print("Assertion failed.");
+      @(exit 1);
+    }
+}
