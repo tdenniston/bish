@@ -37,6 +37,14 @@ As a side note, I won't stop you, but you would probably be crazy to use Bish in
     print("Files in root directory:");
     printall(ls());
 
+##### Shell-like features
+
+    # I/O redirection (like pipes) is a first-class language feature.
+    pattern = "bish";
+    matches = ls() | @(grep $pattern);
+    print("Files in current directory matching $pattern:");
+    print(matches);
+
 ## How
 
 Just clone and build with 'make'. There are no dependencies other than the C++ standard library. Compile bish to bash with the command:
