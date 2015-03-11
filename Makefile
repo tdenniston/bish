@@ -1,4 +1,4 @@
-CXX=g++
+CXX?=c++
 CXXFLAGS?=-g -O0
 RM=rm -f
 
