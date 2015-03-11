@@ -350,6 +350,36 @@ void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
     tokenizer->next();
 }
 
+// Wrapper around tokenizer->scan_until() that throws an error message
+// if EOS is encountered.
+std::string Parser::scan_until(Token a, Token b) {
+    std::string result = tokenizer->scan_until(a, b);
+    if (tokenizer->peek().isa(Token::EOSType)) {
+        abort("Unexpected end of input.");
+    }
+    return result;
+}
+
+// Wrapper around tokenizer->scan_until() that throws an error message
+// if EOS is encountered.
+std::string Parser::scan_until(Token t) {
+    std::string result = tokenizer->scan_until(t);
+    if (tokenizer->peek().isa(Token::EOSType)) {
+        abort("Unexpected end of input.");
+    }
+    return result;
+}
+
+// Wrapper around tokenizer->scan_until() that throws an error message
+// if EOS is encountered.
+std::string Parser::scan_until(char c) {
+    std::string result = tokenizer->scan_until(c);
+    if (tokenizer->peek().isa(Token::EOSType)) {
+        abort("Unexpected end of input.");
+    }
+    return result;
+}
+
 // Terminate the parsing process with the given error message.
 void Parser::abort(const std::string &msg) {
     std::cerr << msg << "\n";
@@ -466,7 +496,7 @@ Block *Parser::block() {
     expect(tokenizer->peek(), Token::LBraceType, "Expected block to begin with '{'");
     do {
         while (tokenizer->peek().isa(Token::SharpType)) {
-            tokenizer->scan_until('\n');
+            scan_until('\n');
         }
         if (tokenizer->peek().isa(Token::RBraceType)) break;
         IRNode *s = stmt();
@@ -528,13 +558,13 @@ IRNode *Parser::externcall() {
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     InterpolatedString *body = new InterpolatedString();
     do {
-        std::string str = tokenizer->scan_until(Token::Dollar(), Token::RParen());
+        std::string str = scan_until(Token::Dollar(), Token::RParen());
         body->push_str(str);
         if (tokenizer->peek().isa(Token::DollarType)) {
             tokenizer->next();
             if (tokenizer->peek().isa(Token::LParenType)) {
                 tokenizer->next();
-                str = tokenizer->scan_until(Token::RParen());
+                str = scan_until(Token::RParen());
                 tokenizer->next();
                 body->push_str("$" + str);
             } else {
@@ -748,7 +778,7 @@ IRNode *Parser::atom() {
     case Token::FractionalType:
         return new Fractional(t.value());
     case Token::QuoteType: {
-        std::string str = tokenizer->scan_until(Token::Quote());
+        std::string str = scan_until(Token::Quote());
         expect(tokenizer->peek(), Token::QuoteType, "Unmatched '\"'");
         return new String(str);
     }
