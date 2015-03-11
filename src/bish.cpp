@@ -89,8 +89,10 @@ void run_on_bash(std::istream &is) {
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        std::cerr << "USAGE: " << argv[0] << " <INPUT>\n";
+        std::cerr << "USAGE: " << argv[0] << " [-r] <INPUT>\n";
         std::cerr << "  Compiles Bish file <INPUT> to bash.\n";
+        std::cerr << "\nOPTIONS:\n";
+        std::cerr << "  -r  compiles and runs the file.\n";
         return 1;
     }
 
