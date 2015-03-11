@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <sstream>
+#include <cstring>
 #include <cassert>
 #include <set>
 #include <string>
@@ -73,6 +76,17 @@ void compile_to_bash(std::ostream &os, Bish::Module *m) {
     m->accept(&compile);
 }
 
+void run_on_bash(std::istream &is) {
+    FILE *bash = popen("bash", "w");
+    char buf[4096];
+    while (is) {
+        is.read(buf, sizeof(buf));
+        fwrite(buf, 1, sizeof(buf), bash);
+    }
+
+    pclose(bash);
+}
+
 int main(int argc, char **argv) {
     if (argc < 2) {
         std::cerr << "USAGE: " << argv[0] << " <INPUT>\n";
@@ -80,11 +94,21 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    std::string path(argv[1]);
-    Bish::Parser p;
-    Bish::Module *m = p.parse(path);
+    if (strcmp(argv[1], "-r") == 0) {
+        std::string path(argv[2]);
+        Bish::Parser p;
+        Bish::Module *m = p.parse(path);
 
-    compile_to_bash(std::cout, m);
+        std::stringstream s;
+        compile_to_bash(s, m);
+        run_on_bash(s);
+    } else {
+        std::string path(argv[1]);
+        Bish::Parser p;
+        Bish::Module *m = p.parse(path);
+
+        compile_to_bash(std::cout, m);
+    }
 
     return 0;
 }
