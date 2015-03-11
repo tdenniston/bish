@@ -33,3 +33,12 @@ def cd(path) {
 def cwd() {
     return @(pwd);
 }
+
+# Check for empty string.
+def empty(s) {
+    if (@(expr length "$s") > 0) {
+        return false;
+    } else {
+        return true;
+    }
+}
