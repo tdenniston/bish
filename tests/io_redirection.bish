@@ -26,4 +26,4 @@ def pipes() {
 
 pipes();
 
-print("I/O redirection tests passed.");
+println("I/O redirection tests passed.");

@@ -1,0 +1,17 @@
+# Test with nested for loops.
+
+def double(val) {
+    return val * val;
+}
+
+sum = 0;
+for (i in 2 .. 4) {
+    d = i * i;
+    for (j in i .. d) {
+        sum = sum + double(j/i+j*i);
+    }
+}
+
+cmp = sum == 29580;
+assert(cmp);
+println("Nested for loops test passed.");
