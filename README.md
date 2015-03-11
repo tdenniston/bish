@@ -43,7 +43,9 @@ As a side note, I won't stop you, but you would probably be crazy to use Bish in
     pattern = "bish";
     matches = ls() | @(grep $pattern);
     print("Files in current directory matching $pattern:");
-    print(matches);
+    for (m in matches) {
+        print(m);
+    }
 
 ## How
 
