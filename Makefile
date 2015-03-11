@@ -1,5 +1,5 @@
 CXX=g++
-CFLAGS=-g -O0
+CFLAGS?=-g -O0
 RM=rm -f
 
 SRC=src
