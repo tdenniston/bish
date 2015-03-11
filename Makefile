@@ -1,5 +1,5 @@
 CXX=g++
-CFLAGS?=-g -O0
+CXXFLAGS?=-g -O0
 RM=rm -f
 
 SRC=src
@@ -16,10 +16,10 @@ all: bish
 
 $(OBJ)/%.o: $(SRC)/%.cpp $(SRC)/%.h
 	@-mkdir -p $(OBJ)
-	$(CXX) $(CFLAGS) -c $< -o $@ -MMD -MF $(OBJ)/$*.d -MT $(OBJ)/$*.o
+	$(CXX) $(CXXFLAGS) -c $< -o $@ -MMD -MF $(OBJ)/$*.d -MT $(OBJ)/$*.o
 
 bish: $(OBJECTS)
-	$(CXX) $(CFLAGS) -o bish $(SRC)/bish.cpp $(OBJECTS)
+	$(CXX) $(CXXFLAGS) -o bish $(SRC)/bish.cpp $(OBJECTS)
 
 .PHONY: clean
 clean:
