@@ -16,7 +16,7 @@ all: bish
 
 $(OBJ)/%.o: $(SRC)/%.cpp $(SRC)/%.h
 	@-mkdir -p $(OBJ)
-	$(CXX) $(CXX_FLAGS) -c $< -o $@ -MMD -MF $(OBJ)/$*.d -MT $(OBJ)/$*.o
+	$(CXX) $(CFLAGS) -c $< -o $@ -MMD -MF $(OBJ)/$*.d -MT $(OBJ)/$*.o
 
 bish: $(OBJECTS)
 	$(CXX) $(CFLAGS) -o bish $(SRC)/bish.cpp $(OBJECTS)
