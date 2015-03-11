@@ -221,12 +221,12 @@ void CodeGen_Bash::visit(BinOp *n) {
     }
 
     if (!comparison) stream << "$((";
-    disable_quote_variable();
+    if (!string) disable_quote_variable();
     n->a->accept(this);
     stream << " " << bash_op << " ";
     n->b->accept(this);
     if (!comparison) stream << "))";
-    enable_quote_variable();
+    if (!string) enable_quote_variable();
 }
 
 void CodeGen_Bash::visit(UnaryOp *n) {
