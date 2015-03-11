@@ -51,7 +51,7 @@ void CodeGen_Bash::visit(ReturnStatement *n) {
     if (external) stream << "\"";
     n->value->accept(this);
     if (external) stream << "\"";
-    disable_functioncall_wrap();
+    reset_functioncall_wrap();
     stream << "; exit";
 }
 
@@ -62,7 +62,7 @@ void CodeGen_Bash::visit(IfStatement *n) {
     if (dynamic_cast<BinOp*>(n->pblock->condition) == NULL) {
         stream << " -eq 1";
     }
-    disable_functioncall_wrap();
+    reset_functioncall_wrap();
     stream << " ]]; then\n";
     disable_block_braces();
     n->pblock->body->accept(this);
@@ -73,7 +73,7 @@ void CodeGen_Bash::visit(IfStatement *n) {
         stream << "elif [[ ";
         enable_functioncall_wrap();
         (*I)->condition->accept(this);
-        disable_functioncall_wrap();
+        reset_functioncall_wrap();
         stream << " ]]; then\n";
         (*I)->body->accept(this);
     }
@@ -83,7 +83,7 @@ void CodeGen_Bash::visit(IfStatement *n) {
         n->elseblock->accept(this);
     }
 
-    enable_block_braces();
+    reset_block_braces();
     indent();
     stream << "fi";
 }
@@ -99,12 +99,12 @@ void CodeGen_Bash::visit(ForLoop *n) {
     } else {
         disable_quote_variable();
         n->lower->accept(this);
-        enable_quote_variable();
+        reset_quote_variable();
     }
     stream << "; do\n";
     disable_block_braces();
     n->body->accept(this);
-    enable_block_braces();
+    reset_block_braces();
     indent();
     stream << "done";
 }
@@ -130,7 +130,7 @@ void CodeGen_Bash::visit(FunctionCall *n) {
     stream << "bish_" << n->function->name;
     for (int i = 0; i < nargs; i++) {
         stream << " ";
-        bool old = enable_functioncall_wrap();
+        enable_functioncall_wrap();
         if (const FunctionCall *FC = dynamic_cast<const FunctionCall*>(n->args[i])) {
           if (should_quote_variable()) stream << "\"";
           n->args[i]->accept(this);
@@ -141,7 +141,7 @@ void CodeGen_Bash::visit(FunctionCall *n) {
             }
             n->args[i]->accept(this);
         }
-        set_functioncall_wrap(old);
+        reset_functioncall_wrap();
     }
     if (should_functioncall_wrap()) stream << ")";
 }
@@ -158,7 +158,7 @@ void CodeGen_Bash::visit(ExternCall *n) {
             visit((*I).var());
         }
     }
-    enable_quote_variable();
+    reset_quote_variable();
     if (should_functioncall_wrap()) stream << ")";
 }
 
@@ -178,7 +178,7 @@ void CodeGen_Bash::visit(IORedirection *n) {
     stream << " " << bash_op << " ";
     n->b->accept(this);
     stream << ")";
-    enable_functioncall_wrap();
+    reset_functioncall_wrap();
 }
 
 void CodeGen_Bash::visit(Assignment *n) {
@@ -194,7 +194,7 @@ void CodeGen_Bash::visit(Assignment *n) {
     stream << lookup_name(n->variable) << "=";
     enable_functioncall_wrap();
     n->value->accept(this);
-    disable_functioncall_wrap();
+    reset_functioncall_wrap();
 }
 
 void CodeGen_Bash::visit(BinOp *n) {
@@ -251,7 +251,7 @@ void CodeGen_Bash::visit(BinOp *n) {
     stream << " " << bash_op << " ";
     n->b->accept(this);
     if (!comparison) stream << "))";
-    if (!string) enable_quote_variable();
+    if (!string) reset_quote_variable();
 }
 
 void CodeGen_Bash::visit(UnaryOp *n) {

@@ -27,14 +27,14 @@ public:
 private:
     std::map<const Variable *, std::string> rename;
 };
-
+ 
 class CodeGen_Bash : public IRVisitor {
 public:
     CodeGen_Bash(std::ostream &os) : stream(os) {
         indent_level = 0;
-        block_print_braces = true;
-        functioncall_wrap = false;
-        quote_variable = true;
+        enable_block_braces();
+        disable_functioncall_wrap();
+        enable_quote_variable();
     }
     virtual void visit(Module *);
     virtual void visit(Block *);
@@ -55,22 +55,26 @@ public:
     virtual void visit(Boolean *);
 private:
     std::stack<LetScope *> let_stack;
+    std::stack<bool> block_print_braces;
+    std::stack<bool> functioncall_wrap;
+    std::stack<bool> quote_variable;
     std::ostream &stream;
     unsigned indent_level;
-    bool block_print_braces;
-    bool functioncall_wrap;
-    bool quote_variable;
 
-    inline void disable_block_braces() { block_print_braces = false; }
-    inline void enable_block_braces() { block_print_braces = true; }
-    inline bool should_print_block_braces() const { return block_print_braces; }
-    inline void disable_functioncall_wrap() { functioncall_wrap = false; }
-    inline bool enable_functioncall_wrap() { bool v = functioncall_wrap; functioncall_wrap = true; return v; }
-    inline void set_functioncall_wrap(bool v) { functioncall_wrap = v; }
-    inline bool should_functioncall_wrap() const { return functioncall_wrap; }
-    inline void disable_quote_variable() { quote_variable = false; }
-    inline void enable_quote_variable() { quote_variable = true; }
-    inline bool should_quote_variable() const { return quote_variable; }
+    inline void disable_block_braces() { block_print_braces.push(false); }
+    inline void enable_block_braces() { block_print_braces.push(true); }
+    inline void reset_block_braces() { block_print_braces.pop(); }
+    inline bool should_print_block_braces() const { return block_print_braces.top(); }
+
+    inline void disable_functioncall_wrap() { functioncall_wrap.push(false); }
+    inline void enable_functioncall_wrap() { functioncall_wrap.push(true); }
+    inline void reset_functioncall_wrap() { functioncall_wrap.pop(); }
+    inline bool should_functioncall_wrap() const { return functioncall_wrap.top(); }
+
+    inline void disable_quote_variable() { quote_variable.push(false); }
+    inline void enable_quote_variable() { quote_variable.push(true); }
+    inline void reset_quote_variable() { quote_variable.pop(); }
+    inline bool should_quote_variable() const { return quote_variable.top(); }
 
     bool is_equals_op(IRNode *n) const {
         if (BinOp *b = dynamic_cast<BinOp*>(n)) {
