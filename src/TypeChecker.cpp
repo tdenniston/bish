@@ -37,6 +37,13 @@ void TypeChecker::visit(ExternCall *node) {
     node->set_type(UndefinedTy);
 }
 
+void TypeChecker::visit(IORedirection *node) {
+    if (node->type() != UndefinedTy) return;
+    node->a->accept(this);
+    node->b->accept(this);
+    node->set_type(UndefinedTy);
+}
+
 void TypeChecker::visit(Assignment *node) {
     if (visited(node) || node->type() != UndefinedTy) return;
     visited_set.insert(node);

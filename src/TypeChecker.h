@@ -12,6 +12,7 @@ public:
     virtual void visit(Function *);
     virtual void visit(FunctionCall *);
     virtual void visit(ExternCall *);
+    virtual void visit(IORedirection *);
     virtual void visit(Assignment *);
     virtual void visit(BinOp *);
     virtual void visit(UnaryOp *);

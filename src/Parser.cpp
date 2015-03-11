@@ -175,6 +175,8 @@ private:
             return ResultState(Token::RBracket(), idx + 1);
         } else if (c == '@') {
             return ResultState(Token::At(), idx + 1);
+        } else if (c == '|') {
+            return ResultState(Token::Pipe(), idx + 1);
         } else if (c == '$') {
             return ResultState(Token::Dollar(), idx + 1);
         } else if (c == '#') {
@@ -440,6 +442,18 @@ UnaryOp::Operator Parser::get_unaryop_operator(const Token &t) {
     }
 }
 
+// Return the I/O redirection Operator corresponding to the given Token.
+IORedirection::Operator Parser::get_redirection_operator(const Token &t) {
+    switch (t.type()) {
+    case Token::PipeType:
+        return IORedirection::Pipe;
+    default:
+        abort("Invalid operator for I/O redirection.");
+        return IORedirection::Pipe;
+    }
+}
+
+
 // Return the Bish Type to represent the given IR node.
 Type Parser::get_primitive_type(const IRNode *n) {
     if (const Integer *v = dynamic_cast<const Integer*>(n)) {
@@ -688,6 +702,16 @@ Variable *Parser::arg() {
 }
 
 IRNode *Parser::expr() {
+    IRNode *a = equality();
+    Token t = tokenizer->peek();
+    if (t.isa(Token::PipeType)) {
+        tokenizer->next();
+        a = new IORedirection(get_redirection_operator(t), a, equality());
+    }
+    return a;
+}
+
+IRNode *Parser::equality() {
     IRNode *a = relative();
     Token t = tokenizer->peek();
     if (t.isa(Token::DoubleEqualsType) || t.isa(Token::NotEqualsType)) {

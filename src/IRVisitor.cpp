@@ -65,6 +65,11 @@ void IRVisitor::visit(ExternCall *node) {
 
 }
 
+void IRVisitor::visit(IORedirection *node) {
+    node->a->accept(this);
+    node->b->accept(this);
+}
+
 void IRVisitor::visit(Assignment *node) {
     node->variable->accept(this);
     node->value->accept(this);

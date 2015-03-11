@@ -22,7 +22,8 @@ stmt ::= assign ';'
        | 'def' var '(' varlist ')' block
        | block
 assign ::= var '=' expr
-expr ::= expr '==' relative | expr '!=' relative | relative
+expr ::= expr '|' equality | equality
+equality ::= equality '==' relative | equality '!=' relative | relative
 relative ::= relative '<' arith | relative '>' arith
            | relative '<=' arith | relative '>=' arith
            | arith
@@ -52,6 +53,7 @@ public:
                    LBracketType,
                    RBracketType,
                    AtType,
+                   PipeType,
                    DollarType,
                    SharpType,
                    SemicolonType,
@@ -119,6 +121,10 @@ public:
 
     static Token At() {
         return Token(AtType, "@");
+    }
+
+    static Token Pipe() {
+        return Token(PipeType, "|");
     }
 
     static Token Dollar() {
@@ -263,6 +269,7 @@ private:
     bool is_binop_token(const Token &t);
     BinOp::Operator get_binop_operator(const Token &t);
     UnaryOp::Operator get_unaryop_operator(const Token &t);
+    IORedirection::Operator get_redirection_operator(const Token &t);
     Type get_primitive_type(const IRNode *n);
     void expect(const Token &t, Token::Type ty, const std::string &msg);
     std::string scan_until(Token a, Token b);
@@ -292,6 +299,7 @@ private:
     Variable *var();
     Variable *arg();
     IRNode *expr();
+    IRNode *equality();
     IRNode *relative();
     IRNode *arith();
     IRNode *term();

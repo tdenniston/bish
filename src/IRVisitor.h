@@ -13,6 +13,7 @@ class ForLoop;
 class Function;
 class FunctionCall;
 class ExternCall;
+class IORedirection;
 class Assignment;
 class BinOp;
 class UnaryOp;
@@ -30,6 +31,7 @@ public:
     virtual void visit(Function *);
     virtual void visit(FunctionCall *);
     virtual void visit(ExternCall *);
+    virtual void visit(IORedirection *);
     virtual void visit(IfStatement *);
     virtual void visit(ReturnStatement *);
     virtual void visit(ForLoop *);

@@ -1,0 +1,36 @@
+# Test the I/O redirection features.
+
+def assert(v) {
+    if (v == false) {
+      print("Assertion failed.");
+      @(exit 1);
+    }
+}
+
+# Simple wrapper function for testing.
+def grep(args) {
+  return @(grep $args);
+}
+
+# Test the pipe feature.
+def pipes() {
+    filename = "testfile";
+    @(touch $filename);
+    # Test piping between bish functions
+    matches = ls() | grep("testfile");
+    # Test piping from external function.
+    matches2 = @(ls) | grep("testfile");
+    # Test piping to external function.
+    nonmatches = ls() | @(grep "doesn't exist");
+    @(rm $filename);
+    test = matches == "testfile";
+    assert(test);    
+    test = matches2 == "testfile";
+    assert(test);    
+    test = nonmatches == "";
+    assert(test);
+}
+
+pipes();
+
+print("I/O redirection tests passed.");

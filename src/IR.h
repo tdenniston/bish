@@ -220,6 +220,14 @@ public:
     ExternCall(InterpolatedString *b) : body(b) {}
 };
 
+class IORedirection : public BaseIRNode<IORedirection> {
+public:
+    typedef enum { Pipe } Operator;
+    Operator op;
+    IRNode *a, *b;
+    IORedirection(Operator op_, IRNode *a_, IRNode *b_) : op(op_), a(a_), b(b_) {}
+};
+
 class BinOp : public BaseIRNode<BinOp> {
 public:
     typedef enum { Add, Sub, Mul, Div, Mod, Eq, NotEq, LT, LTE, GT, GTE } Operator;

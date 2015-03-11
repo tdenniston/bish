@@ -42,9 +42,15 @@ void CodeGen_Bash::visit(Variable *n) {
 }
 
 void CodeGen_Bash::visit(ReturnStatement *n) {
+    bool external = dynamic_cast<ExternCall*>(n->value) != NULL;
     stream << "echo ";
     enable_functioncall_wrap();
+    // Defensively wrap external calls in quotes in case they return
+    // space-separated strings. Not sure how to handle this yet in the
+    // general case.
+    if (external) stream << "\"";
     n->value->accept(this);
+    if (external) stream << "\"";
     disable_functioncall_wrap();
     stream << "; exit";
 }
@@ -154,6 +160,25 @@ void CodeGen_Bash::visit(ExternCall *n) {
     }
     enable_quote_variable();
     if (should_functioncall_wrap()) stream << ")";
+}
+
+void CodeGen_Bash::visit(IORedirection *n) {
+    std::string bash_op;
+    switch (n->op) {
+    case IORedirection::Pipe:
+        bash_op = "|";
+        break;
+    default:
+        assert(false && "Unimplemented redirection.");
+    }
+
+    disable_functioncall_wrap();
+    stream << "$(";
+    n->a->accept(this);
+    stream << " " << bash_op << " ";
+    n->b->accept(this);
+    stream << ")";
+    enable_functioncall_wrap();
 }
 
 void CodeGen_Bash::visit(Assignment *n) {
