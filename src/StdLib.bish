@@ -42,7 +42,7 @@ def cwd() {
 # Terminate the shell if 'v' is false.
 def assert(v) {
     if (v == false) {
-      print("Assertion failed.");
+      println("Assertion failed.");
       @(exit 1);
     }
 }
