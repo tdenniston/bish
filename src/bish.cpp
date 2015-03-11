@@ -80,7 +80,7 @@ void run_on_bash(std::istream &is) {
     FILE *bash = popen("bash", "w");
     char buf[4096];
     int n;
-    while (n = is.readsome(buf, sizeof(buf))) {
+    while ((n = is.readsome(buf, sizeof(buf)))) {
         fwrite(buf, 1, n, bash);
     }
 
