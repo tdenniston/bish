@@ -25,16 +25,16 @@ As a side note, I won't stop you, but you would probably be crazy to use Bish in
 
     def printall(files) {
         for (f in files) {
-            print(f);
+            println(f);
         }
     }
     # cwd, ls, and cd are all builtin functions.
     dir = cwd();
     files = ls();
-    print("Files in current directory $dir:");
+    println("Files in current directory $dir:");
     printall(files);
     cd("/");
-    print("Files in root directory:");
+    println("Files in root directory:");
     printall(ls());
 
 ##### Shell-like features
@@ -42,9 +42,9 @@ As a side note, I won't stop you, but you would probably be crazy to use Bish in
     # I/O redirection (like pipes) is a first-class language feature.
     pattern = "bish";
     matches = ls() | @(grep $pattern);
-    print("Files in current directory matching $pattern:");
+    println("Files in current directory matching $pattern:");
     for (m in matches) {
-        print(m);
+        println(m);
     }
 
 ## How
