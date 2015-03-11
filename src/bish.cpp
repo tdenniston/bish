@@ -98,6 +98,11 @@ int main(int argc, char **argv) {
     }
 
     if (strcmp(argv[1], "-r") == 0) {
+        if (argc != 3) {
+            std::cerr << "-r needs a filename\n";
+            return 1;
+        }
+
         std::string path(argv[2]);
         Bish::Parser p;
         Bish::Module *m = p.parse(path);
