@@ -79,11 +79,12 @@ void compile_to_bash(std::ostream &os, Bish::Module *m) {
 void run_on_bash(std::istream &is) {
     FILE *bash = popen("bash", "w");
     char buf[4096];
-    while (is) {
-        is.read(buf, sizeof(buf));
-        fwrite(buf, 1, sizeof(buf), bash);
+    int n;
+    while (n = is.readsome(buf, sizeof(buf))) {
+        fwrite(buf, 1, n, bash);
     }
 
+    fflush(bash);
     pclose(bash);
 }
 
