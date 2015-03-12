@@ -265,6 +265,7 @@ private:
 
     std::string read_file(const std::string &path);
     void abort(const std::string &msg);
+    void abort_with_position(const std::string &msg);
     bool is_unop_token(const Token &t);
     bool is_binop_token(const Token &t);
     BinOp::Operator get_binop_operator(const Token &t);

@@ -346,8 +346,8 @@ void Parser::post_parse_passes(Module *m) {
 void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
     if (!t.isa(ty)) {
         std::stringstream errstr;
-        errstr << "Parsing error: " << msg << " near " << tokenizer->position();
-        abort(errstr.str());
+        errstr << "Parsing error: " << msg;
+        abort_with_position(errstr.str());
     }
     tokenizer->next();
 }
@@ -385,6 +385,13 @@ std::string Parser::scan_until(char c) {
 // Terminate the parsing process with the given error message.
 void Parser::abort(const std::string &msg) {
     std::cerr << msg << "\n";
+    exit(1);
+}
+
+// Terminate the parsing process with the given error message, and the
+// position of the tokenizer.
+void Parser::abort_with_position(const std::string &msg) {
+    std::cerr << msg << " near " << tokenizer->position() << "\n";
     exit(1);
 }
 
@@ -777,7 +784,10 @@ IRNode *Parser::factor() {
     } else {
         IRNode *a = atom();
         if (tokenizer->peek().isa(Token::LParenType)) {
-            Variable *v = static_cast<Variable*>(a);
+            Variable *v = dynamic_cast<Variable*>(a);
+            if (v == NULL) {
+                abort_with_position("Invalid atom type for function call");
+            }
             // The symbol will be reinserted as a Function, not a Variable.
             remove_from_symbol_table(v->name);
             a = funcall(v->name);
