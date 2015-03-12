@@ -1,11 +1,11 @@
 # Print the given string without new line.
 def print(s) {
-    @(echo -ne $s);
+    @(echo -ne "$s");
 }
 
 # Print the given string with new line.
 def println(s) {
-    @(echo -e $s);
+    @(echo -e "$s");
 }
 
 # Return true if the given file exists.
