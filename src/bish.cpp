@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <sstream>
+#include <cstdlib>
 #include <cstring>
 #include <cassert>
 #include <set>
@@ -37,10 +38,29 @@ private:
     std::set<std::string> names_;
 };
 
+// Return the path to the standard library. This tries a couple of
+// options before falling back on the hardcoded value.
+std::string get_stdlib_path() {
+    char abspath[PATH_MAX];
+    char *root = std::getenv("BISH_ROOT");
+    char *stdlib = std::getenv("BISH_STDLIB");
+    if (root) {
+        root = realpath(root, abspath);
+        assert(root);
+        return std::string(abspath) + "/" + STDLIB_PATH;
+    } else if (stdlib) {
+        stdlib = realpath(stdlib, abspath);
+        assert(stdlib);
+        return std::string(abspath);
+    } else {
+        return STDLIB_PATH;
+    }
+}
+
 // Add necessary stdlib functions to the given module.
 void link_stdlib(Bish::Module *m) {
     Bish::Parser p;
-    Bish::Module *stdlib = p.parse(STDLIB_PATH);
+    Bish::Module *stdlib = p.parse(get_stdlib_path());
     std::set<std::string> stdlib_functions;
     for (std::vector<Bish::Function *>::iterator I = stdlib->functions.begin(),
              E = stdlib->functions.end(); I != E; ++I) {
