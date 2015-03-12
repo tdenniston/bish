@@ -1,12 +1,5 @@
 # Run the tests for the bish compiler.
 
-# Make sure we're using an absolute path to the bish root directory.
-def set_bish_root() {
-    relpath = @(echo $(BISH_ROOT));
-    abs = abspath(relpath);
-    @(BISH_ROOT=$abs);
-}
-
 # Make sure we're in the "tests" directory.
 def change_dir() {
     dir = cwd();
@@ -18,7 +11,7 @@ def change_dir() {
 
 # Run a single bish script and return whether it succeeded or not.
 def run_bish(file) {
-    @($BISH_ROOT/bish -r $file > /dev/null);
+    @(../bish -r $file > /dev/null);
     return success();
 }
 
@@ -33,7 +26,6 @@ def run_all() {
     assert(test);
 }
 
-set_bish_root();
 change_dir();
 run_all();
 println("All tests passed.");
