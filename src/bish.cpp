@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <limits.h>
 #include <sstream>
 #include <cstdlib>
 #include <cstring>
