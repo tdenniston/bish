@@ -26,6 +26,11 @@ inline bool is_alphanumeric(char c) {
     return is_digit(c) || (c >= 0x41 && c <= 0x5a) || (c >= 0x61 && c <= 0x7a);
 }
 
+// Return true if c is a valid character for a symbol (e.g. variable or function name);
+inline bool is_symbol_char(char c) {
+    return is_alphanumeric(c) || c == '_';
+}
+
 }
 
 namespace Bish {
@@ -261,7 +266,7 @@ private:
     ResultState read_symbol() {
         std::string sym = "";
         unsigned newidx = idx;
-        while (is_alphanumeric(text[newidx])) {
+        while (is_symbol_char(text[newidx])) {
             sym += text[newidx];
             newidx++;
         }

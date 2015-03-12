@@ -34,7 +34,7 @@ factor ::= '( expr ')' | funcall | externcall | atom
 funcall ::= var '(' exprlist ')'
 externcall ::= '@' '(' interp ')'
 atom ::= var | NUMBER | '"' STRING '"' | 'true' | 'false'
-var ::= ALPHANUM
+var ::= { ALPHANUM | '_' }
 varlist ::= var { ',' var }
 atomlist ::= expr { ',' expr }
 interp ::= { str | '$' var | '$' '(' any ')'}
@@ -52,6 +52,7 @@ public:
                    RBraceType,
                    LBracketType,
                    RBracketType,
+                   UnderscoreType,
                    AtType,
                    PipeType,
                    DollarType,
@@ -117,6 +118,10 @@ public:
 
     static Token RBracket() {
         return Token(RBracketType, "]");
+    }
+
+    static Token Underscore() {
+        return Token(UnderscoreType, "_");
     }
 
     static Token At() {
