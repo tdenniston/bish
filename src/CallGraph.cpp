@@ -7,14 +7,12 @@
 using namespace Bish;
 
 // Return a list of direct calls from f.
-const std::vector<Function *> &CallGraph::calls(Function *f) const {
-    FuncMap::const_iterator I = calls_map.find(f);
-    assert(I != calls_map.end());
-    return I->second;
+const std::vector<Function *> &CallGraph::calls(Function *f) {
+    return calls_map[f];
 }
 
 // Return a list of all calls (recursively) from root.
-std::vector<Function *> CallGraph::transitive_calls(Function *root) const {
+std::vector<Function *> CallGraph::transitive_calls(Function *root) {
     std::vector<Function *> result;
     std::set<Function *> visited;
     std::queue<Function *> worklist;
@@ -36,10 +34,8 @@ std::vector<Function *> CallGraph::transitive_calls(Function *root) const {
 }
 
 // Return a list of functions which call f.
-const std::vector<Function *> &CallGraph::callers(Function *f) const {
-    FuncMap::const_iterator I = callers_map.find(f);
-    assert(I != callers_map.end());
-    return I->second;
+const std::vector<Function *> &CallGraph::callers(Function *f) {
+  return callers_map[f];
 }
 
 void CallGraphBuilder::visit(Function *f) {

@@ -11,9 +11,9 @@ namespace Bish {
 class CallGraph {
     friend class CallGraphBuilder;
 public:
-    const std::vector<Function *> &calls(Function *f) const;
-    std::vector<Function *> transitive_calls(Function *root) const;
-    const std::vector<Function *> &callers(Function *f) const;
+    const std::vector<Function *> &calls(Function *f);
+    std::vector<Function *> transitive_calls(Function *root);
+    const std::vector<Function *> &callers(Function *f);
 private:
     typedef std::vector<Function *> FuncVec;
     typedef std::map<Function *, FuncVec> FuncMap;

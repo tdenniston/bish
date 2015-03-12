@@ -8,36 +8,12 @@
 #include <string>
 #include <queue>
 #include <iostream>
-#include "CallGraph.h"
 #include "CodeGen_Bash.h"
 #include "Parser.h"
-#include "IRVisitor.h"
 
 const std::string BISH_VERSION = "0.1";
 const std::string BISH_URL = "https://github.com/tdenniston/bish";
 const std::string STDLIB_PATH = "src/StdLib.bish";
-
-class FindFunctionCalls : public Bish::IRVisitor {
-public:
-    FindFunctionCalls(const std::set<std::string> &n) {
-        to_find.insert(n.begin(), n.end());
-    }
-
-    std::set<std::string> names() { return names_; }
-
-    virtual void visit(Bish::FunctionCall *call) {
-        for (std::vector<Bish::IRNode *>::const_iterator I = call->args.begin(),
-                 E = call->args.end(); I != E; ++I) {
-            (*I)->accept(this);
-        }
-        if (to_find.count(call->function->name)) {
-            names_.insert(call->function->name);
-        }
-    }
-private:
-    std::set<std::string> to_find;
-    std::set<std::string> names_;
-};
 
 // Return the path to the standard library. This tries a couple of
 // options before falling back on the hardcoded value.
@@ -62,29 +38,7 @@ std::string get_stdlib_path() {
 void link_stdlib(Bish::Module *m) {
     Bish::Parser p;
     Bish::Module *stdlib = p.parse(get_stdlib_path());
-    std::set<std::string> stdlib_functions;
-    for (std::vector<Bish::Function *>::iterator I = stdlib->functions.begin(),
-             E = stdlib->functions.end(); I != E; ++I) {
-        Bish::Function *f = *I;
-        if (f->name.compare("main") == 0) continue;
-        stdlib_functions.insert(f->name);
-    }
-    FindFunctionCalls find(stdlib_functions);
-    m->accept(&find);
-    Bish::CallGraphBuilder cgb;
-    Bish::CallGraph cg = cgb.build(stdlib);
-    
-    std::set<std::string> to_link = find.names();
-    for (std::set<std::string>::iterator I = to_link.begin(), E = to_link.end(); I != E; ++I) {
-        Bish::Function *f = stdlib->get_function(*I);
-        assert(f);
-        if (f->name.compare("main") == 0) continue;
-        m->add_function(f);
-        std::vector<Bish::Function *> calls = cg.transitive_calls(f);
-        for (std::vector<Bish::Function *>::iterator II = calls.begin(), EE = calls.end(); II != EE; ++II) {
-            m->add_function(stdlib->get_function((*II)->name));
-        }
-    }
+    m->import(stdlib);
 }
 
 void compile_to_bash(std::ostream &os, Bish::Module *m) {

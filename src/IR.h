@@ -93,17 +93,16 @@ public:
         main = m;
     }
 
+    // Set the module's main function.
     void set_main(Function *f);
+    // Add the given function to this module.
     void add_function(Function *f);
-    Function *get_function(const std::string &name) const {
-        for (std::vector<Function *>::const_iterator I = functions.begin(),
-                 E = functions.end(); I != E; ++I) {
-            if (name.compare((*I)->name) == 0) {
-                return *I;
-            }
-        }
-        return NULL;
-    }
+    // Return the function in this module corresponding to the given
+    // name, or NULL if no such function exists.
+    Function *get_function(const std::string &name) const;
+    // Import functions from the given module if they are called from
+    // this module.
+    void import(Module *m);
 };
 
 class Assignment : public BaseIRNode<Assignment> {
