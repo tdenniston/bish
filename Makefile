@@ -12,6 +12,9 @@ HEADER_FILES=CallGraph.h FindCalls.h IR.h IRVisitor.h IRAncestorsPass.h CodeGen_
 OBJECTS = $(SOURCE_FILES:%.cpp=$(OBJ)/%.o)
 HEADERS = $(HEADER_FILES:%.h=$(SRC)/%.h)
 
+ROOT_DIR = $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
+CONFIG_CONSTANTS = -DSTDLIB_PATH="\"$(ROOT_DIR)/src/StdLib.bish\""
+
 all: bish
 
 $(OBJ)/%.o: $(SRC)/%.cpp $(SRC)/%.h
@@ -19,7 +22,7 @@ $(OBJ)/%.o: $(SRC)/%.cpp $(SRC)/%.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@ -MMD -MF $(OBJ)/$*.d -MT $(OBJ)/$*.o
 
 bish: $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o bish $(SRC)/bish.cpp $(OBJECTS)
+	$(CXX) $(CXXFLAGS) -o bish $(SRC)/bish.cpp $(OBJECTS) $(CONFIG_CONSTANTS)
 
 .PHONY: clean
 clean:

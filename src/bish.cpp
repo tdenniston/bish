@@ -8,27 +8,19 @@
 #include <string>
 #include <queue>
 #include <iostream>
+#include "Config.h"
 #include "CodeGen_Bash.h"
 #include "Parser.h"
 
-const std::string BISH_VERSION = "0.1";
-const std::string BISH_URL = "https://github.com/tdenniston/bish";
-const std::string STDLIB_PATH = "src/StdLib.bish";
-
-// Return the path to the standard library. This tries a couple of
-// options before falling back on the hardcoded value.
+// Return the path to the standard library. This allows setting the
+// path via BISH_STDLIB to override the default.
 std::string get_stdlib_path() {
-    char abspath[PATH_MAX];
-    char *root = std::getenv("BISH_ROOT");
     char *stdlib = std::getenv("BISH_STDLIB");
-    if (root) {
-        root = realpath(root, abspath);
-        assert(root);
-        return std::string(abspath) + "/" + STDLIB_PATH;
-    } else if (stdlib) {
+    if (stdlib) {
+        char abspath[PATH_MAX];
         stdlib = realpath(stdlib, abspath);
-        assert(stdlib);
-        return std::string(abspath);
+        assert(stdlib && "Unable to resolve path specified in BISH_STDLIB.");
+        return abspath;
     } else {
         return STDLIB_PATH;
     }
