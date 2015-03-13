@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include "Util.h"
 
 std::string abspath(const std::string &path) {
