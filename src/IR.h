@@ -84,8 +84,13 @@ public:
 
 class Module : public BaseIRNode<Module> {
 public:
+    // List of all functions in the module (including main)
     std::vector<Function *> functions;
+    // Pointer to main function
     Function *main;
+    // Path to source file on disk
+    std::string path;
+    
     Module() : main(NULL) {}
     Module(const std::vector<Function *> &f, Function *m) {
         functions.insert(functions.begin(), f.begin(), f.end());

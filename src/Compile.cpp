@@ -1,10 +1,10 @@
-#include <limits.h>
 #include <cassert>
 #include <cstdlib>
 #include "CodeGen_Bash.h"
 #include "Compile.h"
 #include "Config.h"
 #include "Parser.h"
+#include "Util.h"
 
 using namespace Bish;
 
@@ -15,10 +15,9 @@ namespace {
 std::string get_stdlib_path() {
     char *stdlib = std::getenv("BISH_STDLIB");
     if (stdlib) {
-        char abspath[PATH_MAX];
-        stdlib = realpath(stdlib, abspath);
-        assert(stdlib && "Unable to resolve path specified in BISH_STDLIB.");
-        return abspath;
+        std::string abs = abspath(stdlib);
+        assert(!abs.empty() && "Unable to resolve path specified in BISH_STDLIB.");
+        return abs;
     } else {
         return STDLIB_PATH;
     }

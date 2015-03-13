@@ -317,7 +317,10 @@ std::string Parser::read_file(const std::string &path) {
 // Parse the given file into Bish IR.
 Module *Parser::parse(const std::string &path) {
     std::string contents = read_file(path);
-    return parse_string(contents);
+    Module *m = parse_string(contents);
+    m->path = abspath(path);
+    assert(m->path.size() > 0 && "Unable to resolve module path");
+    return m;
 }
 
 // Parse the given string into Bish IR.
