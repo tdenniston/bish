@@ -1,5 +1,6 @@
 #include <limits.h>
 #include <cassert>
+#include <cstdlib>
 #include "CodeGen_Bash.h"
 #include "Compile.h"
 #include "Config.h"
