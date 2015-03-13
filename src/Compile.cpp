@@ -27,7 +27,11 @@ std::string get_stdlib_path() {
 void link_stdlib(Bish::Module *m) {
     Parser p;
     Module *stdlib = p.parse(get_stdlib_path());
-    m->import(stdlib);
+    // TODO: this seems clunky. Trying to avoid importing stdlib if
+    // the user is compiling stdlib itself.
+    if (m->path.compare(stdlib->path) != 0) {
+        m->import(stdlib);
+    }
 }
 
 }
