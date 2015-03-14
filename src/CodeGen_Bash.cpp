@@ -70,7 +70,8 @@ void CodeGen_Bash::visit(IfStatement *n) {
     stream << "if [[ ";
     enable_functioncall_wrap();
     n->pblock->condition->accept(this);
-    if (dynamic_cast<BinOp*>(n->pblock->condition) == NULL) {
+    if (is_equals_op(n->pblock->condition) ||
+        !dynamic_cast<BinOp*>(n->pblock->condition)) {
         stream << " -eq 1";
     }
     reset_functioncall_wrap();
@@ -147,9 +148,6 @@ void CodeGen_Bash::visit(FunctionCall *n) {
           n->args[i]->accept(this);
           if (should_quote_variable()) stream << "\"";
         } else {
-            if (is_equals_op(n->args[i])) {
-                assert(false && "Using comparison statements as arguments is not yet supported.");
-            }
             n->args[i]->accept(this);
         }
         reset_functioncall_wrap();
@@ -193,15 +191,6 @@ void CodeGen_Bash::visit(IORedirection *n) {
 }
 
 void CodeGen_Bash::visit(Assignment *n) {
-    if (is_equals_op(n->value)) {
-        // Special case for comparisons.
-        stream << "[ ";
-        n->value->accept(this);
-        stream << " ];\n";
-        indent();
-        stream << lookup_name(n->variable) << "=$((!$?))";
-        return;
-    }
     stream << lookup_name(n->variable) << "=";
     enable_functioncall_wrap();
     n->value->accept(this);
@@ -210,17 +199,19 @@ void CodeGen_Bash::visit(Assignment *n) {
 
 void CodeGen_Bash::visit(BinOp *n) {
     std::string bash_op;
-    bool comparison = false, string = false;
+    bool comparison = false, equals = false, string = false;
     if (n->a->type() == StringTy || n->b->type() == StringTy) {
         string = true;
     }
     switch (n->op) {
     case BinOp::Eq:
         bash_op = string ? "==" : "-eq";
+        equals = true;
         comparison = true;
         break;
     case BinOp::NotEq:
         bash_op = string ? "!=" : "-ne";
+        equals = true;
         comparison = true;
         break;
     case BinOp::LT:
@@ -256,11 +247,13 @@ void CodeGen_Bash::visit(BinOp *n) {
         break;
     }
 
+    if (equals) stream << "$(test ";
     if (!comparison) stream << "$((";
     if (!string) disable_quote_variable();
     n->a->accept(this);
     stream << " " << bash_op << " ";
     n->b->accept(this);
+    if (equals) stream << " && echo 1 || echo 0)";
     if (!comparison) stream << "))";
     if (!string) reset_quote_variable();
 }

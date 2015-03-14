@@ -11,9 +11,7 @@ for (i in 2 .. 4) {
         sum = sum + double(j/i+j*i);
     }
 }
-
-cmp = sum == 29580;
-assert(cmp);
+assert(sum == 29580);
 
 sum = 0;
 for (i in 2 .. 4) {
@@ -24,7 +22,6 @@ for (i in 2 .. 4) {
         sum = sum + double(j/i+j*i);
     }
 }
-cmp = sum == 1529;
-assert(cmp);
+assert(sum == 1529);
 
 println("Loops test passed.");
