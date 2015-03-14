@@ -21,8 +21,13 @@ $(OBJ)/%.o: $(SRC)/%.cpp $(SRC)/%.h
 	@-mkdir -p $(OBJ)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ -MMD -MF $(OBJ)/$*.d -MT $(OBJ)/$*.o $(CONFIG_CONSTANTS)
 
-bish: $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o bish $(SRC)/bish.cpp $(OBJECTS) $(CONFIG_CONSTANTS)
+$(OBJ)/libbish.a: $(OBJECTS)
+	$(LD) -r -o $(OBJ)/bish.o $(OBJECTS)
+	ar q $@ $(OBJ)/bish.o
+	ranlib $@
+
+bish: $(OBJ)/libbish.a
+	$(CXX) $(CXXFLAGS) -o bish $(SRC)/bish.cpp $(OBJ)/libbish.a $(CONFIG_CONSTANTS)
 
 .PHONY: clean
 clean:
