@@ -123,6 +123,13 @@ public:
     ReturnStatement(IRNode *v) : value(v) {}
 };
 
+class LoopControlStatement : public BaseIRNode<LoopControlStatement> {
+public:
+    typedef enum { Break, Continue } Operator;
+    Operator op;
+    LoopControlStatement(Operator op_) : op(op_) {}
+};
+
 // Helper class for IfStatement
 class PredicatedBlock {
 public:

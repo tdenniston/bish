@@ -278,6 +278,10 @@ private:
     Token get_multichar_token(const std::string &s) {
         if (s.compare(Token::Return().value()) == 0) {
             return Token::Return();
+        } else if (s.compare(Token::Break().value()) == 0) {
+            return Token::Break();
+        } else if (s.compare(Token::Continue().value()) == 0) {
+            return Token::Continue();
         } else if (s.compare(Token::If().value()) == 0) {
             return Token::If();
         } else if (s.compare(Token::Else().value()) == 0) {
@@ -549,6 +553,10 @@ IRNode *Parser::stmt() {
     }
     case Token::ReturnType:
         return returnstmt();
+    case Token::BreakType:
+        return breakstmt();
+    case Token::ContinueType:
+        return continuestmt();
     case Token::IfType:
         return ifstmt();
     case Token::ForType:
@@ -612,6 +620,18 @@ IRNode *Parser::returnstmt() {
     IRNode *ret = expr();
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     return new ReturnStatement(ret);
+}
+
+IRNode *Parser::breakstmt() {
+    expect(tokenizer->peek(), Token::BreakType, "Expected break statement");
+    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    return new LoopControlStatement(LoopControlStatement::Break);
+}
+
+IRNode *Parser::continuestmt() {
+    expect(tokenizer->peek(), Token::ContinueType, "Expected continue statement");
+    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    return new LoopControlStatement(LoopControlStatement::Continue);
 }
 
 IRNode *Parser::ifstmt() {

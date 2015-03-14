@@ -15,6 +15,8 @@ stmt ::= assign ';'
        | funcall ';'
        | externcall ';'
        | 'return' expr ';'
+       | 'break' ';'
+       | 'continue' ';'
        | '#' any NEWLINE
        | 'if' '(' expr ')' block
        | 'if' '(' expr ')' block { 'else' 'if' '(' expr ')' block } 'else' block
@@ -60,6 +62,8 @@ public:
                    SemicolonType,
                    CommaType,
                    ReturnType,
+                   BreakType,
+                   ContinueType,
                    IfType,
                    ElseType,
                    DefType,
@@ -150,6 +154,14 @@ public:
 
     static Token Return() {
         return Token(ReturnType, "return");
+    }
+
+    static Token Break() {
+      return Token(BreakType, "break");
+    }
+
+    static Token Continue() {
+      return Token(ContinueType, "continue");
     }
 
     static Token If() {
@@ -297,6 +309,8 @@ private:
     IRNode *otherstmt();
     IRNode *ifstmt();
     IRNode *returnstmt();
+    IRNode *breakstmt();
+    IRNode *continuestmt();
     IRNode *forloop();
     Function *functiondef();
     IRNode *externcall();

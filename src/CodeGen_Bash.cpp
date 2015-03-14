@@ -55,6 +55,17 @@ void CodeGen_Bash::visit(ReturnStatement *n) {
     stream << "; exit";
 }
 
+void CodeGen_Bash::visit(LoopControlStatement *n) {
+    switch (n->op) {
+    case LoopControlStatement::Break:
+        stream << "break";
+        break;
+    case LoopControlStatement::Continue:
+        stream << "continue";
+        break;
+    }
+}
+
 void CodeGen_Bash::visit(IfStatement *n) {
     stream << "if [[ ";
     enable_functioncall_wrap();

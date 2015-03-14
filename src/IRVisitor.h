@@ -8,6 +8,7 @@ class Module;
 class Block;
 class Variable;
 class ReturnStatement;
+class LoopControlStatement;
 class IfStatement;
 class ForLoop;
 class Function;
@@ -34,6 +35,7 @@ public:
     virtual void visit(IORedirection *);
     virtual void visit(IfStatement *);
     virtual void visit(ReturnStatement *);
+    virtual void visit(LoopControlStatement *);
     virtual void visit(ForLoop *);
     virtual void visit(Assignment *);
     virtual void visit(BinOp *);

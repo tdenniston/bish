@@ -14,4 +14,17 @@ for (i in 2 .. 4) {
 
 cmp = sum == 29580;
 assert(cmp);
-println("Nested for loops test passed.");
+
+sum = 0;
+for (i in 2 .. 4) {
+    if (i == 3) { continue; }
+    d = i * i;
+    for (j in i .. d) {
+        if (j == 7) { break; }
+        sum = sum + double(j/i+j*i);
+    }
+}
+cmp = sum == 1529;
+assert(cmp);
+
+println("Loops test passed.");

@@ -27,6 +27,10 @@ void IRVisitor::visit(ReturnStatement *node) {
     node->value->accept(this);
 }
 
+void IRVisitor::visit(LoopControlStatement *node) {
+
+}
+
 void IRVisitor::visit(IfStatement *node) {
     node->pblock->condition->accept(this);
     node->pblock->body->accept(this);
