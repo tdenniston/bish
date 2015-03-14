@@ -17,6 +17,8 @@ CONFIG_CONSTANTS = -DSTDLIB_PATH="\"$(ROOT_DIR)/src/StdLib.bish\""
 
 all: bish
 
+-include $(OBJ)/*.d
+
 $(OBJ)/%.o: $(SRC)/%.cpp $(SRC)/%.h
 	@-mkdir -p $(OBJ)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ -MMD -MF $(OBJ)/$*.d -MT $(OBJ)/$*.o $(CONFIG_CONSTANTS)
