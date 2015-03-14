@@ -22,6 +22,9 @@ def run_all() {
 
     result = run_bish("io_redirection.bish");
     assert(result);
+
+    result = run_bish("fib.bish");
+    assert(result);
 }
 
 change_dir();
