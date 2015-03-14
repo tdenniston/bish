@@ -16,12 +16,9 @@ def pipes() {
     # Test piping to external function.
     nonmatches = ls() | @(grep "doesn't exist");
     @(rm $filename);
-    test = matches == "testfile";
-    assert(test);    
-    test = matches2 == "testfile";
-    assert(test);    
-    test = nonmatches == "";
-    assert(test);
+    assert(matches == "testfile");
+    assert(matches2 == "testfile");
+    assert(nonmatches == "");
 }
 
 pipes();

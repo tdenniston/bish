@@ -18,10 +18,10 @@ def run_bish(file) {
 # Run all tests
 def run_all() {
     result = run_bish("double.bish");
-    assert(result == true);
+    assert(result);
 
     result = run_bish("io_redirection.bish");
-    assert(result == true);
+    assert(result);
 }
 
 change_dir();
