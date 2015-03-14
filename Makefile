@@ -12,7 +12,7 @@ HEADER_FILES=CallGraph.h Compile.h FindCalls.h IR.h IRVisitor.h IRAncestorsPass.
 OBJECTS = $(SOURCE_FILES:%.cpp=$(OBJ)/%.o)
 HEADERS = $(HEADER_FILES:%.h=$(SRC)/%.h)
 
-ROOT_DIR = $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
+ROOT_DIR = $(realpath $(dir $(firstword $(MAKEFILE_LIST))))
 CONFIG_CONSTANTS = -DSTDLIB_PATH="\"$(ROOT_DIR)/src/StdLib.bish\""
 
 all: bish
