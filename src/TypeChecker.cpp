@@ -28,6 +28,10 @@ void TypeChecker::visit(FunctionCall *node) {
     if (visited(node) || node->type() != UndefinedTy) return;
     visited_set.insert(node);
     node->function->accept(this);
+    for (std::vector<IRNode *>::const_iterator I = node->args.begin(),
+           E = node->args.end(); I != E; ++I) {
+      (*I)->accept(this);
+    }
     node->set_type(node->function->type());
 }
 
