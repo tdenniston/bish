@@ -24,14 +24,15 @@ stmt ::= assign ';'
        | 'def' var '(' varlist ')' block
        | block
 assign ::= var '=' expr
-expr ::= expr '|' equality | equality
+expr ::= expr '|' logical | logical
+logical ::= logical 'and' equality | logical 'or' equality | equality
 equality ::= equality '==' relative | equality '!=' relative | relative
 relative ::= relative '<' arith | relative '>' arith
            | relative '<=' arith | relative '>=' arith
            | arith
 arith ::= arith '+' term | arith '-' term | term
 term ::= term '*' unary | term '/' unary | term '%' unary | unary
-unary ::= '-' unary | factor
+unary ::= '-' unary | 'not' unary | factor
 factor ::= '( expr ')' | funcall | externcall | atom
 funcall ::= var '(' exprlist ')'
 externcall ::= '@' '(' interp ')'
@@ -69,6 +70,9 @@ public:
                    DefType,
                    ForType,
                    InType,
+                   AndType,
+                   OrType,
+                   NotType,
                    DoubleDotType,
                    EqualsType,
                    DoubleEqualsType,
@@ -182,6 +186,18 @@ public:
 
     static Token In() {
         return Token(InType, "in");
+    }
+
+    static Token And() {
+        return Token(AndType, "and");
+    }
+
+    static Token Or() {
+        return Token(OrType, "or");
+    }
+
+    static Token Not() {
+        return Token(NotType, "not");
     }
 
     static Token DoubleDot() {
@@ -319,6 +335,7 @@ private:
     Variable *var();
     Variable *arg();
     IRNode *expr();
+    IRNode *logical();
     IRNode *equality();
     IRNode *relative();
     IRNode *arith();

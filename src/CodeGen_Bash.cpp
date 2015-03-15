@@ -230,6 +230,14 @@ void CodeGen_Bash::visit(BinOp *n) {
         bash_op = "-ge";
         comparison = true;
         break;
+    case BinOp::And:
+        bash_op = "&&";
+        comparison = true;
+        break;
+    case BinOp::Or:
+        bash_op = "||";
+        comparison = true;
+        break;
     case BinOp::Add:
         bash_op = "+";
         break;
@@ -247,15 +255,27 @@ void CodeGen_Bash::visit(BinOp *n) {
         break;
     }
 
-    if (equals) stream << "$(test ";
+    if (n->op == BinOp::And || n->op == BinOp::Or) {
+        // Disable wrapping comparisons in [[]] because we need to
+        // wrap them all from the outside for And and Or operations.
+        disable_comparison_wrap();
+        stream << "$([[ ";
+    }
+
+    if (equals && should_comparison_wrap()) stream << "$([[ ";
     if (!comparison) stream << "$((";
     if (!string) disable_quote_variable();
     n->a->accept(this);
     stream << " " << bash_op << " ";
     n->b->accept(this);
-    if (equals) stream << " && echo 1 || echo 0)";
+    if (equals && should_comparison_wrap()) stream << " ]] && echo 1 || echo 0)";
     if (!comparison) stream << "))";
     if (!string) reset_quote_variable();
+
+    if (n->op == BinOp::And || n->op == BinOp::Or) {
+        reset_comparison_wrap();
+        stream << " ]] && echo 1 || echo 0)";
+    }
 }
 
 void CodeGen_Bash::visit(UnaryOp *n) {

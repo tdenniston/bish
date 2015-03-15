@@ -292,6 +292,12 @@ private:
             return Token::For();
         } else if (s.compare(Token::In().value()) == 0) {
             return Token::In();
+        } else if (s.compare(Token::And().value()) == 0) {
+            return Token::And();
+        } else if (s.compare(Token::Or().value()) == 0) {
+            return Token::Or();
+        } else if (s.compare(Token::Not().value()) == 0) {
+            return Token::Not();
         } else if (s.compare(Token::True().value()) == 0) {
             return Token::True();
         }  else if (s.compare(Token::False().value()) == 0) {
@@ -416,7 +422,8 @@ bool Parser::is_unop_token(const Token &t) {
 bool Parser::is_binop_token(const Token &t) {
     return t.isa(Token::PlusType) || t.isa(Token::MinusType) ||
         t.isa(Token::StarType) || t.isa(Token::SlashType) ||
-        t.isa(Token::PercentType);
+        t.isa(Token::PercentType) || t.isa(Token::AndType) ||
+        t.isa(Token::OrType);
 }
 
 // Return the binary Operator corresponding to the given token.
@@ -426,6 +433,10 @@ BinOp::Operator Parser::get_binop_operator(const Token &t) {
         return BinOp::Eq;
     case Token::NotEqualsType:
         return BinOp::NotEq;
+    case Token::AndType:
+        return BinOp::And;
+    case Token::OrType:
+        return BinOp::Or;
     case Token::LAngleType:
         return BinOp::LT;
     case Token::LAngleEqualsType:
@@ -737,11 +748,22 @@ Variable *Parser::arg() {
 }
 
 IRNode *Parser::expr() {
-    IRNode *a = equality();
+    IRNode *a = logical();
     Token t = tokenizer->peek();
     if (t.isa(Token::PipeType)) {
         tokenizer->next();
-        a = new IORedirection(get_redirection_operator(t), a, equality());
+        a = new IORedirection(get_redirection_operator(t), a, logical());
+    }
+    return a;
+}
+
+IRNode *Parser::logical() {
+    IRNode *a = equality();
+    Token t = tokenizer->peek();
+    while (t.isa(Token::AndType) || t.isa(Token::OrType)) {
+        tokenizer->next();
+        a = new BinOp(get_binop_operator(t), a, equality());
+        t = tokenizer->peek();
     }
     return a;
 }

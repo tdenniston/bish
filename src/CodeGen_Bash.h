@@ -35,6 +35,7 @@ public:
         enable_block_braces();
         disable_functioncall_wrap();
         enable_quote_variable();
+        enable_comparison_wrap();
     }
     virtual void visit(Module *);
     virtual void visit(Block *);
@@ -59,6 +60,7 @@ private:
     std::stack<bool> block_print_braces;
     std::stack<bool> functioncall_wrap;
     std::stack<bool> quote_variable;
+    std::stack<bool> comparison_wrap;
     std::ostream &stream;
     unsigned indent_level;
 
@@ -76,6 +78,11 @@ private:
     inline void enable_quote_variable() { quote_variable.push(true); }
     inline void reset_quote_variable() { quote_variable.pop(); }
     inline bool should_quote_variable() const { return quote_variable.top(); }
+
+    inline void disable_comparison_wrap() { comparison_wrap.push(false); }
+    inline void enable_comparison_wrap() { comparison_wrap.push(true); }
+    inline void reset_comparison_wrap() { comparison_wrap.pop(); }
+    inline bool should_comparison_wrap() const { return comparison_wrap.top(); }
 
     bool is_equals_op(IRNode *n) const {
         if (BinOp *b = dynamic_cast<BinOp*>(n)) {

@@ -25,6 +25,9 @@ def run_all() {
 
     result = run_bish("fib.bish");
     assert(result);
+
+    result = run_bish("ops.bish");
+    assert(result);
 }
 
 change_dir();

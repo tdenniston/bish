@@ -76,6 +76,8 @@ void TypeChecker::visit(BinOp *node) {
     case BinOp::LTE:
     case BinOp::GT:
     case BinOp::GTE:
+    case BinOp::And:
+    case BinOp::Or:
         node->set_type(BooleanTy);
         break;
     case BinOp::Add:
