@@ -22,26 +22,28 @@ void run_on_bash(std::istream &is) {
     pclose(bash);
 }
 
+void usage(char *argv0) {
+    std::cerr << "USAGE: " << argv0 << " [-r] <INPUT>\n";
+    std::cerr << "  Compiles Bish file <INPUT> to bash.\n";
+    std::cerr << "\nOPTIONS:\n";
+    std::cerr << "  -r: compiles and runs the file.\n";
+}
+
 int main(int argc, char **argv) {
     if (argc < 2) {
-        std::cerr << "USAGE: " << argv[0] << " [-r] <INPUT>\n";
-        std::cerr << "  Compiles Bish file <INPUT> to bash.\n";
-        std::cerr << "\nOPTIONS:\n";
-        std::cerr << "  -r  compiles and runs the file.\n";
+        usage(argv[0]);
         return 1;
     }
 
     int c;
     bool run_after_compile = false;
-    while ( (c = getopt(argc,argv, "r")) != -1) {
-
+    while ((c = getopt(argc,argv, "r")) != -1) {
         switch (c) {
         case 'r':
             run_after_compile = true;
             break;
-
         default:
-           break;
+            break;
         }
     }
 
@@ -55,9 +57,10 @@ int main(int argc, char **argv) {
     Bish::Module *m = p.parse(path);
 
     std::stringstream s;
-    Bish::compile_to_bash( run_after_compile ? s : std::cout, m);
-    if (run_after_compile)
+    Bish::compile_to_bash(run_after_compile ? s : std::cout, m);
+    if (run_after_compile) {
         run_on_bash(s);
+    }
 
     return 0;
 }
