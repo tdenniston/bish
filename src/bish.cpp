@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 #include <iostream>
+#include <unistd.h>
 #include "Compile.h"
 #include "Parser.h"
 
@@ -30,26 +31,33 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    if (strcmp(argv[1], "-r") == 0) {
-        if (argc != 3) {
-            std::cerr << "-r needs a filename\n";
-            return 1;
+    int c;
+    bool run_after_compile = false;
+    while ( (c = getopt(argc,argv, "r")) != -1) {
+
+        switch (c) {
+        case 'r':
+            run_after_compile = true;
+            break;
+
+        default:
+           break;
         }
-
-        std::string path(argv[2]);
-        Bish::Parser p;
-        Bish::Module *m = p.parse(path);
-
-        std::stringstream s;
-        Bish::compile_to_bash(s, m);
-        run_on_bash(s);
-    } else {
-        std::string path(argv[1]);
-        Bish::Parser p;
-        Bish::Module *m = p.parse(path);
-
-        compile_to_bash(std::cout, m);
     }
+
+    if (optind == argc && run_after_compile) {
+        std::cerr << "-r needs a filename" << std::endl;
+        return 1;
+    }
+
+    std::string path(argv[optind]);
+    Bish::Parser p;
+    Bish::Module *m = p.parse(path);
+
+    std::stringstream s;
+    Bish::compile_to_bash( run_after_compile ? s : std::cout, m);
+    if (run_after_compile)
+        run_on_bash(s);
 
     return 0;
 }
