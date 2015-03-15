@@ -415,7 +415,7 @@ void Parser::abort_with_position(const std::string &msg) {
 
 // Return true if the given token is a unary operator.
 bool Parser::is_unop_token(const Token &t) {
-    return t.isa(Token::MinusType);
+    return t.isa(Token::MinusType) || t.isa(Token::NotType);
 }
 
 // Return true if the given token is a binary operator.
@@ -466,6 +466,8 @@ UnaryOp::Operator Parser::get_unaryop_operator(const Token &t) {
     switch (t.type()) {
     case Token::MinusType:
         return UnaryOp::Negate;
+    case Token::NotType:
+        return UnaryOp::Not;
     default:
         abort("Invalid operator for unary operation.");
         return UnaryOp::Negate;

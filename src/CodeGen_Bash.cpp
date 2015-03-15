@@ -255,7 +255,9 @@ void CodeGen_Bash::visit(BinOp *n) {
         break;
     }
 
-    if (n->op == BinOp::And || n->op == BinOp::Or) {
+    bool reset_wrap = false;
+    if (should_comparison_wrap() && (n->op == BinOp::And || n->op == BinOp::Or)) {
+        reset_wrap = true;
         // Disable wrapping comparisons in [[]] because we need to
         // wrap them all from the outside for And and Or operations.
         disable_comparison_wrap();
@@ -272,7 +274,7 @@ void CodeGen_Bash::visit(BinOp *n) {
     if (!comparison) stream << "))";
     if (!string) reset_quote_variable();
 
-    if (n->op == BinOp::And || n->op == BinOp::Or) {
+    if (reset_wrap && (n->op == BinOp::And || n->op == BinOp::Or)) {
         reset_comparison_wrap();
         stream << " ]] && echo 1 || echo 0)";
     }
@@ -283,8 +285,16 @@ void CodeGen_Bash::visit(UnaryOp *n) {
     case UnaryOp::Negate:
         stream << "-";
         break;
+    case UnaryOp::Not:
+        stream << "$([[ ! ( ";
+        disable_comparison_wrap();
+        break;
     }
     n->a->accept(this);
+    if (n->op == UnaryOp::Not) {
+        stream << " ) ]] && echo 1 || echo 0)";
+        reset_comparison_wrap();
+    }
 }
 
 void CodeGen_Bash::visit(Integer *n) {

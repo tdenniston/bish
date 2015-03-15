@@ -249,7 +249,7 @@ public:
 
 class UnaryOp : public BaseIRNode<UnaryOp> {
 public:
-    typedef enum { Negate } Operator;
+    typedef enum { Negate, Not } Operator;
     Operator op;
     IRNode *a;
     UnaryOp(Operator op_, IRNode *a_) : op(op_), a(a_) {}

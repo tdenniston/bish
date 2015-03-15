@@ -11,9 +11,11 @@ def ops() {
     assert(a == 3 and b == 4);
     assert(a == 4 or b == 4);
     assert(a == 3 and b != 5);
-    #assert(a == 3 and not b == 5);
-    #assert(not (a == 2 and b == 3));
+    # Note that 'not b == 5' is equivalent to '(not b) == 5' due to the precedence of 'not'.
+    assert(a == 3 and not (b == 5));
+    assert(not (a == 2 and b == 3));
     assert(a == 3 and b == 4 and c == 5);
+    assert(a + b == 7 and b + c == 9);
 }
 
 ops();
