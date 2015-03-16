@@ -6,7 +6,9 @@
 
 namespace Bish {
 
-void compile_to_bash(std::ostream &os, Module *m);
+class CodeGenerator;
+
+void compile_to_bash(Module *m, Bish::CodeGenerator *c);
 
 }
 

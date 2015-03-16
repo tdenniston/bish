@@ -8,9 +8,10 @@
 #include <unistd.h>
 #include "Compile.h"
 #include "Parser.h"
+#include "CodeGen.h"
 
-void run_on_bash(std::istream &is) {
-    FILE *bash = popen("bash", "w");
+void run_on_bash(const std::string& sh, std::istream &is) {
+    FILE *bash = popen(sh.c_str(), "w");
     char buf[4096];
 
     do {
@@ -27,6 +28,16 @@ void usage(char *argv0) {
     std::cerr << "  Compiles Bish file <INPUT> to bash.\n";
     std::cerr << "\nOPTIONS:\n";
     std::cerr << "  -r: compiles and runs the file.\n";
+    std::cerr << "  -l: list all code generators.\n";
+    std::cerr << "  -u <name>: use name code generator\n";
+}
+
+void show_generators_list() {
+    const Bish::CodeGenerators::CodeGeneratorsMap& cg_map = Bish::CodeGenerators::all();
+    for (Bish::CodeGenerators::CodeGeneratorsMap::const_iterator it = cg_map.begin();
+         it != cg_map.end(); ++it) {
+        std::cout << it->first << std::endl;
+    }
 }
 
 int main(int argc, char **argv) {
@@ -35,31 +46,50 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    Bish::CodeGenerators::initialize();
+
     int c;
     bool run_after_compile = false;
-    while ((c = getopt(argc,argv, "r")) != -1) {
+    std::string code_generator_name = "bash";
+
+    while ((c = getopt(argc,argv, "rlu:")) != -1) {
         switch (c) {
         case 'r':
             run_after_compile = true;
             break;
+
+        case 'l':
+            show_generators_list();
+            return 1;
+
+        case 'u':
+            code_generator_name = std::string(optarg);
+            break;
+
         default:
             break;
         }
     }
 
-    if (optind == argc && run_after_compile) {
-        std::cerr << "-r needs a filename" << std::endl;
+    std::string path( optind < argc ? argv[optind] : "");
+    if (path.empty()) {
+        std::cerr << "please specify input filename" << std::endl;
         return 1;
     }
 
-    std::string path(argv[optind]);
+    std::cout << "using " << code_generator_name << " to compile" << std::endl;
+
+    std::stringstream s;
+
     Bish::Parser p;
     Bish::Module *m = p.parse(path);
 
-    std::stringstream s;
-    Bish::compile_to_bash(run_after_compile ? s : std::cout, m);
+    // cg allocated !
+    Bish::CodeGenerator* cg = Bish::CodeGenerators::get(code_generator_name)(run_after_compile ? s : std::cout);
+
+    Bish::compile_to_bash(m, cg);
     if (run_after_compile) {
-        run_on_bash(s);
+        run_on_bash(code_generator_name, s);
     }
 
     return 0;
