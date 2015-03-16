@@ -220,6 +220,8 @@ private:
             return ResultState(Token::Star(), idx + 1);
         } else if (c == '/') {
             return ResultState(Token::Slash(), idx + 1);
+        } else if (c == '\\') {
+            return ResultState(Token::Backslash(), idx + 1);
         } else if (c == '%') {
             return ResultState(Token::Percent(), idx + 1);
         } else if (c == '"') {
