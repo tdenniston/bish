@@ -311,6 +311,7 @@ private:
     IORedirection::Operator get_redirection_operator(const Token &t);
     Type get_primitive_type(const IRNode *n);
     void expect(const Token &t, Token::Type ty, const std::string &msg);
+    std::string scan_until(const std::vector<Token> &tokens);
     std::string scan_until(Token a, Token b);
     std::string scan_until(Token t);
     std::string scan_until(char c);

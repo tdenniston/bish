@@ -56,41 +56,33 @@ public:
     }
 
     // Return the substring beginning at the current index and
-    // continuing  until the first occurrence of a token of type
-    // a or b.
-    std::string scan_until(Token a, Token b) {
+    // continuing until the first occurrence of one of the given
+    // tokens.
+    std::string scan_until(const std::vector<Token> &tokens) {
         unsigned start = idx;
-        char ca = a.value()[0], cb = b.value()[0];
-        unsigned lena = a.value().size(), lenb = b.value().size();
-        while (!eos()) {
-            while (!eos() && curchar() != ca && curchar() != cb) {
-                idx++;
-            }
-            if (lookahead(lena).compare(a.value()) == 0) {
-                idx += lena - 1;
-                break;
-            } else if (lookahead(lenb).compare(b.value()) == 0) {
-                idx += lenb - 1;
-                break;
-            }
+        const unsigned n = tokens.size();
+        std::set<char> firstchars;
+        std::vector<unsigned> lengths;
+        for (std::vector<Token>::const_iterator I = tokens.begin(), E = tokens.end(); I != E; ++I) {
+            firstchars.insert((*I).value()[0]);
+            lengths.push_back((*I).value().size());
         }
-        return text.substr(start, idx - start);
-    }
 
-    // Return the substring beginning at the current index and
-    // continuing  until the first occurrence of a token of type
-    // t.
-    std::string scan_until(Token t) {
-        unsigned start = idx;
-        char c = t.value()[0];
-        unsigned len = t.value().size();
-        while (!eos()) {
-            while (!eos() && curchar() != c) {
+        bool found = false;
+        while (!eos() && !found) {
+            unsigned i = 0;
+            while (!eos() && firstchars.find(curchar()) == firstchars.end()) {
                 idx++;
             }
-            if (lookahead(len).compare(t.value()) == 0) {
-                idx += len - 1;
-                break;
+            if (eos()) break;
+            for (i = 0; i < n; i++) {
+                const std::string &s = tokens[i].value();
+                unsigned len = lengths[i];
+                if (s.compare(lookahead(len)) == 0) {
+                    found = true;
+                    idx += len - 1;
+                    break;
+                }
             }
         }
         return text.substr(start, idx - start);
@@ -374,8 +366,8 @@ void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
 
 // Wrapper around tokenizer->scan_until() that throws an error message
 // if EOS is encountered.
-std::string Parser::scan_until(Token a, Token b) {
-    std::string result = tokenizer->scan_until(a, b);
+std::string Parser::scan_until(const std::vector<Token> &tokens) {
+    std::string result = tokenizer->scan_until(tokens);
     if (tokenizer->peek().isa(Token::EOSType)) {
         abort("Unexpected end of input.");
     }
@@ -384,12 +376,19 @@ std::string Parser::scan_until(Token a, Token b) {
 
 // Wrapper around tokenizer->scan_until() that throws an error message
 // if EOS is encountered.
-std::string Parser::scan_until(Token t) {
-    std::string result = tokenizer->scan_until(t);
-    if (tokenizer->peek().isa(Token::EOSType)) {
-        abort("Unexpected end of input.");
-    }
-    return result;
+std::string Parser::scan_until(Token a, Token b) {
+    std::vector<Token> tokens;
+    tokens.push_back(a);
+    tokens.push_back(b);
+    return scan_until(tokens);
+}
+
+// Wrapper around tokenizer->scan_until() that throws an error message
+// if EOS is encountered.
+std::string Parser::scan_until(Token a) {
+    std::vector<Token> tokens;
+    tokens.push_back(a);
+    return scan_until(tokens);
 }
 
 // Wrapper around tokenizer->scan_until() that throws an error message
