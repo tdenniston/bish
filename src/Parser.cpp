@@ -634,10 +634,14 @@ InterpolatedString *Parser::interpolated_string(const Token &stop) {
             }
         }
         if (tokenizer->peek().isa(Token::DollarType)) {
-            tokenizer->next();
             if (escape) {
-                result->push_str("$");
+                // Rescan without the dollar as a token. It's escaped,
+                // so we don't want to treat it as a token.
+                const Token arr[] = {stop, Token::Backslash()};
+                const std::vector<Token> toks(arr, arr+2);
+                result->push_str(scan_until(toks));
             } else {
+                tokenizer->next();
                 if (tokenizer->peek().isa(Token::LParenType)) {
                     tokenizer->next();
                     str = scan_until(Token::RParen());

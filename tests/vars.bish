@@ -14,6 +14,9 @@ def vars() {
     assert(result == "interpolate \\hello");
     result = print("this should match\nthis shouldn't") | @(awk '/match/ { print \$0 }');
     assert(result == "this should match");
+    text = "335";
+    @([[ $text =~ ^[0-9]+\$ ]]);
+    assert(success());
 }
 
 vars();
