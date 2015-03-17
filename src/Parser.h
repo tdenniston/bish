@@ -336,6 +336,7 @@ private:
     IRNode *forloop();
     Function *functiondef();
     IRNode *externcall();
+    InterpolatedString *interpolated_string(const Token &stop);
     IRNode *funcall(const std::string &name);
     IRNode *assignment(const std::string &name);
     Variable *var();

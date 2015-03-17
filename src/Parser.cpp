@@ -607,26 +607,51 @@ IRNode *Parser::otherstmt() {
 IRNode *Parser::externcall() {
     expect(tokenizer->peek(), Token::AtType, "Expected '@' to begin extern call.");
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
-    InterpolatedString *body = new InterpolatedString();
-    do {
-        std::string str = scan_until(Token::Dollar(), Token::RParen());
-        body->push_str(str);
-        if (tokenizer->peek().isa(Token::DollarType)) {
-            tokenizer->next();
-            if (tokenizer->peek().isa(Token::LParenType)) {
-                tokenizer->next();
-                str = scan_until(Token::RParen());
-                tokenizer->next();
-                body->push_str("$" + str);
-            } else {
-                Variable *v = var();
-                body->push_var(v);
-                body->push_str(tokenizer->scan_whitespace());
-            }
-        }
-    } while (!tokenizer->peek().isa(Token::RParenType));
+    InterpolatedString *body = interpolated_string(Token::RParen());
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     return new ExternCall(body);
+}
+
+// Parse an interpolated string. The given token parameter is the
+// stopping token. E.g. if the interpolated string should be parsed
+// between double quotes, the caller would consume the initial double
+// quote and call this function with stop = Token::Quote().
+InterpolatedString *Parser::interpolated_string(const Token &stop) {
+    const Token scan_tokens_arr[] = {stop, Token::Dollar(), Token::Backslash()};
+    const std::vector<Token> scan_tokens(scan_tokens_arr, scan_tokens_arr+3);
+    InterpolatedString *result = new InterpolatedString();
+    do {
+        bool escape = false;
+        std::string str = scan_until(scan_tokens);
+        result->push_str(str);
+        if (tokenizer->peek().isa(Token::BackslashType)) {
+            tokenizer->next();
+            escape = true;
+            if (tokenizer->peek().isa(Token::BackslashType)) {
+                tokenizer->next();
+                escape = false;
+                result->push_str("\\");
+            }
+        }
+        if (tokenizer->peek().isa(Token::DollarType)) {
+            tokenizer->next();
+            if (escape) {
+                result->push_str("$");
+            } else {
+                if (tokenizer->peek().isa(Token::LParenType)) {
+                    tokenizer->next();
+                    str = scan_until(Token::RParen());
+                    tokenizer->next();
+                    result->push_str("$" + str);
+                } else {
+                    Variable *v = var();
+                    result->push_var(v);
+                    result->push_str(tokenizer->scan_whitespace());
+                }
+            }
+        }
+    } while (!tokenizer->peek().isa(stop.type()));
+    return result;
 }
 
 IRNode *Parser::returnstmt() {
