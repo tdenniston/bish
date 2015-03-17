@@ -10,6 +10,8 @@ Currently, Bish is still a very new language. I am adding new features as fast a
 
 As a side note, I won't stop you, but you would probably be crazy to use Bish in any sort of production environment until it stabilizes a bit more.
 
+Some small examples are below, but see the [introduction](https://github.com/tdenniston/bish/wiki/Introduction-to-Bish) wiki page for a more comprehensive introduction.
+
 ## Examples
 
 ##### Function calls
