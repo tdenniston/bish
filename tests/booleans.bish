@@ -1,0 +1,39 @@
+# Tests for some boolean operations.
+
+def bools() {
+    # Note these are the commands true and false.
+    @(true);
+    assert(success());
+    @(false);
+    assert(not success());
+    @(true);
+    if (not success()) {
+        assert(false);
+    }
+    @(false);
+    if (success()) {
+        assert(false);
+    }
+    @(true);
+    if (success() == false) {
+        assert(false);
+    }
+    @(false);
+    if (success() == true) {
+        assert(false);
+    }
+    @(true);
+    if (not (success() == true)) {
+        assert(false);
+    }
+    @(false);
+    if (not (success() == false)) {
+        assert(false);
+    }
+
+    assert(not (not (not (not true))));
+    assert(not (not (not false)));
+}
+
+bools();
+println("Boolean tests passed.");

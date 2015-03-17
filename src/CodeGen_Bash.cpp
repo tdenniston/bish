@@ -281,18 +281,21 @@ void CodeGen_Bash::visit(BinOp *n) {
 }
 
 void CodeGen_Bash::visit(UnaryOp *n) {
+    bool negate_binop = dynamic_cast<BinOp*>(n->a);
     switch (n->op) {
     case UnaryOp::Negate:
         stream << "-";
         break;
     case UnaryOp::Not:
-        stream << "$([[ ! ( ";
+        stream << "$(! [[ ";
         disable_comparison_wrap();
         break;
     }
     n->a->accept(this);
     if (n->op == UnaryOp::Not) {
-        stream << " ) ]] && echo 1 || echo 0)";
+        // Don't need the '-eq 1' if the argument is a binary operator (like '==').
+        if (!negate_binop) stream << " -eq 1";
+        stream << " ]] && echo 1 || echo 0)";
         reset_comparison_wrap();
     }
 }

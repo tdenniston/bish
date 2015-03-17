@@ -17,6 +17,9 @@ def vars() {
     text = "335";
     @([[ $text =~ ^[0-9]+\$ ]]);
     assert(success());
+    text = "335f";
+    @([[ $text =~ ^[0-9]+\$ ]]);
+    assert(not success());
 }
 
 vars();
