@@ -403,14 +403,14 @@ std::string Parser::scan_until(char c) {
 
 // Terminate the parsing process with the given error message.
 void Parser::abort(const std::string &msg) {
-    std::cerr << msg << "\n";
+    std::cerr << "Bish parsing error: " << msg << "\n";
     exit(1);
 }
 
 // Terminate the parsing process with the given error message, and the
 // position of the tokenizer.
 void Parser::abort_with_position(const std::string &msg) {
-    std::cerr << msg << " near " << tokenizer->position() << "\n";
+    std::cerr << "Bish parsing error: " << msg << " near " << tokenizer->position() << "\n";
     exit(1);
 }
 
