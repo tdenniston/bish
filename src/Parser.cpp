@@ -194,7 +194,7 @@ private:
             return ResultState(Token::NotEquals(), idx + 2);
         } else if (c == '<') {
             if (nextchar() == '=') {
-                return ResultState(Token::LAngleEquals(), idx + 1);
+                return ResultState(Token::LAngleEquals(), idx + 2);
             } else {
                 return ResultState(Token::LAngle(), idx + 1);
             }
