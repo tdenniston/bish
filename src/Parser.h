@@ -294,6 +294,7 @@ public:
  Parser() : tokenizer(NULL) {}
     ~Parser();
     Module *parse(const std::string &path);
+    Module *parse(std::istream &is);
     Module *parse_string(const std::string &text);
 private:
     Tokenizer *tokenizer;
@@ -301,6 +302,7 @@ private:
     std::stack<SymbolTable *> symbol_table_stack;
     SymbolTable *function_symbol_table;
 
+    std::string read_stream(std::istream &is);
     std::string read_file(const std::string &path);
     void abort(const std::string &msg);
     void abort_with_position(const std::string &msg);

@@ -306,6 +306,14 @@ Parser::~Parser() {
     if (tokenizer) delete tokenizer;
 }
 
+// Read all contents from the given input stream and return it as a
+// string.
+std::string Parser::read_stream(std::istream &is) {
+    std::stringstream buffer;
+    buffer << is.rdbuf();
+    return buffer.str();
+}
+
 // Return the entire contents of the file at the given path.
 std::string Parser::read_file(const std::string &path) {
     std::ifstream t(path.c_str());
@@ -313,9 +321,9 @@ std::string Parser::read_file(const std::string &path) {
         std::string msg = "Failed to open file at " + path;
         abort(msg);
     }
-    std::stringstream buffer;
-    buffer << t.rdbuf();
-    return buffer.str();
+    std::string result = read_stream(t);
+    t.close();
+    return result;
 }
 
 // Parse the given file into Bish IR.
@@ -324,6 +332,13 @@ Module *Parser::parse(const std::string &path) {
     Module *m = parse_string(contents);
     m->path = abspath(path);
     assert(m->path.size() > 0 && "Unable to resolve module path");
+    return m;
+}
+
+// Parse the given input stream into Bish IR.
+Module *Parser::parse(std::istream &is) {
+    std::string contents = read_stream(is);
+    Module *m = parse_string(contents);
     return m;
 }
 
