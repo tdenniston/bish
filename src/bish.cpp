@@ -63,8 +63,7 @@ int main(int argc, char **argv) {
     std::stringstream s;
     Bish::compile_to_bash(run_after_compile ? s : std::cout, m);
     if (run_after_compile) {
-        int exit_status = 0;
-        exit_status = run_on_bash(s);
+        int exit_status = run_on_bash(s);
         exit(exit_status);
     }
 
