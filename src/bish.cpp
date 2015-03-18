@@ -20,7 +20,9 @@ int run_on_bash(std::istream &is) {
 
     fflush(bash);
 
-    int e = pclose(bash)/256;
+    // pclose returns the exit status of the process,
+    // but shifted to the left by 8 bits.
+    int e = pclose(bash) >> 8;
     return e;
 }
 
