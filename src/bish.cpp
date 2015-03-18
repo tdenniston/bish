@@ -9,7 +9,7 @@
 #include "Compile.h"
 #include "Parser.h"
 
-void run_on_bash(std::istream &is) {
+int run_on_bash(std::istream &is) {
     FILE *bash = popen("bash", "w");
     char buf[4096];
 
@@ -19,7 +19,11 @@ void run_on_bash(std::istream &is) {
     } while (is.gcount() > 0);
 
     fflush(bash);
-    pclose(bash);
+
+    // pclose returns the exit status of the process,
+    // but shifted to the left by 8 bits.
+    int e = pclose(bash) >> 8;
+    return e;
 }
 
 void usage(char *argv0) {
@@ -59,7 +63,8 @@ int main(int argc, char **argv) {
     std::stringstream s;
     Bish::compile_to_bash(run_after_compile ? s : std::cout, m);
     if (run_after_compile) {
-        run_on_bash(s);
+        int exit_status = run_on_bash(s);
+        exit(exit_status);
     }
 
     return 0;
