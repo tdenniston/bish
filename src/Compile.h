@@ -8,7 +8,7 @@ namespace Bish {
 
 class CodeGenerator;
 
-void compile_to_bash(Module *m, Bish::CodeGenerator *c);
+void compile_to(Module *m, Bish::CodeGenerator *c);
 
 }
 

@@ -10,7 +10,7 @@
 #include "Parser.h"
 #include "CodeGen.h"
 
-void run_on_bash(const std::string& sh, std::istream &is) {
+int run_on(const std::string& sh, std::istream &is) {
     FILE *bash = popen(sh.c_str(), "w");
     char buf[4096];
 
@@ -66,15 +66,12 @@ int main(int argc, char **argv) {
         case 'r':
             run_after_compile = true;
             break;
-
         case 'l':
             show_generators_list();
             return 1;
-
         case 'u':
             code_generator_name = std::string(optarg);
             break;
-
         default:
             break;
         }
@@ -89,16 +86,20 @@ int main(int argc, char **argv) {
     std::cout << "using " << code_generator_name << " to compile" << std::endl;
 
     std::stringstream s;
-
     Bish::Parser p;
     Bish::Module *m = path.compare("-") == 0 ? p.parse(std::cin) : p.parse(path);
 
-    // cg allocated !
-    Bish::CodeGenerator* cg = Bish::CodeGenerators::get(code_generator_name)(run_after_compile ? s : std::cout);
+    Bish::CodeGenerators::ConGeneratorConstructor cg_constructor =
+        Bish::CodeGenerators::get(code_generator_name);
 
-    Bish::compile_to_bash(m, cg);
+    if (cg_constructor == NULL) {
+        std::cout << "No code generator " << code_generator_name << std::endl;
+        return 1;
+    }
+
+    Bish::compile_to(m, cg_constructor(run_after_compile ? s : std::cout) );
     if (run_after_compile) {
-        const int exit_status = run_on_bash(code_generator_name, s);
+        const int exit_status = run_on(code_generator_name, s);
         exit(exit_status);
     }
 

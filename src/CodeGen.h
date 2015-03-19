@@ -23,15 +23,15 @@ class CodeGenerators
 {
 public:
     typedef
-    CodeGenerator*(*Cons)(std::ostream& aa);
+    CodeGenerator*(*ConGeneratorConstructor)(std::ostream& aa);
 
     typedef
-    std::map<std::string, Cons > CodeGeneratorsMap;
+    std::map<std::string, ConGeneratorConstructor > CodeGeneratorsMap;
 
     static void initialize();
 
     static const CodeGeneratorsMap& all();
-    static Cons get(const std::string& name);
+    static ConGeneratorConstructor get(const std::string& name);
 private:
     static CodeGeneratorsMap generator_map;
 };
