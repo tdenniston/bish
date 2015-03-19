@@ -1,0 +1,12 @@
+# Tests for the escaping mechanism for quotes/external commands.
+
+def escaping() {
+    # Just need these to parse:
+    println("Allow \"double quotes\"");
+    println("\" is unmatched");
+    println("Literal \\");
+    println("'single quotes' don't need escaping.");
+}
+
+escaping();
+println("Escaped tokens tests passed.");

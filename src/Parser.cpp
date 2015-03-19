@@ -57,9 +57,15 @@ public:
 
     // Return the substring beginning at the current index and
     // continuing until the first occurrence of one of the given
-    // tokens.
-    std::string scan_until(const std::vector<Token> &tokens) {
-        unsigned start = idx;
+    // tokens. Any of the given tokens prefixed by '\' are ignored
+    // during scanning. If the keep_literal_backslash parameter is
+    // true, '\' characters are kept in the output.  E.g. scanning for
+    // '(' in the string "test\))" would return "test\)" with
+    // keep_literal_backslash set to true, and "test)" with
+    // keep_literal_backslash set to false.
+    std::string scan_until(const std::vector<Token> &tokens, bool keep_literal_backslash) {
+        bool found = false, escape = false;
+        std::string result;
         const unsigned n = tokens.size();
         std::set<char> firstchars;
         std::vector<unsigned> lengths;
@@ -68,10 +74,16 @@ public:
             lengths.push_back((*I).value().size());
         }
 
-        bool found = false;
         while (!eos() && !found) {
             unsigned i = 0;
-            while (!eos() && firstchars.find(curchar()) == firstchars.end()) {
+            while (!eos() && (firstchars.find(curchar()) == firstchars.end() || escape)) {
+                if (curchar() == '\\') {
+                    escape = !escape;
+                    if (keep_literal_backslash) result += curchar();
+                } else {
+                    escape = false;
+                    result += curchar();
+                }
                 idx++;
             }
             if (eos()) break;
@@ -85,7 +97,7 @@ public:
                 }
             }
         }
-        return text.substr(start, idx - start);
+        return result;
     }
 
     // Return the substring beginning at the current index and
@@ -129,6 +141,7 @@ private:
         return text[idx];
     }
 
+    // Return the next character
     inline char nextchar() const {
         return text[idx + 1];
     }
@@ -381,8 +394,8 @@ void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
 
 // Wrapper around tokenizer->scan_until() that throws an error message
 // if EOS is encountered.
-std::string Parser::scan_until(const std::vector<Token> &tokens) {
-    std::string result = tokenizer->scan_until(tokens);
+std::string Parser::scan_until(const std::vector<Token> &tokens, bool keep_literal_backslash) {
+    std::string result = tokenizer->scan_until(tokens, keep_literal_backslash);
     if (tokenizer->peek().isa(Token::EOSType)) {
         abort("Unexpected end of input.");
     }
@@ -632,41 +645,23 @@ IRNode *Parser::externcall() {
 // between double quotes, the caller would consume the initial double
 // quote and call this function with stop = Token::Quote().
 InterpolatedString *Parser::interpolated_string(const Token &stop) {
-    const Token scan_tokens_arr[] = {stop, Token::Dollar(), Token::Backslash()};
-    const std::vector<Token> scan_tokens(scan_tokens_arr, scan_tokens_arr+3);
+    const Token scan_tokens_arr[] = {stop, Token::Dollar()};
+    const std::vector<Token> scan_tokens(scan_tokens_arr, scan_tokens_arr+2);
     InterpolatedString *result = new InterpolatedString();
     do {
-        bool escape = false;
-        std::string str = scan_until(scan_tokens);
+        std::string str = scan_until(scan_tokens, false);
         result->push_str(str);
-        if (tokenizer->peek().isa(Token::BackslashType)) {
-            tokenizer->next();
-            escape = true;
-            if (tokenizer->peek().isa(Token::BackslashType)) {
-                tokenizer->next();
-                escape = false;
-                result->push_str("\\");
-            }
-        }
         if (tokenizer->peek().isa(Token::DollarType)) {
-            if (escape) {
-                // Rescan without the dollar as a token. It's escaped,
-                // so we don't want to treat it as a token.
-                const Token arr[] = {stop, Token::Backslash()};
-                const std::vector<Token> toks(arr, arr+2);
-                result->push_str(scan_until(toks));
-            } else {
+            tokenizer->next();
+            if (tokenizer->peek().isa(Token::LParenType)) {
                 tokenizer->next();
-                if (tokenizer->peek().isa(Token::LParenType)) {
-                    tokenizer->next();
-                    str = scan_until(Token::RParen());
-                    tokenizer->next();
-                    result->push_str("$" + str);
-                } else {
-                    Variable *v = var();
-                    result->push_var(v);
-                    result->push_str(tokenizer->scan_whitespace());
-                }
+                str = scan_until(Token::RParen());
+                tokenizer->next();
+                result->push_str("$" + str);
+            } else {
+                Variable *v = var();
+                result->push_var(v);
+                result->push_str(tokenizer->scan_whitespace());
             }
         }
     } while (!tokenizer->peek().isa(stop.type()));
