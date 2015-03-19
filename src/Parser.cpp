@@ -649,6 +649,10 @@ InterpolatedString *Parser::interpolated_string(const Token &stop) {
     const std::vector<Token> scan_tokens(scan_tokens_arr, scan_tokens_arr+2);
     InterpolatedString *result = new InterpolatedString();
     do {
+        // Because this function is currently only invoked by
+        // externcall(), we don't want to keep any escaping '\'
+        // because externcalls are inserted verbatim into the
+        // generated code.
         std::string str = scan_until(scan_tokens, false);
         result->push_str(str);
         if (tokenizer->peek().isa(Token::DollarType)) {

@@ -6,6 +6,8 @@ def escaping() {
     println("\" is unmatched");
     println("Literal \\");
     println("'single quotes' don't need escaping.");
+
+    @(\(cd; ls\); ls);
 }
 
 escaping();
