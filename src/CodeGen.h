@@ -22,15 +22,16 @@ protected:
 class CodeGenerators
 {
 public:
+    // starting C++11 std::function can be used.
     typedef
-    CodeGenerator*(*ConGeneratorConstructor)(std::ostream& aa);
+    CodeGenerator*(*CodeGeneratorConstructor)(std::ostream &aa);
 
     typedef
-    std::map<std::string, ConGeneratorConstructor > CodeGeneratorsMap;
+    std::map<std::string, CodeGeneratorConstructor > CodeGeneratorsMap;
     static void initialize();
 
     static const CodeGeneratorsMap& all();
-    static ConGeneratorConstructor get(const std::string& name);
+    static CodeGeneratorConstructor get(const std::string &name);
 private:
     static CodeGeneratorsMap generator_map;
 };

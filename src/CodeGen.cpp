@@ -3,7 +3,7 @@
 namespace Bish {
 
 template<typename T>
-static CodeGenerator* createInstance(std::ostream &os)
+static CodeGenerator* create_instance(std::ostream &os)
 {
     return new T(os);
 }
@@ -12,7 +12,11 @@ CodeGenerators::CodeGeneratorsMap CodeGenerators::generator_map;
 
 void CodeGenerators::initialize()
 {
-    generator_map["bash"] = &createInstance<CodeGen_Bash>;
+    /*
+      We are saving a function pointer which will construct
+      the actual code generator object when needed.
+    */
+    generator_map["bash"] = &create_instance<CodeGen_Bash>;
 }
 
 const CodeGenerators::CodeGeneratorsMap& CodeGenerators::all()
@@ -20,8 +24,7 @@ const CodeGenerators::CodeGeneratorsMap& CodeGenerators::all()
     return generator_map;
 }
 
-
-CodeGenerators::ConGeneratorConstructor CodeGenerators::get(const std::string &name)
+CodeGenerators::CodeGeneratorConstructor CodeGenerators::get(const std::string &name)
 {
     CodeGeneratorsMap::iterator it = generator_map.find(name);
     if (it == generator_map.end()) {
