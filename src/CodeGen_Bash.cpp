@@ -191,7 +191,7 @@ void CodeGen_Bash::visit(IORedirection *n) {
 }
 
 void CodeGen_Bash::visit(Assignment *n) {
-    stream << lookup_name(n->variable) << "=";
+    stream << "local " << lookup_name(n->variable) << "=";
     enable_functioncall_wrap();
     n->value->accept(this);
     reset_functioncall_wrap();
