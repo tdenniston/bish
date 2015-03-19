@@ -20,6 +20,7 @@ const CodeGenerators::CodeGeneratorsMap& CodeGenerators::all()
     return generator_map;
 }
 
+
 CodeGenerators::ConGeneratorConstructor CodeGenerators::get(const std::string &name)
 {
     CodeGeneratorsMap::iterator it = generator_map.find(name);

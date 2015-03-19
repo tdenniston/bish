@@ -9,7 +9,6 @@ namespace Bish {
 class CodeGenerator;
 
 void compile_to(Module *m, Bish::CodeGenerator *c);
-
 }
 
 

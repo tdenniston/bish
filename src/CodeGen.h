@@ -27,7 +27,6 @@ public:
 
     typedef
     std::map<std::string, ConGeneratorConstructor > CodeGeneratorsMap;
-
     static void initialize();
 
     static const CodeGeneratorsMap& all();
