@@ -92,11 +92,6 @@ public:
     std::string path;
     
     Module() : main(NULL) {}
-    Module(const std::vector<Function *> &f, Function *m) {
-        functions.insert(functions.begin(), f.begin(), f.end());
-        functions.push_back(m);
-        main = m;
-    }
 
     // Set the module's main function.
     void set_main(Function *f);

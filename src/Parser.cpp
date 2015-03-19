@@ -554,11 +554,8 @@ Module *Parser::module() {
     Module *m = new Module();
     push_module(m);
     function_symbol_table = new SymbolTable();
-    // The pre-main function has all module-level statements. If the
-    // user also defined a main function, a call to pre_main will be
-    // inserted as the first statement in the user main.
-    Function *pre_main = new Function("main", block());
-    m->set_main(pre_main);
+    Function *main = new Function("main", block());
+    m->set_main(main);
     pop_module();
     delete function_symbol_table;
     return m;
