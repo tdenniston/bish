@@ -725,6 +725,12 @@ IRNode *Parser::forloop() {
         tokenizer->next();
         upper = atom();
     }
+    if (Variable *lv = dynamic_cast<Variable*>(lower)) {
+        lower = get_defined_variable(lv);
+    }
+    if (Variable *uv = dynamic_cast<Variable*>(upper)) {
+        upper = get_defined_variable(uv);
+    }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     IRNode *body = block();
     return new ForLoop(v, lower, upper, body);
@@ -781,7 +787,7 @@ IRNode *Parser::assignment(const std::string &name) {
 Variable *Parser::var() {
     std::string name = tokenizer->peek().value();
     expect(tokenizer->peek(), Token::SymbolType, "Expected variable to be a symbol");
-    return lookup_or_new_var(name);//new Variable(name);
+    return lookup_or_new_var(name);
 }
 
 Variable *Parser::arg() {
@@ -884,9 +890,10 @@ IRNode *Parser::factor() {
             if (v == NULL) {
                 abort_with_position("Invalid atom type for function call");
             }
-            // The symbol will be reinserted as a Function, not a Variable.
-            remove_from_symbol_table(v->name);
             a = funcall(v->name);
+        } else if (Variable *v = dynamic_cast<Variable*>(a)) {
+            Variable *sym = get_defined_variable(v);
+            a = sym;
         }
         return a;
     }
@@ -898,7 +905,7 @@ IRNode *Parser::atom() {
 
     switch(t.type()) {
     case Token::SymbolType:
-        return lookup_or_new_var(t.value());
+        return new Variable(t.value());
     case Token::TrueType:
         return new Boolean(true);
     case Token::FalseType:
@@ -924,8 +931,23 @@ std::string Parser::symbol() {
     return t.value();
 }
 
+// Return the variable from the symbol table corresponding to the
+// given variable. The given variable is then deleted. If there is no
+// symbol table entry, abort.
+Variable *Parser::get_defined_variable(Variable *v) {
+    Variable *sym = lookup_variable(v->name);
+    if (!sym) {
+        abort_with_position("Undefined variable \"" + v->name + "\"");
+    }
+    assert(sym != v);
+    delete v;
+    return sym;
+}
+
+// Return the symbol table entry corresponding to the given variable
+// name. If no entry exists, create one first.
 Variable *Parser::lookup_or_new_var(const std::string &name) {
-    IRNode *result = lookup(name);
+    IRNode *result = lookup_variable(name);
     if (result) {
         Variable *v = dynamic_cast<Variable*>(result);
         assert(v);
@@ -937,6 +959,8 @@ Variable *Parser::lookup_or_new_var(const std::string &name) {
     }
 }
 
+// Return the symbol table entry corresponding to the given function
+// name. If no entry exists, create one first.
 Function *Parser::lookup_or_new_function(const std::string &name) {
     SymbolTableEntry *e = function_symbol_table->lookup(name);
     Function *f = NULL;
@@ -949,8 +973,10 @@ Function *Parser::lookup_or_new_function(const std::string &name) {
     assert(f);
     return f;
 }
-  
-IRNode *Parser::lookup(const std::string &name) {
+
+// Return the symbol table entry corresponding to the given variable
+// name, or NULL if none exists.
+Variable *Parser::lookup_variable(const std::string &name) {
     IRNode *result = NULL;
     std::stack<SymbolTable *> aux;
     while (!symbol_table_stack.empty()) {
@@ -966,11 +992,9 @@ IRNode *Parser::lookup(const std::string &name) {
         symbol_table_stack.push(aux.top());
         aux.pop();
     }
-    return result;
-}
-
-void Parser::remove_from_symbol_table(const std::string &name) {
-    symbol_table_stack.top()->remove(name);
+    Variable *v = dynamic_cast<Variable*>(result);
+    if (result) assert(v);
+    return v;
 }
 
 }

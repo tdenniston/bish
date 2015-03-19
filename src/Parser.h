@@ -321,10 +321,10 @@ private:
     Module *pop_module();
     void push_symbol_table(SymbolTable *s);
     SymbolTable *pop_symbol_table();
-    IRNode *lookup(const std::string &name);
+    Variable *get_defined_variable(Variable *v);
+    Variable *lookup_variable(const std::string &name);
     Variable *lookup_or_new_var(const std::string &name);
     Function *lookup_or_new_function(const std::string &name);
-    void remove_from_symbol_table(const std::string &name);
     void post_parse_passes(Module *m);
 
     Module *module();
