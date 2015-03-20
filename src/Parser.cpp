@@ -343,7 +343,7 @@ std::string Parser::read_file(const std::string &path) {
 Module *Parser::parse(const std::string &path) {
     std::string contents = read_file(path);
     Module *m = parse_string(contents);
-    m->path = abspath(path);
+    m->set_path(path);
     assert(m->path.size() > 0 && "Unable to resolve module path");
     return m;
 }

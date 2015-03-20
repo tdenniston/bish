@@ -95,6 +95,8 @@ public:
     Function *main;
     // Path to source file on disk
     std::string path;
+    // Namespace identifier
+    std::string namespace_id;
     
     Module() : main(NULL) {}
 
@@ -104,6 +106,8 @@ public:
     void add_function(Function *f);
     // Add the given global variable assignment.
     void add_global(Assignment *a);
+    // Set the module's path on disk and corresponding namespace.
+    void set_path(const std::string &p);
     // Return the function in this module corresponding to the given
     // name, or NULL if no such function exists.
     Function *get_function(const std::string &name) const;

@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 #include "CallGraph.h"
 #include "FindCalls.h"
@@ -16,6 +17,12 @@ void Module::add_function(Function *f) {
 
 void Module::add_global(Assignment *a) {
     global_variables.push_back(a);
+}
+
+void Module::set_path(const std::string &p) {
+    path = p;
+    namespace_id = remove_suffix(basename(path), ".");
+    assert(!namespace_id.empty() && "Unable to resolve namespace identifier.");
 }
 
 Function *Module::get_function(const std::string &name) const {

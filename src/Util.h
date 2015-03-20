@@ -21,5 +21,9 @@ inline std::string convert_string(int i) {
 
 // Return the absolute path from the given path.
 std::string abspath(const std::string &path);
-
+// Return the basename (last component) of a path.
+std::string basename(const std::string &path);
+// Return the string with any suffix beginning with "marker" removed.
+// E.g. remove_suffix("test.bish", ".") returns "test"
+std::string remove_suffix(const std::string &s, const std::string &marker);
 #endif

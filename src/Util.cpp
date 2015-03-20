@@ -11,3 +11,20 @@ std::string abspath(const std::string &path) {
         return "";
     }
 }
+
+std::string basename(const std::string &path) {
+    std::size_t idx = path.rfind("/");
+    if (idx != std::string::npos) {
+        return path.substr(idx + 1, std::string::npos);
+    } else {
+        return path;
+    }
+}
+
+std::string remove_suffix(const std::string &s, const std::string &marker) {
+    std::size_t idx = s.rfind(marker);
+    if (idx != std::string::npos) {
+        return s.substr(0, idx);
+    }
+    return s;
+}
