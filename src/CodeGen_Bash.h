@@ -57,6 +57,7 @@ public:
     virtual void visit(Boolean *);
 private:
     std::stack<LetScope *> let_stack;
+    std::stack<Function *> function_args_insert;
     std::stack<bool> block_print_braces;
     std::stack<bool> functioncall_wrap;
     std::stack<bool> quote_variable;
@@ -94,6 +95,8 @@ private:
     void indent();
     void push_let_scope(LetScope *s) { let_stack.push(s); }
     LetScope *pop_let_scope() { LetScope *s = let_stack.top(); let_stack.pop(); return s; }
+    void push_function_args_insert(Function *f) { function_args_insert.push(f); }
+    void pop_function_args_insert() { function_args_insert.pop(); }
 
     bool lookup_let(const Variable *v, std::string &out) {
         std::stack<LetScope *> aux;

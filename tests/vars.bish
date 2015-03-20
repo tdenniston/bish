@@ -1,5 +1,9 @@
 # Tests for disambiguating between interpolated strings and external variables.
 
+def f(x) {
+    return "x is $x";
+}
+
 def vars() {
     text = "hello";
     result = print("interpolate $text");
@@ -20,6 +24,8 @@ def vars() {
     text = "335f";
     @([[ $text =~ ^[0-9]+\$ ]]);
     assert(not success());
+    result = f("hello");
+    assert(result == "x is hello");
 }
 
 vars();

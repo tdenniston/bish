@@ -31,6 +31,17 @@ void CodeGen_Bash::visit(Module *n) {
 void CodeGen_Bash::visit(Block *n) {
     if (should_print_block_braces()) stream << "{\n";
     indent_level++;
+
+    if (!function_args_insert.empty()) {
+        Function *f = function_args_insert.top();
+        function_args_insert.pop();
+        unsigned i = 1;
+        for (std::vector<Variable *>::const_iterator I = f->args.begin(), E = f->args.end(); I != E; ++I, ++i) {
+            indent();
+            stream << "local " << (*I)->name << "=\"$" << i << "\";\n";
+        }
+    }
+
     for (std::vector<IRNode *>::const_iterator I = n->nodes.begin(), E = n->nodes.end();
          I != E; ++I) {
         indent();
@@ -130,16 +141,8 @@ void CodeGen_Bash::visit(ForLoop *n) {
 void CodeGen_Bash::visit(Function *n) {
     stream << "function bish_" << n->name << " ";
     stream << "() ";
-    LetScope *s = new LetScope();
-    push_let_scope(s);
-    // Bash doesn't allow named arguments to functions.
-    // We have to translate to positional arguments.
-    unsigned i = 1;
-    for (std::vector<Variable *>::const_iterator I = n->args.begin(), E = n->args.end(); I != E; ++I, ++i) {
-      s->add(*I, convert_string(i));
-    }
+    push_function_args_insert(n);
     if (n->body) n->body->accept(this);
-    pop_let_scope();
 }
 
 void CodeGen_Bash::visit(FunctionCall *n) {
