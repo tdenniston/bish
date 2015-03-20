@@ -6,6 +6,10 @@ using namespace Bish;
 IRVisitor::~IRVisitor() { }
 
 void IRVisitor::visit(Module *node) {
+    for (std::vector<Assignment *>::const_iterator I = node->global_variables.begin(),
+             E = node->global_variables.end(); I != E; ++I) {
+        (*I)->accept(this);
+    }
     for (std::vector<Function *>::const_iterator I = node->functions.begin(),
              E = node->functions.end(); I != E; ++I) {
         (*I)->accept(this);

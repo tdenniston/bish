@@ -42,12 +42,15 @@ public:
     Block(const std::vector<IRNode *> &n) {
         nodes.insert(nodes.begin(), n.begin(), n.end());
     }
+    iterator begin() { return nodes.begin(); }
+    iterator end() { return nodes.end(); }
 };
 
 class Variable : public BaseIRNode<Variable> {
 public:
     std::string name;
-    Variable(const std::string &n) : name(n) {}
+    bool global;
+    Variable(const std::string &n) : name(n), global(false) {}
 };
 
 class Function : public BaseIRNode<Function> {
@@ -86,6 +89,8 @@ class Module : public BaseIRNode<Module> {
 public:
     // List of all functions in the module (including main)
     std::vector<Function *> functions;
+    // List of all global variables.
+    std::vector<Assignment *> global_variables;
     // Pointer to main function
     Function *main;
     // Path to source file on disk
@@ -97,6 +102,8 @@ public:
     void set_main(Function *f);
     // Add the given function to this module.
     void add_function(Function *f);
+    // Add the given global variable assignment.
+    void add_global(Assignment *a);
     // Return the function in this module corresponding to the given
     // name, or NULL if no such function exists.
     Function *get_function(const std::string &name) const;

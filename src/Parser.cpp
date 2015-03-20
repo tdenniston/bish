@@ -556,9 +556,34 @@ Module *Parser::module() {
     function_symbol_table = new SymbolTable();
     Function *main = new Function("main", block());
     m->set_main(main);
+    setup_global_variables(m);
     pop_module();
     delete function_symbol_table;
     return m;
+}
+
+// Turn module-level assignments into global variables.
+void Parser::setup_global_variables(Module *m) {
+    // The first assignment to a variable at module scope becomes the
+    // global variable initializer. All later assignments are kept, as
+    // they will go into the main function.
+    std::vector<Block::iterator> to_erase;
+    std::set<Variable *> handled;
+    assert(m->main != NULL);
+    for (Block::iterator I = m->main->body->begin(), E = m->main->body->end(); I != E; ++I) {
+        if (Assignment *a = dynamic_cast<Assignment*>(*I)) {
+            if (handled.find(a->variable) == handled.end()) {
+                handled.insert(a->variable);
+                a->variable->global = true;
+                m->add_global(a);
+                to_erase.push_back(I);
+            }
+        }
+    }
+    for (std::vector<Block::iterator>::iterator I = to_erase.begin(), E = to_erase.end(); I != E; ++I) {
+        Block::iterator II = *I;
+        m->main->body->nodes.erase(II);
+    }
 }
 
 // Parse a Bish block.

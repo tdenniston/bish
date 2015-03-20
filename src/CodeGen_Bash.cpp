@@ -10,6 +10,12 @@ void CodeGen_Bash::indent() {
 }
 
 void CodeGen_Bash::visit(Module *n) {
+    for (std::vector<Assignment *>::const_iterator I = n->global_variables.begin(),
+             E = n->global_variables.end(); I != E; ++I) {
+        (*I)->accept(this);
+        stream << ";\n";
+    }
+    stream << "\n";
     for (std::vector<Function *>::const_iterator I = n->functions.begin(),
              E = n->functions.end(); I != E; ++I) {
         (*I)->accept(this);
@@ -191,7 +197,8 @@ void CodeGen_Bash::visit(IORedirection *n) {
 }
 
 void CodeGen_Bash::visit(Assignment *n) {
-    stream << "local " << lookup_name(n->variable) << "=";
+    if (!n->variable->global) stream << "local ";
+    stream << lookup_name(n->variable) << "=";
     enable_functioncall_wrap();
     n->value->accept(this);
     reset_functioncall_wrap();

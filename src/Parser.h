@@ -321,6 +321,7 @@ private:
     Module *pop_module();
     void push_symbol_table(SymbolTable *s);
     SymbolTable *pop_symbol_table();
+    void setup_global_variables(Module *m);
     Variable *get_defined_variable(Variable *v);
     Variable *lookup_variable(const std::string &name);
     Variable *lookup_or_new_var(const std::string &name);

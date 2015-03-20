@@ -14,6 +14,10 @@ void Module::add_function(Function *f) {
     functions.push_back(f);
 }
 
+void Module::add_global(Assignment *a) {
+    global_variables.push_back(a);
+}
+
 Function *Module::get_function(const std::string &name) const {
     for (std::vector<Function *>::const_iterator I = functions.begin(),
              E = functions.end(); I != E; ++I) {
