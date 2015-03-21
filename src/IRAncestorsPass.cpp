@@ -53,7 +53,7 @@ void IRAncestorsPass::visit(Function *node) {
              E = node->args.end(); I != E; ++I) {
         (*I)->accept(this);
     }
-    node->body->accept(this);
+    if (node->body) node->body->accept(this);
     node->set_parent(module_stack.top());
     function_stack.pop();
 }
