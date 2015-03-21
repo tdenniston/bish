@@ -147,6 +147,7 @@ void CodeGen_Bash::visit(ForLoop *n) {
 }
 
 void CodeGen_Bash::visit(Function *n) {
+    if (n->body == NULL) return;
     stream << "function " << get_qualified_name(n->name) << " ";
     stream << "() ";
     push_function_args_insert(n);
