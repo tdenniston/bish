@@ -1,0 +1,5 @@
+# Tests for importing bish modules.
+
+def import_me() {
+    return true;
+}

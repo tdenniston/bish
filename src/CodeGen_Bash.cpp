@@ -9,6 +9,12 @@ void CodeGen_Bash::indent() {
     }
 }
 
+// Return true if the given node is a statement that should be
+// emitted. This excludes side-effecting statements like 'import'.
+bool CodeGen_Bash::should_emit_statement(const IRNode *node) const {
+    return dynamic_cast<const ImportStatement*>(node) == NULL;
+}
+
 void CodeGen_Bash::visit(Module *n) {
     for (std::vector<Assignment *>::const_iterator I = n->global_variables.begin(),
              E = n->global_variables.end(); I != E; ++I) {
@@ -44,9 +50,11 @@ void CodeGen_Bash::visit(Block *n) {
 
     for (std::vector<IRNode *>::const_iterator I = n->nodes.begin(), E = n->nodes.end();
          I != E; ++I) {
-        indent();
-        (*I)->accept(this);
-        stream << ";\n";
+        if (should_emit_statement(*I)) {
+            indent();
+            (*I)->accept(this);
+            stream << ";\n";
+        }
     }
     indent_level--;
     if (should_print_block_braces()) stream << "}\n\n";

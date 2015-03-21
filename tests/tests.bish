@@ -37,6 +37,9 @@ def run_all() {
 
     result = run_bish("escaping.bish");
     assert(result);
+
+    result = run_bish("imports.bish");
+    assert(result);
 }
 
 change_dir();

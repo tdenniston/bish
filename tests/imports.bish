@@ -1,0 +1,10 @@
+# Tests for importing bish modules.
+
+import imports2;
+
+def imports() {
+    assert(import_me());    
+}
+
+imports();
+println("Import tests passed.");

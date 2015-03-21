@@ -85,6 +85,8 @@ private:
     inline void reset_comparison_wrap() { comparison_wrap.pop(); }
     inline bool should_comparison_wrap() const { return comparison_wrap.top(); }
 
+    inline bool should_emit_statement(const IRNode *node) const;
+
     bool is_equals_op(IRNode *n) const {
         if (BinOp *b = dynamic_cast<BinOp*>(n)) {
             return b->op == BinOp::Eq;

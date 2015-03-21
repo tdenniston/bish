@@ -7,6 +7,7 @@
 #include "Util.h"
 #include "Parser.h"
 #include "TypeChecker.h"
+#include "LinkImportsPass.h"
 #include "IRAncestorsPass.h"
 
 namespace {
@@ -374,6 +375,10 @@ Module *Parser::parse_string(const std::string &text, const std::string &path) {
 
 // Run an ordered list of postprocessing passes over the IR.
 void Parser::post_parse_passes(Module *m) {
+    // Link modules from import statements.
+    LinkImportsPass link;
+    m->accept(&link);
+
     // Construct IRNode hierarchy
     IRAncestorsPass ancestors;
     m->accept(&ancestors);
