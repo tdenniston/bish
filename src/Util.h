@@ -23,7 +23,14 @@ inline std::string convert_string(int i) {
 std::string abspath(const std::string &path);
 // Return the basename (last component) of a path.
 std::string basename(const std::string &path);
+// Return the directory name of a path.
+std::string dirname(const std::string &path);
 // Return the string with any suffix beginning with "marker" removed.
 // E.g. remove_suffix("test.bish", ".") returns "test"
 std::string remove_suffix(const std::string &s, const std::string &marker);
+// Strip leading and trailing whitespace.
+std::string strip(const std::string &s);
+// Return the name of a module from a pathname.
+// E.g. module_name_from_path("/a/b/test.bish") returns "test"
+std::string module_name_from_path(const std::string &path);
 #endif

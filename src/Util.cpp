@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstdlib>
 #include "Util.h"
 
@@ -21,10 +22,36 @@ std::string basename(const std::string &path) {
     }
 }
 
+std::string dirname(const std::string &path) {
+    assert(!path.empty());
+    std::size_t idx = path.size() - 1;
+    // Ignore trailing slashes.
+    while (idx > 0 && path[idx--] == '/') ;
+    idx = path.rfind("/", idx);
+    if (idx == 0) return "/";
+    if (idx != std::string::npos) {
+        return path.substr(0, idx);
+    } else {
+        return ".";
+    }
+}
+
 std::string remove_suffix(const std::string &s, const std::string &marker) {
     std::size_t idx = s.rfind(marker);
     if (idx != std::string::npos) {
         return s.substr(0, idx);
     }
     return s;
+}
+
+std::string strip(const std::string &s) {
+    const char *whitespace = " \t\n";
+    std::string result = s;
+    result.erase(0, result.find_first_not_of(whitespace));
+    result.erase(result.find_last_not_of(whitespace) + 1);
+    return result;
+}
+
+std::string module_name_from_path(const std::string &path) {
+    return remove_suffix(basename(path), ".bish");
 }
