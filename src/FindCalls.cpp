@@ -12,7 +12,7 @@ FindCallsToModule::FindCallsToModule(Module *m) {
     }
 }
 
-std::set<std::string> FindCallsToModule::functions() const {
+std::set<Name> FindCallsToModule::functions() const {
     return calls;
 }
 

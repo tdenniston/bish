@@ -25,10 +25,10 @@ void Module::set_path(const std::string &p) {
     assert(!namespace_id.empty() && "Unable to resolve namespace identifier.");
 }
 
-Function *Module::get_function(const std::string &name) const {
+Function *Module::get_function(const Name &name) const {
     for (std::vector<Function *>::const_iterator I = functions.begin(),
              E = functions.end(); I != E; ++I) {
-        if (name.compare((*I)->name) == 0) {
+        if (name == (*I)->name) {
             return *I;
         }
     }
@@ -41,8 +41,8 @@ void Module::import(Module *m) {
     CallGraphBuilder cgb;
     CallGraph cg = cgb.build(m);
     
-    std::set<std::string> to_link = find.functions();
-    for (std::set<std::string>::iterator I = to_link.begin(), E = to_link.end(); I != E; ++I) {
+    std::set<Name> to_link = find.functions();
+    for (std::set<Name>::iterator I = to_link.begin(), E = to_link.end(); I != E; ++I) {
         Function *f = m->get_function(*I);
         add_function(f);
         // Make sure to pull in functions that f calls as well.

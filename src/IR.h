@@ -48,31 +48,48 @@ public:
     iterator end() { return nodes.end(); }
 };
 
+// The name of a symbol, with an optional namespace qualifier.
+class Name {
+public:
+    std::string namespace_id;
+    std::string name;
+    Name(const std::string &n) : name(n) {}
+    Name(const std::string &n, const std::string &ns) : name(n), namespace_id(ns) {}
+    Name(const Name &n) : name(n.name), namespace_id(n.namespace_id) {}
+    
+    // Define lexicographic sort so this may be a key for std::map.
+    bool operator<(const Name &b) const {
+        return (namespace_id < b.namespace_id ||
+                (namespace_id == b.namespace_id && name < b.name));
+    }
+
+    bool operator==(const Name &b) const {
+        return namespace_id == b.namespace_id && name == b.name;
+    }
+};
+
 class Variable : public BaseIRNode<Variable> {
 public:
-    std::string name;
+    Name name;
     bool global;
-    Variable(const std::string &n) : name(n), global(false) {}
+    Variable(const Name &n) : name(n), global(false) {}
 };
 
 class Function : public BaseIRNode<Function> {
 public:
-    std::string name;
+    Name name;
     std::vector<Variable *> args;
     Block *body;
 
-    Function(const std::string &n) {
-        name = n;
+    Function(const Name &n) : name(n) {
         body = NULL;
     }
 
-    Function(const std::string &n, Block *b) {
-        name = n;
+    Function(const Name &n, Block *b) : name(n) {
         body = b;
     }
 
-    Function(const std::string &n, const std::vector<Variable *> &a, Block *b) {
-        name = n;
+    Function(const Name &n, const std::vector<Variable *> &a, Block *b) : name(n) {
         args.insert(args.begin(), a.begin(), a.end());
         body = b;
     }
@@ -112,7 +129,7 @@ public:
     void set_path(const std::string &p);
     // Return the function in this module corresponding to the given
     // name, or NULL if no such function exists.
-    Function *get_function(const std::string &name) const;
+    Function *get_function(const Name &name) const;
     // Import functions from the given module if they are called from
     // this module.
     void import(Module *m);

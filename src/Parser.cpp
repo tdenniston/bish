@@ -194,8 +194,12 @@ private:
             return ResultState(Token::Sharp(), idx + 1);
         } else if (c == ';') {
             return ResultState(Token::Semicolon(), idx + 1);
-        } else if (c == '.' && nextchar() == '.') {
-            return ResultState(Token::DoubleDot(), idx + 2);
+        } else if (c == '.') {
+            if (nextchar() == '.') {
+                return ResultState(Token::DoubleDot(), idx + 2);
+            } else {
+                return ResultState(Token::Dot(), idx + 1);
+            }
         } else if (c == ',') {
             return ResultState(Token::Comma(), idx + 1);
         } else if (c == '=') {
@@ -562,7 +566,7 @@ Module *Parser::module(const std::string &path) {
     m->set_path(path);
     push_module(m);
     function_symbol_table = new SymbolTable();
-    Function *main = new Function("main", block());
+    Function *main = new Function(Name("main"), block());
     m->set_main(main);
     setup_global_variables(m);
     pop_module();
@@ -646,7 +650,7 @@ IRNode *Parser::stmt() {
 }
 
 IRNode *Parser::otherstmt() {
-    std::string sym = symbol();
+    Name sym = symbol();
     IRNode *s = NULL;
     switch (tokenizer->peek().type()) {
     case Token::EqualsType:
@@ -777,7 +781,7 @@ IRNode *Parser::forloop() {
 
 Function *Parser::functiondef() {
     expect(tokenizer->peek(), Token::DefType, "Expected def statement");
-    std::string name = symbol();
+    Name name = symbol();
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     std::vector<Variable *> args;
     push_symbol_table(new SymbolTable());
@@ -797,7 +801,7 @@ Function *Parser::functiondef() {
     return f;
 }
 
-IRNode *Parser::funcall(const std::string &name) {
+IRNode *Parser::funcall(const Name &name) {
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     std::vector<IRNode *> args;
     if (!tokenizer->peek().isa(Token::RParenType)) {
@@ -812,7 +816,7 @@ IRNode *Parser::funcall(const std::string &name) {
     return new FunctionCall(f, args);
 }
 
-IRNode *Parser::assignment(const std::string &name) {
+IRNode *Parser::assignment(const Name &name) {
     expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
     Variable *v = lookup_or_new_var(name);
     IRNode *e = expr();
@@ -964,10 +968,10 @@ IRNode *Parser::atom() {
     }
 }
 
-std::string Parser::symbol() {
+Name Parser::symbol() {
     Token t = tokenizer->peek();
     expect(t, Token::SymbolType, "Expected symbol.");
-    return t.value();
+    return Name(t.value());
 }
 
 // Return the variable from the symbol table corresponding to the
@@ -976,7 +980,7 @@ std::string Parser::symbol() {
 Variable *Parser::get_defined_variable(Variable *v) {
     Variable *sym = lookup_variable(v->name);
     if (!sym) {
-        abort_with_position("Undefined variable \"" + v->name + "\"");
+        abort_with_position("Undefined variable \"" + v->name.name + "\"");
     }
     assert(sym != v);
     delete v;
@@ -985,7 +989,7 @@ Variable *Parser::get_defined_variable(Variable *v) {
 
 // Return the symbol table entry corresponding to the given variable
 // name. If no entry exists, create one first.
-Variable *Parser::lookup_or_new_var(const std::string &name) {
+Variable *Parser::lookup_or_new_var(const Name &name) {
     IRNode *result = lookup_variable(name);
     if (result) {
         Variable *v = dynamic_cast<Variable*>(result);
@@ -1000,7 +1004,7 @@ Variable *Parser::lookup_or_new_var(const std::string &name) {
 
 // Return the symbol table entry corresponding to the given function
 // name. If no entry exists, create one first.
-Function *Parser::lookup_or_new_function(const std::string &name) {
+Function *Parser::lookup_or_new_function(const Name &name) {
     SymbolTableEntry *e = function_symbol_table->lookup(name);
     Function *f = NULL;
     if (e) {
@@ -1015,7 +1019,7 @@ Function *Parser::lookup_or_new_function(const std::string &name) {
 
 // Return the symbol table entry corresponding to the given variable
 // name, or NULL if none exists.
-Variable *Parser::lookup_variable(const std::string &name) {
+Variable *Parser::lookup_variable(const Name &name) {
     IRNode *result = NULL;
     std::stack<SymbolTable *> aux;
     while (!symbol_table_stack.empty()) {

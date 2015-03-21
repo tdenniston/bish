@@ -18,13 +18,12 @@ class SymbolTable {
 public:
     SymbolTable() : parent(NULL) {}
     SymbolTable(SymbolTable *p) : parent(p) {}
-    void insert(const std::string &name, IRNode *n, Type ty);
-    void remove(const std::string &name);
-    SymbolTableEntry *lookup(const std::string &name) const;
-    void propagate(const std::string &a, const std::string &b);
-    bool contains(const std::string &v) const;
+    void insert(const Name &name, IRNode *n, Type ty);
+    void remove(const Name &name);
+    SymbolTableEntry *lookup(const Name &name) const;
+    bool contains(const Name &v) const;
 private:
-    std::map<std::string, SymbolTableEntry *> table;
+    std::map<Name, SymbolTableEntry *> table;
     SymbolTable *parent;
 };
 

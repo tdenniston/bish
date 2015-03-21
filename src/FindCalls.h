@@ -16,11 +16,11 @@ namespace Bish {
 class FindCallsToModule : public IRVisitor {
 public:
     FindCallsToModule(Module *m);
-    std::set<std::string> functions() const;
+    std::set<Name> functions() const;
     virtual void visit(FunctionCall *call);
 private:
-    std::set<std::string> to_find;
-    std::set<std::string> calls;
+    std::set<Name> to_find;
+    std::set<Name> calls;
 };
 
 }

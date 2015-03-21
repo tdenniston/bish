@@ -24,7 +24,7 @@ stmt ::= assign ';'
        | 'for' '(' var 'in' atom [ '..' atom ] ')' block
        | 'def' var '(' varlist ')' block
        | block
-assign ::= var '=' expr
+assign ::= namespacedvar '=' expr
 expr ::= expr '|' logical | logical
 logical ::= logical 'and' equality | logical 'or' equality | equality
 equality ::= equality '==' relative | equality '!=' relative | relative
@@ -35,13 +35,14 @@ arith ::= arith '+' term | arith '-' term | term
 term ::= term '*' unary | term '/' unary | term '%' unary | unary
 unary ::= '-' unary | 'not' unary | factor
 factor ::= '( expr ')' | funcall | externcall | atom
-funcall ::= var '(' exprlist ')'
+funcall ::= namespacedvar '(' exprlist ')'
 externcall ::= '@' '(' interp ')'
-atom ::= var | NUMBER | '"' STRING '"' | 'true' | 'false'
+atom ::= namespacedvar | NUMBER | '"' STRING '"' | 'true' | 'false'
 var ::= { ALPHANUM | '_' }
+namespacedvar ::= [ var '.' ] var
 varlist ::= var { ',' var }
 atomlist ::= expr { ',' expr }
-interp ::= { str | '$' var | '$' '(' any ')'}
+interp ::= { str | '$' namespacedvar | '$' '(' any ')'}
 */
 
 namespace Bish {
@@ -75,6 +76,7 @@ public:
                    AndType,
                    OrType,
                    NotType,
+                   DotType,
                    DoubleDotType,
                    EqualsType,
                    DoubleEqualsType,
@@ -207,6 +209,10 @@ public:
         return Token(NotType, "not");
     }
 
+    static Token Dot() {
+        return Token(DotType, ".");
+    }
+
     static Token DoubleDot() {
         return Token(DoubleDotType, "..");
     }
@@ -329,9 +335,9 @@ private:
     SymbolTable *pop_symbol_table();
     void setup_global_variables(Module *m);
     Variable *get_defined_variable(Variable *v);
-    Variable *lookup_variable(const std::string &name);
-    Variable *lookup_or_new_var(const std::string &name);
-    Function *lookup_or_new_function(const std::string &name);
+    Variable *lookup_variable(const Name &name);
+    Variable *lookup_or_new_var(const Name &name);
+    Function *lookup_or_new_function(const Name &name);
     void post_parse_passes(Module *m);
 
     Module *module(const std::string &path);
@@ -347,8 +353,8 @@ private:
     Function *functiondef();
     IRNode *externcall();
     InterpolatedString *interpolated_string(const Token &stop);
-    IRNode *funcall(const std::string &name);
-    IRNode *assignment(const std::string &name);
+    IRNode *funcall(const Name &name);
+    IRNode *assignment(const Name &name);
     Variable *var();
     Variable *arg();
     IRNode *expr();
@@ -360,7 +366,7 @@ private:
     IRNode *unary();
     IRNode *factor();
     IRNode *atom();
-    std::string symbol();
+    Name symbol();
 
 };
 

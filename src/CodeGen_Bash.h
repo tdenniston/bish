@@ -125,7 +125,7 @@ private:
         if (lookup_let(v, tmp)) {
             return tmp;
         } else {
-            return v->name;
+            return v->name.name;
         }
     }
 };
