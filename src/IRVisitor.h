@@ -1,6 +1,8 @@
 #ifndef __BISH_IR_VISITOR_H__
 #define __BISH_IR_VISITOR_H__
 
+#include <set>
+
 namespace Bish {
 
 class IRNode;
@@ -46,6 +48,9 @@ public:
     virtual void visit(Fractional *);
     virtual void visit(String *);
     virtual void visit(Boolean *);
+private:
+    std::set<IRNode *> visited_set;
+    bool visited(IRNode *n) { return visited_set.find(n) != visited_set.end(); }
 };
 
 }
