@@ -309,8 +309,8 @@ public:
 
 class String : public BaseIRNode<String> {
 public:
-    std::string value;
-    String(const std::string &s) : value(s) {}
+    InterpolatedString *value;
+    String(InterpolatedString *s) : value(s) {}
 };
 
 class Boolean : public BaseIRNode<Boolean> {

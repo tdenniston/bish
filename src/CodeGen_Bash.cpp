@@ -175,7 +175,13 @@ void CodeGen_Bash::visit(FunctionCall *n) {
 void CodeGen_Bash::visit(ExternCall *n) {
     if (should_functioncall_wrap()) stream << "$(";
     disable_quote_variable();
-    for (InterpolatedString::const_iterator I = n->body->begin(), E = n->body->end();
+    output_interpolated_string(n->body);
+    reset_quote_variable();
+    if (should_functioncall_wrap()) stream << ")";
+}
+
+void CodeGen_Bash::output_interpolated_string(InterpolatedString *n) {
+    for (InterpolatedString::const_iterator I = n->begin(), E = n->end();
          I != E; ++I) {
         if ((*I).is_str()) {
             stream << (*I).str();
@@ -184,8 +190,6 @@ void CodeGen_Bash::visit(ExternCall *n) {
             visit((*I).var());
         }
     }
-    reset_quote_variable();
-    if (should_functioncall_wrap()) stream << ")";
 }
 
 void CodeGen_Bash::visit(IORedirection *n) {
@@ -327,7 +331,9 @@ void CodeGen_Bash::visit(Fractional *n) {
 }
 
 void CodeGen_Bash::visit(String *n) {
-    stream << "\"" << n->value << "\"";
+    stream << "\"";
+    output_interpolated_string(n->value);
+    stream << "\"";
 }
 
 void CodeGen_Bash::visit(Boolean *n) {

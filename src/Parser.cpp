@@ -671,7 +671,7 @@ IRNode *Parser::otherstmt() {
 IRNode *Parser::externcall() {
     expect(tokenizer->peek(), Token::AtType, "Expected '@' to begin extern call.");
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
-    InterpolatedString *body = interpolated_string(Token::RParen());
+    InterpolatedString *body = interpolated_string(Token::RParen(), false);
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     return new ExternCall(body);
 }
@@ -680,16 +680,12 @@ IRNode *Parser::externcall() {
 // stopping token. E.g. if the interpolated string should be parsed
 // between double quotes, the caller would consume the initial double
 // quote and call this function with stop = Token::Quote().
-InterpolatedString *Parser::interpolated_string(const Token &stop) {
+InterpolatedString *Parser::interpolated_string(const Token &stop, bool keep_literal_backslash) {
     const Token scan_tokens_arr[] = {stop, Token::Dollar()};
     const std::vector<Token> scan_tokens(scan_tokens_arr, scan_tokens_arr+2);
     InterpolatedString *result = new InterpolatedString();
     do {
-        // Because this function is currently only invoked by
-        // externcall(), we don't want to keep any escaping '\'
-        // because externcalls are inserted verbatim into the
-        // generated code.
-        std::string str = scan_until(scan_tokens, false);
+        std::string str = scan_until(scan_tokens, keep_literal_backslash);
         result->push_str(str);
         if (tokenizer->peek().isa(Token::DollarType)) {
             tokenizer->next();
@@ -969,7 +965,7 @@ IRNode *Parser::atom() {
     case Token::FractionalType:
         return new Fractional(t.value());
     case Token::QuoteType: {
-        std::string str = scan_until(Token::Quote());
+        InterpolatedString *str = interpolated_string(Token::Quote(), true);
         expect(tokenizer->peek(), Token::QuoteType, "Unmatched '\"'");
         return new String(str);
     }

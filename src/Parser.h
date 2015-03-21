@@ -353,7 +353,7 @@ private:
     IRNode *forloop();
     Function *functiondef();
     IRNode *externcall();
-    InterpolatedString *interpolated_string(const Token &stop);
+    InterpolatedString *interpolated_string(const Token &stop, bool keep_literal_backslash);
     IRNode *funcall(const Name &name);
     IRNode *assignment(const Name &name);
     Variable *var();

@@ -87,6 +87,8 @@ private:
 
     inline bool should_emit_statement(const IRNode *node) const;
 
+    void output_interpolated_string(InterpolatedString *n);
+
     bool is_equals_op(IRNode *n) const {
         if (BinOp *b = dynamic_cast<BinOp*>(n)) {
             return b->op == BinOp::Eq;
