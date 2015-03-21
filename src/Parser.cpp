@@ -285,6 +285,8 @@ private:
     Token get_multichar_token(const std::string &s) {
         if (s.compare(Token::Return().value()) == 0) {
             return Token::Return();
+        } else if (s.compare(Token::Import().value()) == 0) {
+            return Token::Import();
         } else if (s.compare(Token::Break().value()) == 0) {
             return Token::Break();
         } else if (s.compare(Token::Continue().value()) == 0) {
@@ -342,8 +344,7 @@ std::string Parser::read_file(const std::string &path) {
 // Parse the given file into Bish IR.
 Module *Parser::parse(const std::string &path) {
     std::string contents = read_file(path);
-    Module *m = parse_string(contents);
-    m->set_path(path);
+    Module *m = parse_string(contents, path);
     assert(m->path.size() > 0 && "Unable to resolve module path");
     return m;
 }
@@ -355,15 +356,16 @@ Module *Parser::parse(std::istream &is) {
     return m;
 }
 
-// Parse the given string into Bish IR.
-Module *Parser::parse_string(const std::string &text) {
+// Parse the given string into Bish IR. If a path is given, set the
+// resulting Module's path to that value.
+Module *Parser::parse_string(const std::string &text, const std::string &path) {
     if (tokenizer) delete tokenizer;
 
     // Insert a dummy block for root scope.
     std::string preprocessed = "{\n" + text + "\n}";
     tokenizer = new Tokenizer(preprocessed);
 
-    Module *m = module();
+    Module *m = module(path);
     expect(tokenizer->peek(), Token::EOSType, "Expected end of string.");
 
     post_parse_passes(m);
@@ -550,8 +552,9 @@ SymbolTable *Parser::pop_symbol_table() {
     return s;
 }
 
-Module *Parser::module() {
+Module *Parser::module(const std::string &path) {
     Module *m = new Module();
+    m->set_path(path);
     push_module(m);
     function_symbol_table = new SymbolTable();
     Function *main = new Function("main", block());
@@ -615,6 +618,8 @@ IRNode *Parser::stmt() {
         expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
         return a;
     }
+    case Token::ImportType:
+        return importstmt();
     case Token::ReturnType:
         return returnstmt();
     case Token::BreakType:
@@ -692,6 +697,13 @@ InterpolatedString *Parser::interpolated_string(const Token &stop) {
         }
     } while (!tokenizer->peek().isa(stop.type()));
     return result;
+}
+
+IRNode *Parser::importstmt() {
+    expect(tokenizer->peek(), Token::ImportType, "Expected import statement");
+    std::string module_name = strip(scan_until(Token::Semicolon()));
+    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    return new ImportStatement(module_stack.top(), module_name);
 }
 
 IRNode *Parser::returnstmt() {

@@ -14,6 +14,7 @@ block ::= '{' { stmt } '}'
 stmt ::= assign ';'
        | funcall ';'
        | externcall ';'
+       | 'import' any ';'
        | 'return' expr ';'
        | 'break' ';'
        | 'continue' ';'
@@ -62,6 +63,7 @@ public:
                    SharpType,
                    SemicolonType,
                    CommaType,
+                   ImportType,
                    ReturnType,
                    BreakType,
                    ContinueType,
@@ -155,6 +157,10 @@ public:
 
     static Token Comma() {
         return Token(CommaType, ",");
+    }
+
+    static Token Import() {
+        return Token(ImportType, "import");
     }
 
     static Token Return() {
@@ -295,7 +301,7 @@ public:
     ~Parser();
     Module *parse(const std::string &path);
     Module *parse(std::istream &is);
-    Module *parse_string(const std::string &text);
+    Module *parse_string(const std::string &text, const std::string &path="");
 private:
     Tokenizer *tokenizer;
     std::stack<Module *> module_stack;
@@ -328,11 +334,12 @@ private:
     Function *lookup_or_new_function(const std::string &name);
     void post_parse_passes(Module *m);
 
-    Module *module();
+    Module *module(const std::string &path);
     Block *block();
     IRNode *stmt();
     IRNode *otherstmt();
     IRNode *ifstmt();
+    IRNode *importstmt();
     IRNode *returnstmt();
     IRNode *breakstmt();
     IRNode *continuestmt();

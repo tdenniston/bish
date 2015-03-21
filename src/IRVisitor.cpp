@@ -31,6 +31,10 @@ void IRVisitor::visit(ReturnStatement *node) {
     node->value->accept(this);
 }
 
+void IRVisitor::visit(ImportStatement *node) {
+
+}
+
 void IRVisitor::visit(LoopControlStatement *node) {
 
 }

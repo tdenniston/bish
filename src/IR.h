@@ -1,6 +1,8 @@
 #ifndef __BISH_IR_H__
 #define __BISH_IR_H__
 
+#include <iostream>
+#include <cassert>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -123,6 +125,19 @@ public:
     Assignment(Variable *var, IRNode *val) : variable(var), value(val) {}
 };
 
+class ImportStatement : public BaseIRNode<ImportStatement> {
+public:
+    std::string module_name;
+    std::string path;
+    ImportStatement(const Module *m, const std::string &qual_name) {
+        std::string path_ = dirname(m->path) + "/" + qual_name + ".bish";
+        path = abspath(path_);
+        assert(!path.empty() && "Could not resolve module path from import.");
+        module_name = module_name_from_path(qual_name);
+        assert(!module_name.empty());
+    }
+};
+ 
 class ReturnStatement : public BaseIRNode<ReturnStatement> {
 public:
     IRNode *value;
