@@ -25,10 +25,10 @@ $(OBJ)/%.o: $(SRC)/%.cpp $(SRC)/%.h
 
 $(OBJ)/libbish.a: $(OBJECTS)
 	$(LD) -r -o $(OBJ)/bish.o $(OBJECTS)
-	ar q $@ $(OBJ)/bish.o
+	ar -ru $@ $(OBJ)/bish.o
 	ranlib $@
 
-bish: $(OBJ)/libbish.a
+bish: $(SRC)/bish.cpp $(OBJ)/libbish.a
 	$(CXX) $(CXXFLAGS) -o bish $(SRC)/bish.cpp $(OBJ)/libbish.a $(CONFIG_CONSTANTS)
 
 .PHONY: clean
