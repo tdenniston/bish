@@ -3,7 +3,7 @@
 import imports2;
 
 def imports() {
-    assert(import_me());    
+    assert(imports2.import_me());    
 }
 
 imports();

@@ -310,6 +310,7 @@ public:
     Module *parse_string(const std::string &text, const std::string &path="");
 private:
     Tokenizer *tokenizer;
+    std::set<std::string> namespaces;
     std::stack<Module *> module_stack;
     std::stack<SymbolTable *> symbol_table_stack;
     SymbolTable *function_symbol_table;

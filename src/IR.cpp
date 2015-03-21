@@ -3,6 +3,7 @@
 #include "CallGraph.h"
 #include "FindCalls.h"
 #include "IR.h"
+#include "Util.h"
 
 namespace Bish {
 
@@ -28,7 +29,7 @@ void Module::set_path(const std::string &p) {
 Function *Module::get_function(const Name &name) const {
     for (std::vector<Function *>::const_iterator I = functions.begin(),
              E = functions.end(); I != E; ++I) {
-        if (name == (*I)->name) {
+        if (name.name == (*I)->name.name) {
             return *I;
         }
     }
@@ -44,12 +45,30 @@ void Module::import(Module *m) {
     std::set<Name> to_link = find.functions();
     for (std::set<Name>::iterator I = to_link.begin(), E = to_link.end(); I != E; ++I) {
         Function *f = m->get_function(*I);
+        assert(f);
+        assert(f->name.namespace_id.empty());
+        f->name.namespace_id = m->namespace_id;
         add_function(f);
         // Make sure to pull in functions that f calls as well.
         std::vector<Function *> calls = cg.transitive_calls(f);
         for (std::vector<Function *>::iterator CI = calls.begin(), CE = calls.end(); CI != CE; ++CI) {
-            if (to_link.count((*CI)->name)) continue;
-            add_function(*CI);
+            f = *CI;
+            if (to_link.count(f->name)) continue;
+            assert(f->name.namespace_id.empty());
+            f->name.namespace_id = m->namespace_id;
+            add_function(f);
+        }
+    }
+
+    // Special case for standard library functions: fix up the
+    // function call namespaces. This is so that the user does not
+    // have to write, for example, "Stdlib.assert()" in order to call
+    // the standard library assert function.
+    if (m->path == get_stdlib_path()) {
+        std::vector<FunctionCall *> calls = find.function_calls();
+        for (std::vector<FunctionCall *>::iterator I = calls.begin(), E = calls.end(); I != E; ++I) {
+            FunctionCall *call = *I;
+            call->function->name.namespace_id = "StdLib";
         }
     }
 }

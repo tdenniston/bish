@@ -711,6 +711,7 @@ InterpolatedString *Parser::interpolated_string(const Token &stop) {
 IRNode *Parser::importstmt() {
     expect(tokenizer->peek(), Token::ImportType, "Expected import statement");
     std::string module_name = strip(scan_until(Token::Semicolon()));
+    namespaces.insert(module_name);
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     return new ImportStatement(module_stack.top(), module_name);
 }
@@ -947,8 +948,18 @@ IRNode *Parser::atom() {
     tokenizer->next();
 
     switch(t.type()) {
-    case Token::SymbolType:
-        return new Variable(t.value());
+    case Token::SymbolType: {
+        if (tokenizer->peek().isa(Token::DotType)) {
+            tokenizer->next();
+            Token t1 = tokenizer->peek();
+            expect(t1, Token::SymbolType, "Expected symbol.");
+            if (namespaces.find(t.value()) == namespaces.end()) {
+                abort_with_position("Unknown namespace");
+            }
+            return new Variable(Name(t1.value(), t.value()));
+        }
+        return new Variable(Name(t.value()));
+    }
     case Token::TrueType:
         return new Boolean(true);
     case Token::FalseType:
@@ -971,6 +982,15 @@ IRNode *Parser::atom() {
 Name Parser::symbol() {
     Token t = tokenizer->peek();
     expect(t, Token::SymbolType, "Expected symbol.");
+    if (tokenizer->peek().isa(Token::DotType)) {
+        tokenizer->next();
+        Token t1 = tokenizer->peek();
+        expect(t1, Token::SymbolType, "Expected symbol.");
+        if (namespaces.find(t.value()) == namespaces.end()) {
+            abort_with_position("Unknown namespace");
+        }
+        return Name(t1.value(), t.value());
+    }
     return Name(t.value());
 }
 

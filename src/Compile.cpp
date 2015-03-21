@@ -10,19 +10,6 @@ using namespace Bish;
 
 namespace {
 
-// Return the path to the standard library. This allows setting the
-// path via BISH_STDLIB to override the default.
-std::string get_stdlib_path() {
-    char *stdlib = std::getenv("BISH_STDLIB");
-    if (stdlib) {
-        std::string abs = abspath(stdlib);
-        assert(!abs.empty() && "Unable to resolve path specified in BISH_STDLIB.");
-        return abs;
-    } else {
-        return STDLIB_PATH;
-    }
-}
-
 // Add necessary stdlib functions to the given module.
 void link_stdlib(Bish::Module *m) {
     Parser p;

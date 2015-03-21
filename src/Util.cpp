@@ -1,6 +1,20 @@
 #include <cassert>
 #include <cstdlib>
+#include "Config.h"
 #include "Util.h"
+
+// Return the path to the standard library. This allows setting the
+// path via BISH_STDLIB to override the default.
+std::string get_stdlib_path() {
+    char *stdlib = std::getenv("BISH_STDLIB");
+    if (stdlib) {
+        std::string abs = abspath(stdlib);
+        assert(!abs.empty() && "Unable to resolve path specified in BISH_STDLIB.");
+        return abs;
+    } else {
+        return STDLIB_PATH;
+    }
+}
 
 std::string abspath(const std::string &path) {
     const char *s = path.c_str();

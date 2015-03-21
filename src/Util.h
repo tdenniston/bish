@@ -19,6 +19,8 @@ inline std::string convert_string(int i) {
   return dynamic_cast<std::ostringstream &>((std::ostringstream() << i )).str();
 }
 
+// Return the absolute path to the standard library.
+std::string get_stdlib_path();
 // Return the absolute path from the given path.
 std::string abspath(const std::string &path);
 // Return the basename (last component) of a path.

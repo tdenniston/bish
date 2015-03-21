@@ -123,10 +123,15 @@ private:
     std::string lookup_name(const Variable *v) {
         std::string tmp;
         if (lookup_let(v, tmp)) {
+            assert(false);
             return tmp;
         } else {
-            return v->name.name;
+            return get_qualified_name(v->name);
         }
+    }
+
+    inline std::string get_qualified_name(const Name &n) {
+        return n.namespace_id + "_" + n.name;
     }
 };
 

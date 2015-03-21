@@ -8,7 +8,7 @@ FindCallsToModule::FindCallsToModule(Module *m) {
         Function *f = *I;
         // Skip calls to the module's main function.
         if (f == m->main) continue;
-        to_find.insert(f->name);
+        to_find.insert(f->name.name);
     }
 }
 
@@ -16,12 +16,17 @@ std::set<Name> FindCallsToModule::functions() const {
     return calls;
 }
 
+std::vector<FunctionCall *> FindCallsToModule::function_calls() const {
+    return fcalls;
+}
+
 void FindCallsToModule::visit(FunctionCall *call) {
     for (std::vector<IRNode *>::const_iterator I = call->args.begin(),
              E = call->args.end(); I != E; ++I) {
         (*I)->accept(this);
     }
-    if (to_find.count(call->function->name)) {
+    if (to_find.count(call->function->name.name)) {
         calls.insert(call->function->name);
+        fcalls.push_back(call);
     }
 }
