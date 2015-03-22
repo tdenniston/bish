@@ -16,16 +16,18 @@ bool CodeGen_Bash::should_emit_statement(const IRNode *node) const {
 }
 
 void CodeGen_Bash::visit(Module *n) {
+    // Define the functions first.
+    for (std::vector<Function *>::const_iterator I = n->functions.begin(),
+             E = n->functions.end(); I != E; ++I) {
+        (*I)->accept(this);
+    }
+    // Global variables next.
     for (std::vector<Assignment *>::const_iterator I = n->global_variables.begin(),
              E = n->global_variables.end(); I != E; ++I) {
         (*I)->accept(this);
         stream << ";\n";
     }
     stream << "\n";
-    for (std::vector<Function *>::const_iterator I = n->functions.begin(),
-             E = n->functions.end(); I != E; ++I) {
-        (*I)->accept(this);
-    }
     // Insert a call to bish_main().
     assert(n->main);
     FunctionCall *call_main = new FunctionCall(n->main);
