@@ -51,11 +51,11 @@ void Module::import(Module *m) {
         // namespace. Therefore, to_link can contain functions with
         // the same name but belonging to a different namespace. Don't
         // process those here:
-        if (!name.namespace_id.empty() && name.namespace_id != m->namespace_id) continue;
+        if (!name.namespace_id.empty() && !name.has_namespace(m->namespace_id)) continue;
         Function *f = m->get_function(name);
         assert(f);
         assert(f->name.namespace_id.empty());
-        f->name.namespace_id = m->namespace_id;
+        f->name.add_namespace(m->namespace_id);
         add_function(f);
         linked[f->name] = f;
         // Make sure to pull in functions that f calls as well.
@@ -64,8 +64,7 @@ void Module::import(Module *m) {
             f = *CI;
             // Avoid dummy functions and duplicates.
             if (f->body == NULL || to_link.count(f->name)) continue;
-            //assert(f->name.namespace_id.empty());
-            f->name.namespace_id = m->namespace_id;
+            f->name.add_namespace(m->namespace_id);
             add_function(f);
             linked[f->name] = f;
         }
@@ -82,7 +81,7 @@ void Module::import(Module *m) {
         // Special case for stdlib functions: they can be called
         // without a namespace, so add it here.
         if (m->path == get_stdlib_path()) {
-            call->function->name.namespace_id = "StdLib";
+            call->function->name.add_namespace("StdLib");
         }
         if (linked.find(name) != linked.end()) {
             assert(call->function->body == NULL);

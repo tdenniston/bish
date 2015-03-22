@@ -48,17 +48,43 @@ public:
     iterator end() { return nodes.end(); }
 };
 
-// The name of a symbol, with an optional namespace qualifier.
+// The name of a symbol, with optional namespace qualifier(s).
 class Name {
 public:
-    std::string namespace_id;
+    std::vector<std::string> namespace_id;
     std::string name;
     Name(const std::string &n) : name(n) {}
-    Name(const std::string &n, const std::string &ns) : name(n), namespace_id(ns) {}
-    Name(const Name &n) : name(n.name), namespace_id(n.namespace_id) {}
+    Name(const std::string &n, const std::string &ns) : name(n) {
+        namespace_id.push_back(ns);
+    }
+    Name(const Name &n) : name(n.name) {
+        namespace_id.insert(namespace_id.begin(), n.namespace_id.begin(), n.namespace_id.end());
+    }
 
-    std::string str(const char sep='.') const {
-        return namespace_id + sep + name;
+    std::string str(const char sep='_') const {
+        std::string result;
+        for (std::vector<std::string>::const_iterator I = namespace_id.begin(),
+                 E = namespace_id.end(); I != E; ++I) {
+            result += *I + sep;
+        }
+        result += name;
+        return result;
+    }
+
+    void add_namespace(const std::string &ns) {
+        namespace_id.insert(namespace_id.begin(), ns);
+    }
+
+    bool namespaces_equal(const Name &b) const {
+        return namespace_id == b.namespace_id;
+    }
+
+    bool has_namespace(const std::string &ns) const {
+        for (std::vector<std::string>::const_iterator I = namespace_id.begin(),
+                 E = namespace_id.end(); I != E; ++I) {
+            if (*I == ns) return true;
+        }
+        return false;
     }
     
     // Define lexicographic sort so this may be a key for std::map.

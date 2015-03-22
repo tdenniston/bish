@@ -44,7 +44,7 @@ void CodeGen_Bash::visit(Block *n) {
         unsigned i = 1;
         for (std::vector<Variable *>::const_iterator I = f->args.begin(), E = f->args.end(); I != E; ++I, ++i) {
             indent();
-            stream << "local " << (*I)->name.str('_') << "=\"$" << i << "\";\n";
+            stream << "local " << (*I)->name.str() << "=\"$" << i << "\";\n";
         }
     }
 
@@ -148,7 +148,7 @@ void CodeGen_Bash::visit(ForLoop *n) {
 
 void CodeGen_Bash::visit(Function *n) {
     if (n->body == NULL) return;
-    stream << "function " << n->name.str('_') << " ";
+    stream << "function " << n->name.str() << " ";
     stream << "() ";
     push_function_args_insert(n);
     if (n->body) n->body->accept(this);
@@ -157,7 +157,7 @@ void CodeGen_Bash::visit(Function *n) {
 void CodeGen_Bash::visit(FunctionCall *n) {
     const int nargs = n->args.size();
     if (should_functioncall_wrap()) stream << "$(";
-    stream << n->function->name.str('_');
+    stream << n->function->name.str();
     for (int i = 0; i < nargs; i++) {
         stream << " ";
         enable_functioncall_wrap();

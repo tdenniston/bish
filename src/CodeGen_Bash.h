@@ -128,7 +128,7 @@ private:
             assert(false);
             return tmp;
         } else {
-            return v->name.str('_');
+            return v->name.str();
         }
     }
 };
