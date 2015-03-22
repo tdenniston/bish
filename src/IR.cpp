@@ -43,6 +43,7 @@ void Module::import(Module *m) {
     CallGraph cg = cgb.build(m);
 
     std::set<Name> to_link = find.functions();
+    std::map<Name, Function *> linked;
     for (std::set<Name>::iterator I = to_link.begin(), E = to_link.end(); I != E; ++I) {
         const Name &name = *I;
         // FindCallsToModule only compares function names to allow the
@@ -56,27 +57,47 @@ void Module::import(Module *m) {
         assert(f->name.namespace_id.empty());
         f->name.namespace_id = m->namespace_id;
         add_function(f);
+        linked[f->name] = f;
         // Make sure to pull in functions that f calls as well.
         std::vector<Function *> calls = cg.transitive_calls(f);
         for (std::vector<Function *>::iterator CI = calls.begin(), CE = calls.end(); CI != CE; ++CI) {
             f = *CI;
             // Avoid dummy functions and duplicates.
             if (f->body == NULL || to_link.count(f->name)) continue;
-            assert(f->name.namespace_id.empty());
+            //assert(f->name.namespace_id.empty());
             f->name.namespace_id = m->namespace_id;
             add_function(f);
+            linked[f->name] = f;
         }
     }
 
-    // Special case for standard library functions: fix up the
-    // function call namespaces. This is so that the user does not
-    // have to write, for example, "Stdlib.assert()" in order to call
-    // the standard library assert function.
-    if (m->path == get_stdlib_path()) {
-        std::vector<FunctionCall *> calls = find.function_calls();
-        for (std::vector<FunctionCall *>::iterator I = calls.begin(), E = calls.end(); I != E; ++I) {
-            FunctionCall *call = *I;
+    // Now patch up the function pointers, replacing the "dummy"
+    // functions inserted at parse time with the real functions from
+    // the imported module.
+    std::vector<FunctionCall *> calls = find.function_calls();
+    std::set<Function *> to_erase;
+    for (std::vector<FunctionCall *>::iterator I = calls.begin(), E = calls.end(); I != E; ++I) {
+        FunctionCall *call = *I;
+        Name name = call->function->name;
+        // Special case for stdlib functions: they can be called
+        // without a namespace, so add it here.
+        if (m->path == get_stdlib_path()) {
             call->function->name.namespace_id = "StdLib";
+        }
+        if (linked.find(name) != linked.end()) {
+            assert(call->function->body == NULL);
+            to_erase.insert(call->function);
+            call->function = linked[name];
+        }
+    }
+
+    // Finally, erase the old dummy functions.
+    for (std::vector<Function *>::iterator I = functions.begin(), E = functions.end(); I != E; ) {
+        if (to_erase.find(*I) != to_erase.end()) {
+            delete *I;
+            I = functions.erase(I);
+        } else {
+            ++I;
         }
     }
 }
