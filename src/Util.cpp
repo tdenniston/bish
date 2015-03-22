@@ -1,7 +1,14 @@
+#include <sys/stat.h>
 #include <cassert>
 #include <cstdlib>
 #include "Config.h"
 #include "Util.h"
+
+bool is_file(const std::string &path) {
+    struct stat info;
+    int rc = stat(path.c_str(), &info);
+    return rc == 0 && !S_ISDIR(info.st_mode);
+}
 
 // Return the path to the standard library. This allows setting the
 // path via BISH_STDLIB to override the default.

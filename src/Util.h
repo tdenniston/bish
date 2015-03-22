@@ -19,6 +19,8 @@ inline std::string convert_string(int i) {
   return dynamic_cast<std::ostringstream &>((std::ostringstream() << i )).str();
 }
 
+// Return true if the given path is a valid file.
+bool is_file(const std::string &path);
 // Return the absolute path to the standard library.
 std::string get_stdlib_path();
 // Return the absolute path from the given path.
