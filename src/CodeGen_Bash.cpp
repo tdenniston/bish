@@ -27,7 +27,6 @@ void CodeGen_Bash::visit(Module *n) {
         (*I)->accept(this);
         stream << ";\n";
     }
-    stream << "\n";
     // Insert a call to bish_main().
     assert(n->main);
     FunctionCall *call_main = new FunctionCall(n->main);
@@ -57,6 +56,11 @@ void CodeGen_Bash::visit(Block *n) {
             (*I)->accept(this);
             stream << ";\n";
         }
+    }
+    // Bash doesn't allow empty functions: must insert a call to a null command.
+    if (n->nodes.empty()) {
+        indent();
+        stream << ": # Empty function\n";
     }
     indent_level--;
     if (should_print_block_braces()) stream << "}\n\n";
