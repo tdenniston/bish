@@ -26,6 +26,8 @@ def vars() {
     assert(not success());
     result = f("hello");
     assert(result == "x is hello");
+    # result = f("hello:");
+    # assert(result == "x is hello:");
 }
 
 def test() {
