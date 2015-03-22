@@ -707,9 +707,14 @@ InterpolatedString *Parser::interpolated_string(const Token &stop, bool keep_lit
 IRNode *Parser::importstmt() {
     expect(tokenizer->peek(), Token::ImportType, "Expected import statement");
     std::string module_name = strip(scan_until(Token::Semicolon()));
-    namespaces.insert(module_name);
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
-    return new ImportStatement(module_stack.top(), module_name);
+    if (namespaces.find(module_name) == namespaces.end()) {
+        namespaces.insert(module_name);
+        return new ImportStatement(module_stack.top(), module_name);
+    } else {
+        // Ignore duplicate imports.
+        return NULL;
+    }
 }
 
 IRNode *Parser::returnstmt() {
