@@ -53,7 +53,8 @@ void Module::import(Module *m) {
         std::vector<Function *> calls = cg.transitive_calls(f);
         for (std::vector<Function *>::iterator CI = calls.begin(), CE = calls.end(); CI != CE; ++CI) {
             f = *CI;
-            if (to_link.count(f->name)) continue;
+            // Avoid dummy functions and duplicates.
+            if (f->body == NULL || to_link.count(f->name)) continue;
             assert(f->name.namespace_id.empty());
             f->name.namespace_id = m->namespace_id;
             add_function(f);
