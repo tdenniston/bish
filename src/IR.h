@@ -56,6 +56,10 @@ public:
     Name(const std::string &n) : name(n) {}
     Name(const std::string &n, const std::string &ns) : name(n), namespace_id(ns) {}
     Name(const Name &n) : name(n.name), namespace_id(n.namespace_id) {}
+
+    std::string str(const char sep='.') const {
+        return namespace_id + sep + name;
+    }
     
     // Define lexicographic sort so this may be a key for std::map.
     bool operator<(const Name &b) const {

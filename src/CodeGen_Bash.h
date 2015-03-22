@@ -128,12 +128,8 @@ private:
             assert(false);
             return tmp;
         } else {
-            return get_qualified_name(v->name);
+            return v->name.str('_');
         }
-    }
-
-    inline std::string get_qualified_name(const Name &n) {
-        return n.namespace_id + "_" + n.name;
     }
 };
 
