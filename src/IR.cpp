@@ -41,10 +41,17 @@ void Module::import(Module *m) {
     accept(&find);
     CallGraphBuilder cgb;
     CallGraph cg = cgb.build(m);
-    
+
     std::set<Name> to_link = find.functions();
     for (std::set<Name>::iterator I = to_link.begin(), E = to_link.end(); I != E; ++I) {
-        Function *f = m->get_function(*I);
+        const Name &name = *I;
+        // FindCallsToModule only compares function names to allow the
+        // standard library functions to be called without a
+        // namespace. Therefore, to_link can contain functions with
+        // the same name but belonging to a different namespace. Don't
+        // process those here:
+        if (!name.namespace_id.empty() && name.namespace_id != m->namespace_id) continue;
+        Function *f = m->get_function(name);
         assert(f);
         assert(f->name.namespace_id.empty());
         f->name.namespace_id = m->namespace_id;
