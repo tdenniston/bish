@@ -112,17 +112,6 @@ public:
         return text.substr(start, idx - start);
     }
 
-    // Return the substring beginning at the current index and
-    // continuing (exclusively) until the first occurrence of a
-    // non-whitespace character.
-    std::string scan_whitespace() {
-        unsigned start = idx;
-        while (is_whitespace(curchar())) {
-            idx++;
-        }
-        return text.substr(start, idx - start);
-    }
-
     // Return a human-readable representation of the current position
     // in the string.
     std::string position() const {
@@ -684,7 +673,7 @@ InterpolatedString *Parser::interpolated_string(const Token &stop, bool keep_lit
     const Token scan_tokens_arr[] = {stop, Token::Dollar()};
     const std::vector<Token> scan_tokens(scan_tokens_arr, scan_tokens_arr+2);
     InterpolatedString *result = new InterpolatedString();
-    do {
+    while (true) {
         std::string str = scan_until(scan_tokens, keep_literal_backslash);
         result->push_str(str);
         if (tokenizer->peek().isa(Token::DollarType)) {
@@ -697,10 +686,11 @@ InterpolatedString *Parser::interpolated_string(const Token &stop, bool keep_lit
             } else {
                 Variable *v = var();
                 result->push_var(v);
-                result->push_str(tokenizer->scan_whitespace());
             }
+        } else if (tokenizer->peek().isa(stop.type())) {
+            break;
         }
-    } while (!tokenizer->peek().isa(stop.type()));
+    }
     return result;
 }
 
