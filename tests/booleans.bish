@@ -35,5 +35,7 @@ def bools() {
     assert(not (not (not false)));
 }
 
-bools();
-println("Boolean tests passed.");
+def test() {
+    bools();
+    println("Boolean tests passed.");
+}

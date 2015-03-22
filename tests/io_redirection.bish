@@ -21,6 +21,7 @@ def pipes() {
     assert(nonmatches == "");
 }
 
-pipes();
-
-println("I/O redirection tests passed.");
+def test() {
+    pipes();
+    println("I/O redirection tests passed.");
+}

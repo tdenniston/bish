@@ -10,5 +10,8 @@ def escaping() {
     @(\(cd; ls\); ls);
 }
 
-escaping();
-println("Escaped tokens tests passed.");
+def test() {
+    # Capture the output so it doesn't go to stdout:
+    output = escaping();
+    println("Escaped tokens tests passed.");
+}

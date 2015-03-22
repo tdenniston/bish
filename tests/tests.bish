@@ -1,47 +1,31 @@
 # Run the tests for the bish compiler.
 
-# Make sure we're in the "tests" directory.
-def change_dir() {
-    dir = cwd();
-    dir = @(basename $dir);
-    if (dir != "tests") {
-        cd("tests");
-    }
-}
-
-# Run a single bish script and return whether it succeeded or not.
-def run_bish(file) {
-    @(../bish -r $file > /dev/null);
-    return success();
-}
-
 # Run all tests
 def run_all() {
-    result = run_bish("double.bish");
-    assert(result);
+    import double;
+    double.test();
 
-    result = run_bish("io_redirection.bish");
-    assert(result);
+    import io_redirection;
+    io_redirection.test();
 
-    result = run_bish("fib.bish");
-    assert(result);
+    import fib;
+    fib.test();
 
-    result = run_bish("ops.bish");
-    assert(result);
+    import ops;
+    ops.test();
 
-    result = run_bish("vars.bish");
-    assert(result);
+    import vars;
+    vars.test();
 
-    result = run_bish("booleans.bish");
-    assert(result);
+    import booleans;
+    booleans.test();
 
-    result = run_bish("escaping.bish");
-    assert(result);
+    import escaping;
+    escaping.test();
 
-    result = run_bish("imports.bish");
-    assert(result);
+    import imports;
+    imports.test();
 }
 
-change_dir();
 run_all();
 println("All tests passed.");

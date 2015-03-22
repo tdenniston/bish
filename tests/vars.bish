@@ -28,5 +28,7 @@ def vars() {
     assert(result == "x is hello");
 }
 
-vars();
-println("Vars tests passed.");
+def test() {
+    vars();
+    println("Vars tests passed.");
+}

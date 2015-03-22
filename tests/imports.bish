@@ -6,5 +6,7 @@ def imports() {
     assert(imports2.import_me());    
 }
 
-imports();
-println("Import tests passed.");
+def test() {
+    imports();
+    println("Import tests passed.");
+}

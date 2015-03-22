@@ -22,5 +22,7 @@ def ops() {
     assert(a + 1 >= b);
 }
 
-ops();
-println("Operator tests passed.");
+def test() {
+    ops();
+    println("Operator tests passed.");
+}

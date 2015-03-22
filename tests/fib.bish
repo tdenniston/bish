@@ -5,5 +5,7 @@ def fib(n) {
   return fib(n-1) + fib(n-2);
 }
 
-assert(fib(5) == 8);
-println("Fib test passed.");
+def test() {
+    assert(fib(5) == 8);
+    println("Fib test passed.");
+}
