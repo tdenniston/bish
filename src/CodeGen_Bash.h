@@ -30,12 +30,13 @@ private:
  
 class CodeGen_Bash : public IRVisitor {
 public:
-    CodeGen_Bash(std::ostream &os) : stream(os) {
+    CodeGen_Bash(std::ostream &os, bool cal = false) : stream(os) {
         indent_level = 0;
         enable_block_braces();
         disable_functioncall_wrap();
         enable_quote_variable();
         enable_comparison_wrap();
+        compile_as_library = cal;
     }
     virtual void visit(Module *);
     virtual void visit(Block *);
@@ -64,6 +65,7 @@ private:
     std::stack<bool> comparison_wrap;
     std::ostream &stream;
     unsigned indent_level;
+    bool compile_as_library;
 
     inline void disable_block_braces() { block_print_braces.push(false); }
     inline void enable_block_braces() { block_print_braces.push(true); }

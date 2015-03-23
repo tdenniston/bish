@@ -33,18 +33,23 @@ void usage(char *argv0) {
     std::cerr << "\nOPTIONS:\n";
     std::cerr << "  -h: Displays this help message.\n";
     std::cerr << "  -r: Compiles and runs the file.\n";
+    std::cerr << "  -l: Compiles the file as a library.\n";
 }
 
 int main(int argc, char **argv) {
     int c;
     bool run_after_compile = false;
-    while ((c = getopt(argc,argv, "hr")) != -1) {
+    bool compile_as_library = false;
+    while ((c = getopt(argc,argv, "hrl")) != -1) {
         switch (c) {
         case 'h':
             usage(argv[0]);
             return 1;
         case 'r':
             run_after_compile = true;
+            break;
+        case 'l':
+            compile_as_library = true;
             break;
         default:
             break;
@@ -61,7 +66,7 @@ int main(int argc, char **argv) {
     Bish::Module *m = path.compare("-") == 0 ? p.parse(std::cin) : p.parse(path);
 
     std::stringstream s;
-    Bish::compile_to_bash(run_after_compile ? s : std::cout, m);
+    Bish::compile_to_bash(run_after_compile ? s : std::cout, m, compile_as_library);
     if (run_after_compile) {
         int exit_status = run_on_bash(s);
         exit(exit_status);

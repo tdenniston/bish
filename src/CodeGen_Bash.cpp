@@ -27,12 +27,14 @@ void CodeGen_Bash::visit(Module *n) {
         (*I)->accept(this);
         stream << ";\n";
     }
-    // Insert a call to bish_main().
-    assert(n->main);
-    FunctionCall *call_main = new FunctionCall(n->main);
-    visit(call_main);
-    stream << ";\n";
-    delete call_main;
+    if(!compile_as_library) {
+        // Insert a call to bish_main().
+        assert(n->main);
+        FunctionCall *call_main = new FunctionCall(n->main);
+        visit(call_main);
+        stream << ";\n";
+        delete call_main;
+    }
 }
 
 void CodeGen_Bash::visit(Block *n) {
