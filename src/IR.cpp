@@ -63,7 +63,7 @@ void Module::import(Module *m) {
         for (std::vector<Function *>::iterator CI = calls.begin(), CE = calls.end(); CI != CE; ++CI) {
             f = *CI;
             // Avoid dummy functions and duplicates.
-            if (f->body == NULL || to_link.count(f->name)) continue;
+            if (f->body == NULL || to_link.count(f->name) || linked.count(f->name)) continue;
             f->name.add_namespace(m->namespace_id);
             add_function(f);
             linked[f->name] = f;
