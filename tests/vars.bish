@@ -18,6 +18,9 @@ def vars() {
     assert(result == "interpolate \\hello");
     result = print("this should match\nthis shouldn't") | @(awk '/match/ { print \$0 }');
     assert(result == "this should match");
+    text = "hello with spaces";
+    result = print("interpolate $text");
+    assert(result == "interpolate hello with spaces");
     text = "335";
     @([[ $text =~ ^[0-9]+\$ ]]);
     assert(success());

@@ -339,7 +339,9 @@ void CodeGen_Bash::visit(Fractional *n) {
 
 void CodeGen_Bash::visit(String *n) {
     stream << "\"";
+    disable_quote_variable();
     output_interpolated_string(n->value);
+    reset_quote_variable();
     stream << "\"";
 }
 
