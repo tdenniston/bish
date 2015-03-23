@@ -42,7 +42,7 @@ namespace Bish {
  */
 class Tokenizer {
 public:
-    Tokenizer(const std::string &t) : text(t), idx(0), lineno(1) {}
+    Tokenizer(const std::string &t) : text(t), idx(0), lineno(0) {}
 
     // Return the token at the head of the stream, but do not skip it.
     Token peek() {
@@ -385,9 +385,7 @@ void Parser::post_parse_passes(Module *m) {
 // the tokenizer. If false, produce an error message.
 void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
     if (!t.isa(ty)) {
-        std::stringstream errstr;
-        errstr << "Parsing error: " << msg;
-        abort_with_position(errstr.str());
+        abort_with_position(msg);
     }
     tokenizer->next();
 }
@@ -485,7 +483,7 @@ BinOp::Operator Parser::get_binop_operator(const Token &t) {
     case Token::PercentType:
         return BinOp::Mod;
     default:
-        abort("Invalid operator for binary operation.");
+        abort_with_position("Invalid operator for binary operation.");
         return BinOp::Add;
     }
 }
@@ -498,7 +496,7 @@ UnaryOp::Operator Parser::get_unaryop_operator(const Token &t) {
     case Token::NotType:
         return UnaryOp::Not;
     default:
-        abort("Invalid operator for unary operation.");
+        abort_with_position("Invalid operator for unary operation.");
         return UnaryOp::Negate;
     }
 }
@@ -509,7 +507,7 @@ IORedirection::Operator Parser::get_redirection_operator(const Token &t) {
     case Token::PipeType:
         return IORedirection::Pipe;
     default:
-        abort("Invalid operator for I/O redirection.");
+        abort_with_position("Invalid operator for I/O redirection.");
         return IORedirection::Pipe;
     }
 }
@@ -649,7 +647,7 @@ IRNode *Parser::otherstmt() {
         s = funcall(sym);
         break;
     default:
-        abort("Unexpected token in statement.");
+        abort_with_position("Unexpected token in statement.");
         s = NULL;
         break;
     }
@@ -965,7 +963,7 @@ IRNode *Parser::atom() {
         return new String(str);
     }
     default:
-        abort("Invalid token type for atom.");
+        abort_with_position("Invalid token type for atom.");
         return NULL;
     }
 }
