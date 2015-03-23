@@ -19,7 +19,8 @@ void CodeGen_Bash::visit(Module *n) {
     // Define the functions first.
     for (std::vector<Function *>::const_iterator I = n->functions.begin(),
              E = n->functions.end(); I != E; ++I) {
-        (*I)->accept(this);
+	if(!(compile_as_library && (*I)->name.name == "main"))
+            (*I)->accept(this);
     }
     // Global variables next.
     for (std::vector<Assignment *>::const_iterator I = n->global_variables.begin(),
