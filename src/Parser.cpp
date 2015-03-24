@@ -12,6 +12,98 @@
 
 namespace Bish {
 
+void ParseScope::set_module(Module *m) {
+    current_module = m;
+}
+
+void ParseScope::pop_module() {
+    current_module = NULL;
+}
+
+Module *ParseScope::module() {
+    return current_module;
+}
+
+void ParseScope::push_symbol_table() {
+    symbol_table_stack.push(new SymbolTable());
+}
+
+void ParseScope::pop_symbol_table() {
+    delete symbol_table_stack.top();
+    symbol_table_stack.pop();
+}
+
+void ParseScope::add_symbol(const Name &name, Variable *v, Type ty) {
+    symbol_table_stack.top()->insert(name, v, UndefinedTy);
+}
+
+// Return the variable from the symbol table corresponding to the
+// given variable. The given variable is then deleted. If there is no
+// symbol table entry, abort.
+Variable *ParseScope::get_defined_variable(Variable *v) {
+    Variable *sym = lookup_variable(v->name);
+    if (!sym) {
+        assert(false && "Undefined variable.");
+        //abort_with_position("Undefined variable \"" + v->name.name + "\"");
+    }
+    assert(sym != v);
+    delete v;
+    return sym;
+}
+
+// Return the symbol table entry corresponding to the given variable
+// name, or NULL if none exists.
+Variable *ParseScope::lookup_variable(const Name &name) {
+    IRNode *result = NULL;
+    std::stack<SymbolTable *> aux;
+    while (!symbol_table_stack.empty()) {
+        SymbolTableEntry *e = symbol_table_stack.top()->lookup(name);
+        if (e) {
+            result = e->node;
+            break;
+        }
+        aux.push(symbol_table_stack.top());
+        symbol_table_stack.pop();
+    }
+    while (!aux.empty()) {
+        symbol_table_stack.push(aux.top());
+        aux.pop();
+    }
+    Variable *v = dynamic_cast<Variable*>(result);
+    if (result) assert(v);
+    return v;
+}
+
+// Return the symbol table entry corresponding to the given variable
+// name. If no entry exists, create one first.
+Variable *ParseScope::lookup_or_new_var(const Name &name) {
+    IRNode *result = lookup_variable(name);
+    if (result) {
+        Variable *v = dynamic_cast<Variable*>(result);
+        assert(v);
+        return v;
+    } else {
+        Variable *v = new Variable(name);
+        add_symbol(name, v, UndefinedTy);
+        return v;
+    }
+}
+
+// Return the symbol table entry corresponding to the given function
+// name. If no entry exists, create one first.
+Function *ParseScope::lookup_or_new_function(const Name &name) {
+    SymbolTableEntry *e = function_symbol_table->lookup(name);
+    Function *f = NULL;
+    if (e) {
+        f = dynamic_cast<Function*>(e->node);
+    } else {
+        f = new Function(name);
+        function_symbol_table->insert(name, f, UndefinedTy);
+    }
+    assert(f);
+    return f;
+}
+
 Parser::~Parser() {
     if (tokenizer) delete tokenizer;
 }
@@ -141,36 +233,14 @@ void Parser::abort_with_position(const std::string &msg) {
     exit(1);
 }
 
-void Parser::push_module(Module *m) {
-    module_stack.push(m);
-}
-
-Module *Parser::pop_module() {
-    Module *m = module_stack.top();
-    module_stack.pop();
-    return m;
-}
-
-void Parser::push_symbol_table(SymbolTable *s) {
-    symbol_table_stack.push(s);
-}
-
-SymbolTable *Parser::pop_symbol_table() {
-    SymbolTable *s = symbol_table_stack.top();
-    symbol_table_stack.pop();
-    return s;
-}
-
 Module *Parser::module(const std::string &path) {
     Module *m = new Module();
     m->set_path(path);
-    push_module(m);
-    function_symbol_table = new SymbolTable();
+    scope.set_module(m);
     Function *main = new Function(Name("main"), block());
     m->set_main(main);
     setup_global_variables(m);
-    pop_module();
-    delete function_symbol_table;
+    scope.pop_module();
     return m;
 }
 
@@ -201,7 +271,7 @@ void Parser::setup_global_variables(Module *m) {
 // Parse a Bish block.
 Block *Parser::block() {
     std::vector<IRNode *> statements;
-    push_symbol_table(new SymbolTable());
+    scope.push_symbol_table();
     expect(tokenizer->peek(), Token::LBraceType, "Expected block to begin with '{'");
     do {
         while (tokenizer->peek().isa(Token::SharpType)) {
@@ -213,7 +283,7 @@ Block *Parser::block() {
     } while (!tokenizer->peek().isa(Token::RBraceType));
     expect(tokenizer->peek(), Token::RBraceType, "Expected block to end with '}'");
     Block *result = new Block(statements);
-    delete pop_symbol_table();
+    scope.pop_symbol_table();
     return result;
 }
 
@@ -241,7 +311,7 @@ IRNode *Parser::stmt() {
         return forloop();
     case Token::DefType: {
         Function *f = functiondef();
-        module_stack.top()->add_function(f);
+        scope.module()->add_function(f);
         return NULL;
     }
     default:
@@ -311,7 +381,7 @@ IRNode *Parser::importstmt() {
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     if (namespaces.find(module_name) == namespaces.end()) {
         namespaces.insert(module_name);
-        return new ImportStatement(module_stack.top(), module_name);
+        return new ImportStatement(scope.module(), module_name);
     } else {
         // Ignore duplicate imports.
         return NULL;
@@ -372,10 +442,10 @@ IRNode *Parser::forloop() {
         upper = atom();
     }
     if (Variable *lv = dynamic_cast<Variable*>(lower)) {
-        lower = get_defined_variable(lv);
+        lower = scope.get_defined_variable(lv);
     }
     if (Variable *uv = dynamic_cast<Variable*>(upper)) {
-        upper = get_defined_variable(uv);
+        upper = scope.get_defined_variable(uv);
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     IRNode *body = block();
@@ -387,7 +457,7 @@ Function *Parser::functiondef() {
     Name name = symbol();
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     std::vector<Variable *> args;
-    push_symbol_table(new SymbolTable());
+    scope.push_symbol_table();
     if (!tokenizer->peek().isa(Token::RParenType)) {
         args.push_back(arg());
         while (tokenizer->peek().isa(Token::CommaType)) {
@@ -397,11 +467,11 @@ Function *Parser::functiondef() {
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     Block *body = block();
-    delete pop_symbol_table();
+    scope.pop_symbol_table();
     // It's possible the function was called before it was defined. In
     // that case we get that function instance, and initialize its
     // arguments and body here.
-    Function *f = lookup_or_new_function(name);
+    Function *f = scope.lookup_or_new_function(name);
     // If the arguments and body have already been initialized, throw
     // a redefinition error.
     if (f->body != NULL) {
@@ -423,17 +493,17 @@ IRNode *Parser::funcall(const Name &name) {
         }
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
-    Function *f = lookup_or_new_function(name);
+    Function *f = scope.lookup_or_new_function(name);
     return new FunctionCall(f, args);
 }
 
 IRNode *Parser::assignment(const Name &name) {
     expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
-    Variable *v = lookup_or_new_var(name);
+    Variable *v = scope.lookup_or_new_var(name);
     IRNode *e = expr();
     Type t = get_primitive_type(e);
     if (t != UndefinedTy) {
-        symbol_table_stack.top()->insert(name, v, t);
+        scope.add_symbol(name, v, t);
     }
     return new Assignment(v, e);
 }
@@ -441,7 +511,7 @@ IRNode *Parser::assignment(const Name &name) {
 Variable *Parser::var() {
     std::string name = tokenizer->peek().value();
     expect(tokenizer->peek(), Token::SymbolType, "Expected variable to be a symbol");
-    return lookup_or_new_var(name);
+    return scope.lookup_or_new_var(name);
 }
 
 Variable *Parser::arg() {
@@ -449,7 +519,7 @@ Variable *Parser::arg() {
     std::string name = tokenizer->peek().value();
     expect(tokenizer->peek(), Token::SymbolType, "Expected argument to be a symbol");
     Variable *arg = new Variable(name);
-    symbol_table_stack.top()->insert(name, arg, UndefinedTy);
+    scope.add_symbol(name, arg, UndefinedTy);
     return arg;
 }
 
@@ -546,7 +616,7 @@ IRNode *Parser::factor() {
             }
             a = funcall(v->name);
         } else if (Variable *v = dynamic_cast<Variable*>(a)) {
-            Variable *sym = get_defined_variable(v);
+            Variable *sym = scope.get_defined_variable(v);
             a = sym;
         }
         return a;
@@ -602,72 +672,6 @@ Name Parser::symbol() {
         return Name(t1.value(), t.value());
     }
     return Name(t.value());
-}
-
-// Return the variable from the symbol table corresponding to the
-// given variable. The given variable is then deleted. If there is no
-// symbol table entry, abort.
-Variable *Parser::get_defined_variable(Variable *v) {
-    Variable *sym = lookup_variable(v->name);
-    if (!sym) {
-        abort_with_position("Undefined variable \"" + v->name.name + "\"");
-    }
-    assert(sym != v);
-    delete v;
-    return sym;
-}
-
-// Return the symbol table entry corresponding to the given variable
-// name. If no entry exists, create one first.
-Variable *Parser::lookup_or_new_var(const Name &name) {
-    IRNode *result = lookup_variable(name);
-    if (result) {
-        Variable *v = dynamic_cast<Variable*>(result);
-        assert(v);
-        return v;
-    } else {
-        Variable *v = new Variable(name);
-        symbol_table_stack.top()->insert(name, v, UndefinedTy);
-        return v;
-    }
-}
-
-// Return the symbol table entry corresponding to the given function
-// name. If no entry exists, create one first.
-Function *Parser::lookup_or_new_function(const Name &name) {
-    SymbolTableEntry *e = function_symbol_table->lookup(name);
-    Function *f = NULL;
-    if (e) {
-        f = dynamic_cast<Function*>(e->node);
-    } else {
-        f = new Function(name);
-        function_symbol_table->insert(name, f, UndefinedTy);
-    }
-    assert(f);
-    return f;
-}
-
-// Return the symbol table entry corresponding to the given variable
-// name, or NULL if none exists.
-Variable *Parser::lookup_variable(const Name &name) {
-    IRNode *result = NULL;
-    std::stack<SymbolTable *> aux;
-    while (!symbol_table_stack.empty()) {
-        SymbolTableEntry *e = symbol_table_stack.top()->lookup(name);
-        if (e) {
-            result = e->node;
-            break;
-        }
-        aux.push(symbol_table_stack.top());
-        symbol_table_stack.pop();
-    }
-    while (!aux.empty()) {
-        symbol_table_stack.push(aux.top());
-        aux.pop();
-    }
-    Variable *v = dynamic_cast<Variable*>(result);
-    if (result) assert(v);
-    return v;
 }
 
 }

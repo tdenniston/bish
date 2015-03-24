@@ -48,6 +48,52 @@ interp ::= { str | '$' namespacedvar | '$' '(' any ')'}
 
 namespace Bish {
 
+/* Class which encapsulates all of the scoping information needed
+ * during parsing (e.g. symbol tables). */
+class ParseScope {
+public:
+    ParseScope() {
+        function_symbol_table = new SymbolTable();
+    }
+
+    ~ParseScope() {
+        delete function_symbol_table;
+    }
+
+    // Set the current module.
+    void set_module(Module *m);
+    // Unset the current module.
+    void pop_module();
+    // Return the current module.
+    Module *module();
+    // Create a new scope for variables.
+    void push_symbol_table();
+    // Remove the topmost scope for variables.
+    void pop_symbol_table();
+    // Add the given symbol to the current variable scope.
+    void add_symbol(const Name &name, Variable *v, Type ty);
+    // Return the variable from the symbol table corresponding to the
+    // given variable. The given variable is then deleted. If there is no
+    // symbol table entry, abort.
+    Variable *get_defined_variable(Variable *v);
+    // Return the symbol table entry corresponding to the given variable
+    // name, or NULL if none exists.
+    Variable *lookup_variable(const Name &name);
+    // Return the symbol table entry corresponding to the given variable
+    // name. If no entry exists, create one first.
+    Variable *lookup_or_new_var(const Name &name);
+    // Return the symbol table entry corresponding to the given function
+    // name. If no entry exists, create one first.
+    Function *lookup_or_new_function(const Name &name);
+private:
+    // Current Module being parsed.
+    Module *current_module;
+    // Current scope stack of symbol tables for variables.
+    std::stack<SymbolTable *> symbol_table_stack;
+    // Symbol table for functions (which are defined globally).
+    SymbolTable *function_symbol_table;
+};
+
 class Parser {
 public:
     Parser() : tokenizer(NULL) {}
@@ -56,11 +102,9 @@ public:
     Module *parse(std::istream &is);
     Module *parse_string(const std::string &text, const std::string &path="");
 private:
+    ParseScope scope;
     Tokenizer *tokenizer;
     std::set<std::string> namespaces;
-    std::stack<Module *> module_stack;
-    std::stack<SymbolTable *> symbol_table_stack;
-    SymbolTable *function_symbol_table;
 
     std::string read_stream(std::istream &is);
     std::string read_file(const std::string &path);
@@ -71,15 +115,7 @@ private:
     std::string scan_until(Token a, Token b);
     std::string scan_until(Token t);
     std::string scan_until(char c);
-    void push_module(Module *m);
-    Module *pop_module();
-    void push_symbol_table(SymbolTable *s);
-    SymbolTable *pop_symbol_table();
     void setup_global_variables(Module *m);
-    Variable *get_defined_variable(Variable *v);
-    Variable *lookup_variable(const Name &name);
-    Variable *lookup_or_new_var(const Name &name);
-    Function *lookup_or_new_function(const Name &name);
     void post_parse_passes(Module *m);
 
     Module *module(const std::string &path);
