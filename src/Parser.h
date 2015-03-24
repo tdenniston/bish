@@ -79,6 +79,9 @@ public:
     // Return the symbol table entry corresponding to the given variable
     // name, or NULL if none exists.
     Variable *lookup_variable(const Name &name);
+    // Return the symbol table entry corresponding to the given function
+    // name, or NULL if none exists.
+    Function *lookup_function(const Name &name);
     // Return the symbol table entry corresponding to the given variable
     // name. If no entry exists, create one first.
     Variable *lookup_or_new_var(const Name &name);

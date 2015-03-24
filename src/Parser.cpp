@@ -74,29 +74,36 @@ Variable *ParseScope::lookup_variable(const Name &name) {
     return v;
 }
 
+// Return the symbol table entry corresponding to the given function
+// name, or NULL if none exists.
+Function *ParseScope::lookup_function(const Name &name) {
+    SymbolTableEntry *e = function_symbol_table->lookup(name);
+    if (e) {
+        Function *f = dynamic_cast<Function*>(e->node);
+        assert(f);
+        return f;
+    } else {
+        return NULL;
+    }
+}
+
 // Return the symbol table entry corresponding to the given variable
 // name. If no entry exists, create one first.
 Variable *ParseScope::lookup_or_new_var(const Name &name) {
-    IRNode *result = lookup_variable(name);
-    if (result) {
-        Variable *v = dynamic_cast<Variable*>(result);
-        bish_assert(v);
-        return v;
-    } else {
-        Variable *v = new Variable(name);
-        add_symbol(name, v, UndefinedTy);
-        return v;
+    Variable *result = lookup_variable(name);
+    if (result == NULL) {
+        result = new Variable(name);
+        add_symbol(name, result, UndefinedTy);
     }
+    bish_assert(result);
+    return result;
 }
 
 // Return the symbol table entry corresponding to the given function
 // name. If no entry exists, create one first.
 Function *ParseScope::lookup_or_new_function(const Name &name) {
-    SymbolTableEntry *e = function_symbol_table->lookup(name);
-    Function *f = NULL;
-    if (e) {
-        f = dynamic_cast<Function*>(e->node);
-    } else {
+    Function *f = lookup_function(name);
+    if (f == NULL) {
         f = new Function(name);
         function_symbol_table->insert(name, f, UndefinedTy);
     }
@@ -331,6 +338,8 @@ IRNode *Parser::otherstmt() {
 }
 
 Assignment *Parser::assignment(const Name &name) {
+    bish_assert(!scope.lookup_function(name)) << "Cannot assign to function \"" <<
+        name.str() << "\" near " << tokenizer->position();
     expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
     Variable *v = scope.lookup_or_new_var(name);
     IRNode *e = expr();
@@ -342,6 +351,8 @@ Assignment *Parser::assignment(const Name &name) {
 }
 
 FunctionCall *Parser::funcall(const Name &name) {
+    bish_assert(!scope.lookup_variable(name)) << "Symbol \"" <<
+        name.str() << "\" near " << tokenizer->position() << " is not a function.";
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     std::vector<IRNode *> args;
     if (!tokenizer->peek().isa(Token::RParenType)) {
