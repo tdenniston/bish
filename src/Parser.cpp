@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iostream>
 
+#include "Errors.h"
 #include "Util.h"
 #include "Parser.h"
 #include "TypeChecker.h"
@@ -43,10 +44,9 @@ void ParseScope::add_symbol(const Name &name, Variable *v, Type ty) {
 Variable *ParseScope::get_defined_variable(Variable *v) {
     Variable *sym = lookup_variable(v->name);
     if (!sym) {
-        assert(false && "Undefined variable.");
-        //abort_with_position("Undefined variable \"" + v->name.name + "\"");
+        bish_abort() << "Undefined variable \"" << v->name.name << "\"";
     }
-    assert(sym != v);
+    bish_assert(sym != v);
     delete v;
     return sym;
 }
@@ -70,7 +70,7 @@ Variable *ParseScope::lookup_variable(const Name &name) {
         aux.pop();
     }
     Variable *v = dynamic_cast<Variable*>(result);
-    if (result) assert(v);
+    if (result) bish_assert(v);
     return v;
 }
 
@@ -80,7 +80,7 @@ Variable *ParseScope::lookup_or_new_var(const Name &name) {
     IRNode *result = lookup_variable(name);
     if (result) {
         Variable *v = dynamic_cast<Variable*>(result);
-        assert(v);
+        bish_assert(v);
         return v;
     } else {
         Variable *v = new Variable(name);
@@ -100,7 +100,7 @@ Function *ParseScope::lookup_or_new_function(const Name &name) {
         f = new Function(name);
         function_symbol_table->insert(name, f, UndefinedTy);
     }
-    assert(f);
+    bish_assert(f);
     return f;
 }
 
@@ -120,8 +120,7 @@ std::string Parser::read_stream(std::istream &is) {
 std::string Parser::read_file(const std::string &path) {
     std::ifstream t(path.c_str());
     if (!is_file(path) || !t.is_open()) {
-        std::string msg = "Failed to open file at " + path;
-        abort(msg);
+        bish_abort() << "Failed to open file at " << path;
     }
     std::string result = read_stream(t);
     t.close();
@@ -132,7 +131,7 @@ std::string Parser::read_file(const std::string &path) {
 Module *Parser::parse(const std::string &path) {
     std::string contents = read_file(path);
     Module *m = parse_string(contents, path);
-    assert(m->path.size() > 0 && "Unable to resolve module path");
+    bish_assert(m->path.size() > 0) << "Unable to resolve module path";
     return m;
 }
 
@@ -188,7 +187,7 @@ void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
 std::string Parser::scan_until(const std::vector<Token> &tokens, bool keep_literal_backslash) {
     std::string result = tokenizer->scan_until(tokens, keep_literal_backslash);
     if (tokenizer->peek().isa(Token::EOSType)) {
-        abort("Unexpected end of input.");
+        bish_abort() << "Unexpected end of input.";
     }
     return result;
 }
@@ -215,22 +214,15 @@ std::string Parser::scan_until(Token a) {
 std::string Parser::scan_until(char c) {
     std::string result = tokenizer->scan_until(c);
     if (tokenizer->peek().isa(Token::EOSType)) {
-        abort("Unexpected end of input.");
+        bish_abort() << "Unexpected end of input.";
     }
     return result;
-}
-
-// Terminate the parsing process with the given error message.
-void Parser::abort(const std::string &msg) {
-    std::cerr << "Bish parsing error: " << msg << "\n";
-    exit(1);
 }
 
 // Terminate the parsing process with the given error message, and the
 // position of the tokenizer.
 void Parser::abort_with_position(const std::string &msg) {
-    std::cerr << "Bish parsing error: " << msg << " near " << tokenizer->position() << "\n";
-    exit(1);
+    bish_abort() << ": parsing error: " << msg << " near " << tokenizer->position() << "\n";
 }
 
 Module *Parser::module(const std::string &path) {
@@ -251,7 +243,7 @@ void Parser::setup_global_variables(Module *m) {
     // they will go into the main function.
     std::vector<Block::iterator> to_erase;
     std::set<Variable *> handled;
-    assert(m->main != NULL);
+    bish_assert(m->main != NULL);
     for (Block::iterator I = m->main->body->begin(), E = m->main->body->end(); I != E; ++I) {
         if (Assignment *a = dynamic_cast<Assignment*>(*I)) {
             if (handled.find(a->variable) == handled.end()) {

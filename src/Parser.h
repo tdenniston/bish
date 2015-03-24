@@ -108,7 +108,6 @@ private:
 
     std::string read_stream(std::istream &is);
     std::string read_file(const std::string &path);
-    void abort(const std::string &msg);
     void abort_with_position(const std::string &msg);
     void expect(const Token &t, Token::Type ty, const std::string &msg);
     std::string scan_until(const std::vector<Token> &tokens, bool keep_literal_backslash=true);
