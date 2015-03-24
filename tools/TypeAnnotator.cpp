@@ -94,7 +94,7 @@ public:
     void visit(Function *n) {
         if (visited(n)) return;
         visited_set.insert(n);
-        stream << "def " << n->name.str() << "(";
+        stream << "def " << n->name.str() << "[:" << strtype(n) << "] (";
         const int nargs = n->args.size();
         int i = 0;
         for (std::vector<Variable *>::const_iterator I = n->args.begin(),

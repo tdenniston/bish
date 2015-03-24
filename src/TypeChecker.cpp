@@ -10,8 +10,13 @@ void TypeChecker::visit(ReturnStatement *node) {
     visited_set.insert(node);
     node->value->accept(this);
     node->set_type(node->value->type());
-    assert(node->parent()->type() == UndefinedTy);
-    propagate_if_undef(node->parent(), node);
+    // Propagate type of this return statement to the parent function.
+    Function *f = dynamic_cast<Function*>(node->parent()->parent());
+    assert(f);
+    if (f->type() != UndefinedTy) {
+        assert(f->type() == node->value->type() && "Invalid return type for function.");
+    }
+    propagate_if_undef(f, node);
 }
 
 void TypeChecker::visit(Function *node) {
