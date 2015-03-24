@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "IR.h"
 
 namespace Bish {
 
@@ -314,6 +315,12 @@ private:
     // checks for reserved keywords.
     Token get_multichar_token(const std::string &s);
 };
+
+bool is_unop_token(const Token &t);
+bool is_binop_token(const Token &t);
+BinOp::Operator get_binop_operator(const Token &t);
+UnaryOp::Operator get_unaryop_operator(const Token &t);
+IORedirection::Operator get_redirection_operator(const Token &t);
 
 }
 

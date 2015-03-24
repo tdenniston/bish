@@ -66,11 +66,6 @@ private:
     std::string read_file(const std::string &path);
     void abort(const std::string &msg);
     void abort_with_position(const std::string &msg);
-    bool is_unop_token(const Token &t);
-    bool is_binop_token(const Token &t);
-    BinOp::Operator get_binop_operator(const Token &t);
-    UnaryOp::Operator get_unaryop_operator(const Token &t);
-    IORedirection::Operator get_redirection_operator(const Token &t);
     Type get_primitive_type(const IRNode *n);
     void expect(const Token &t, Token::Type ty, const std::string &msg);
     std::string scan_until(const std::vector<Token> &tokens, bool keep_literal_backslash=true);

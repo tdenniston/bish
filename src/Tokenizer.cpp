@@ -288,3 +288,74 @@ Token Tokenizer::get_multichar_token(const std::string &s) {
     }
 }
 
+// Return true if the given token is a unary operator.
+bool Bish::is_unop_token(const Token &t) {
+    return t.isa(Token::MinusType) || t.isa(Token::NotType);
+}
+
+// Return true if the given token is a binary operator.
+bool Bish::is_binop_token(const Token &t) {
+    return t.isa(Token::PlusType) || t.isa(Token::MinusType) ||
+        t.isa(Token::StarType) || t.isa(Token::SlashType) ||
+        t.isa(Token::PercentType) || t.isa(Token::AndType) ||
+        t.isa(Token::OrType);
+}
+
+// Return the binary Operator corresponding to the given token.
+BinOp::Operator Bish::get_binop_operator(const Token &t) {
+    switch (t.type()) {
+    case Token::DoubleEqualsType:
+        return BinOp::Eq;
+    case Token::NotEqualsType:
+        return BinOp::NotEq;
+    case Token::AndType:
+        return BinOp::And;
+    case Token::OrType:
+        return BinOp::Or;
+    case Token::LAngleType:
+        return BinOp::LT;
+    case Token::LAngleEqualsType:
+        return BinOp::LTE;
+    case Token::RAngleType:
+        return BinOp::GT;
+    case Token::RAngleEqualsType:
+        return BinOp::GTE;
+    case Token::PlusType:
+        return BinOp::Add;
+    case Token::MinusType:
+        return BinOp::Sub;
+    case Token::StarType:
+        return BinOp::Mul;
+    case Token::SlashType:
+        return BinOp::Div;
+    case Token::PercentType:
+        return BinOp::Mod;
+    default:
+        assert(false && "Invalid operator for binary operation.");
+        return BinOp::Add;
+    }
+}
+
+// Return the unary Operator corresponding to the given token.
+UnaryOp::Operator Bish::get_unaryop_operator(const Token &t) {
+    switch (t.type()) {
+    case Token::MinusType:
+        return UnaryOp::Negate;
+    case Token::NotType:
+        return UnaryOp::Not;
+    default:
+        assert(false && "Invalid operator for unary operation.");
+        return UnaryOp::Negate;
+    }
+}
+
+// Return the I/O redirection Operator corresponding to the given Token.
+IORedirection::Operator Bish::get_redirection_operator(const Token &t) {
+    switch (t.type()) {
+    case Token::PipeType:
+        return IORedirection::Pipe;
+    default:
+        assert(false && "Invalid operator for I/O redirection.");
+        return IORedirection::Pipe;
+    }
+}
