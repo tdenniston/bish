@@ -33,9 +33,15 @@ void TypeChecker::visit(FunctionCall *node) {
     if (visited(node) || node->type() != UndefinedTy) return;
     visited_set.insert(node);
     node->function->accept(this);
+    unsigned i = 0;
+    assert(node->function->body != NULL && "Calling an undefined function.");
     for (std::vector<IRNode *>::const_iterator I = node->args.begin(),
-           E = node->args.end(); I != E; ++I) {
-      (*I)->accept(this);
+             E = node->args.end(); I != E; ++I, ++i) {
+        (*I)->accept(this);
+        if (node->function->args[i]->type() != UndefinedTy) {
+            assert((*I)->type() == node->function->args[i]->type() &&
+                   "Invalid argument type for function call.");
+        }
     }
     node->set_type(node->function->type());
 }
