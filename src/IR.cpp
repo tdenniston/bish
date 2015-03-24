@@ -77,16 +77,17 @@ void Module::import(Module *m) {
     std::set<Function *> to_erase;
     for (std::vector<FunctionCall *>::iterator I = calls.begin(), E = calls.end(); I != E; ++I) {
         FunctionCall *call = *I;
-        Name name = call->function->name;
+        Name &name = call->function->name;
         // Special case for stdlib functions: they can be called
         // without a namespace, so add it here.
         if (m->path == get_stdlib_path()) {
-            if (!name.has_namespace("StdLib")) call->function->name.add_namespace("StdLib");
+            if (!name.has_namespace("StdLib")) name.add_namespace("StdLib");
         }
         if (linked.find(name) != linked.end()) {
             assert(call->function->body == NULL);
             to_erase.insert(call->function);
             call->function = linked[name];
+            assert(call->function->body != NULL);
         }
     }
 
