@@ -141,21 +141,6 @@ void Parser::abort_with_position(const std::string &msg) {
     exit(1);
 }
 
-// Return the Bish Type to represent the given IR node.
-Type Parser::get_primitive_type(const IRNode *n) {
-    if (const Integer *v = dynamic_cast<const Integer*>(n)) {
-        return IntegerTy;
-    } else if (const Fractional *v = dynamic_cast<const Fractional*>(n)) {
-        return FractionalTy;
-    } else if (const String *v = dynamic_cast<const String*>(n)) {
-        return StringTy;
-    } else if (const Boolean *v = dynamic_cast<const Boolean*>(n)) {
-        return BooleanTy;
-    } else {
-        return UndefinedTy;
-    }
-}
-
 void Parser::push_module(Module *m) {
     module_stack.push(m);
 }
