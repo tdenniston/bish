@@ -26,6 +26,8 @@ stmt ::= assign ';'
        | 'def' var '(' varlist ')' block
        | block
 assign ::= namespacedvar '=' expr
+funcall ::= namespacedvar '(' exprlist ')'
+externcall ::= '@' '(' interp ')'
 expr ::= expr '|' logical | logical
 logical ::= logical 'and' equality | logical 'or' equality | equality
 equality ::= equality '==' relative | equality '!=' relative | relative
@@ -36,8 +38,6 @@ arith ::= arith '+' term | arith '-' term | term
 term ::= term '*' unary | term '/' unary | term '%' unary | unary
 unary ::= '-' unary | 'not' unary | factor
 factor ::= '( expr ')' | funcall | externcall | atom
-funcall ::= namespacedvar '(' exprlist ')'
-externcall ::= '@' '(' interp ')'
 atom ::= namespacedvar | NUMBER | '"' STRING '"' | 'true' | 'false'
 var ::= { ALPHANUM | '_' }
 namespacedvar ::= [ var '.' ] var
@@ -121,19 +121,16 @@ private:
     Block *block();
     IRNode *stmt();
     IRNode *otherstmt();
-    IRNode *ifstmt();
-    IRNode *importstmt();
-    IRNode *returnstmt();
-    IRNode *breakstmt();
-    IRNode *continuestmt();
-    IRNode *forloop();
+    Assignment *assignment(const Name &name);
+    FunctionCall *funcall(const Name &name);
+    ExternCall *externcall();
+    ImportStatement *importstmt();
+    ReturnStatement *returnstmt();
+    LoopControlStatement *breakstmt();
+    LoopControlStatement *continuestmt();
+    IfStatement *ifstmt();
+    ForLoop *forloop();
     Function *functiondef();
-    IRNode *externcall();
-    InterpolatedString *interpolated_string(const Token &stop, bool keep_literal_backslash);
-    IRNode *funcall(const Name &name);
-    IRNode *assignment(const Name &name);
-    Variable *var();
-    Variable *arg();
     IRNode *expr();
     IRNode *logical();
     IRNode *equality();
@@ -143,7 +140,10 @@ private:
     IRNode *unary();
     IRNode *factor();
     IRNode *atom();
-    Name symbol();
+    Variable *var();
+    Variable *arg();
+    Name namespacedvar();
+    InterpolatedString *interpolated_string(const Token &stop, bool keep_literal_backslash);
 
 };
 

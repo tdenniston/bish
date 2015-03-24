@@ -312,7 +312,7 @@ IRNode *Parser::stmt() {
 }
 
 IRNode *Parser::otherstmt() {
-    Name sym = symbol();
+    Name sym = namespacedvar();
     IRNode *s = NULL;
     switch (tokenizer->peek().type()) {
     case Token::EqualsType:
@@ -330,7 +330,33 @@ IRNode *Parser::otherstmt() {
     return s;
 }
 
-IRNode *Parser::externcall() {
+Assignment *Parser::assignment(const Name &name) {
+    expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
+    Variable *v = scope.lookup_or_new_var(name);
+    IRNode *e = expr();
+    Type t = get_primitive_type(e);
+    if (t != UndefinedTy) {
+        scope.add_symbol(name, v, t);
+    }
+    return new Assignment(v, e);
+}
+
+FunctionCall *Parser::funcall(const Name &name) {
+    expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
+    std::vector<IRNode *> args;
+    if (!tokenizer->peek().isa(Token::RParenType)) {
+        args.push_back(expr());
+        while (tokenizer->peek().isa(Token::CommaType)) {
+            tokenizer->next();
+            args.push_back(expr());
+        }
+    }
+    expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
+    Function *f = scope.lookup_or_new_function(name);
+    return new FunctionCall(f, args);
+}
+
+ExternCall *Parser::externcall() {
     expect(tokenizer->peek(), Token::AtType, "Expected '@' to begin extern call.");
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     InterpolatedString *body = interpolated_string(Token::RParen(), false);
@@ -338,36 +364,7 @@ IRNode *Parser::externcall() {
     return new ExternCall(body);
 }
 
-// Parse an interpolated string. The given token parameter is the
-// stopping token. E.g. if the interpolated string should be parsed
-// between double quotes, the caller would consume the initial double
-// quote and call this function with stop = Token::Quote().
-InterpolatedString *Parser::interpolated_string(const Token &stop, bool keep_literal_backslash) {
-    const Token scan_tokens_arr[] = {stop, Token::Dollar()};
-    const std::vector<Token> scan_tokens(scan_tokens_arr, scan_tokens_arr+2);
-    InterpolatedString *result = new InterpolatedString();
-    while (true) {
-        std::string str = scan_until(scan_tokens, keep_literal_backslash);
-        result->push_str(str);
-        if (tokenizer->peek().isa(Token::DollarType)) {
-            tokenizer->next();
-            if (tokenizer->peek().isa(Token::LParenType)) {
-                tokenizer->next();
-                str = scan_until(Token::RParen());
-                tokenizer->next();
-                result->push_str("$" + str);
-            } else {
-                Variable *v = var();
-                result->push_var(v);
-            }
-        } else if (tokenizer->peek().isa(stop.type())) {
-            break;
-        }
-    }
-    return result;
-}
-
-IRNode *Parser::importstmt() {
+ImportStatement *Parser::importstmt() {
     expect(tokenizer->peek(), Token::ImportType, "Expected import statement");
     std::string module_name = strip(scan_until(Token::Semicolon()));
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
@@ -380,26 +377,26 @@ IRNode *Parser::importstmt() {
     }
 }
 
-IRNode *Parser::returnstmt() {
+ReturnStatement *Parser::returnstmt() {
     expect(tokenizer->peek(), Token::ReturnType, "Expected return statement");
     IRNode *ret = expr();
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     return new ReturnStatement(ret);
 }
 
-IRNode *Parser::breakstmt() {
+LoopControlStatement *Parser::breakstmt() {
     expect(tokenizer->peek(), Token::BreakType, "Expected break statement");
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     return new LoopControlStatement(LoopControlStatement::Break);
 }
 
-IRNode *Parser::continuestmt() {
+LoopControlStatement *Parser::continuestmt() {
     expect(tokenizer->peek(), Token::ContinueType, "Expected continue statement");
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     return new LoopControlStatement(LoopControlStatement::Continue);
 }
 
-IRNode *Parser::ifstmt() {
+IfStatement *Parser::ifstmt() {
     expect(tokenizer->peek(), Token::IfType, "Expected if statement");
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     IRNode *cond = expr();
@@ -423,7 +420,7 @@ IRNode *Parser::ifstmt() {
     return new IfStatement(cond, body, elses, elseblock);
 }
 
-IRNode *Parser::forloop() {
+ForLoop *Parser::forloop() {
     expect(tokenizer->peek(), Token::ForType, "Expected for statement");
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     Variable *v = var();
@@ -446,7 +443,7 @@ IRNode *Parser::forloop() {
 
 Function *Parser::functiondef() {
     expect(tokenizer->peek(), Token::DefType, "Expected def statement");
-    Name name = symbol();
+    Name name = namespacedvar();
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     std::vector<Variable *> args;
     scope.push_symbol_table();
@@ -472,47 +469,6 @@ Function *Parser::functiondef() {
     f->set_args(args);
     f->set_body(body);
     return f;
-}
-
-IRNode *Parser::funcall(const Name &name) {
-    expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
-    std::vector<IRNode *> args;
-    if (!tokenizer->peek().isa(Token::RParenType)) {
-        args.push_back(expr());
-        while (tokenizer->peek().isa(Token::CommaType)) {
-            tokenizer->next();
-            args.push_back(expr());
-        }
-    }
-    expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
-    Function *f = scope.lookup_or_new_function(name);
-    return new FunctionCall(f, args);
-}
-
-IRNode *Parser::assignment(const Name &name) {
-    expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
-    Variable *v = scope.lookup_or_new_var(name);
-    IRNode *e = expr();
-    Type t = get_primitive_type(e);
-    if (t != UndefinedTy) {
-        scope.add_symbol(name, v, t);
-    }
-    return new Assignment(v, e);
-}
-
-Variable *Parser::var() {
-    std::string name = tokenizer->peek().value();
-    expect(tokenizer->peek(), Token::SymbolType, "Expected variable to be a symbol");
-    return scope.lookup_or_new_var(name);
-}
-
-Variable *Parser::arg() {
-    // Similar to var() but this always creates a new symbol.
-    std::string name = tokenizer->peek().value();
-    expect(tokenizer->peek(), Token::SymbolType, "Expected argument to be a symbol");
-    Variable *arg = new Variable(name);
-    scope.add_symbol(name, arg, UndefinedTy);
-    return arg;
 }
 
 IRNode *Parser::expr() {
@@ -651,7 +607,22 @@ IRNode *Parser::atom() {
     }
 }
 
-Name Parser::symbol() {
+Variable *Parser::var() {
+    std::string name = tokenizer->peek().value();
+    expect(tokenizer->peek(), Token::SymbolType, "Expected variable to be a symbol");
+    return scope.lookup_or_new_var(name);
+}
+
+Variable *Parser::arg() {
+    // Similar to var() but this always creates a new symbol.
+    std::string name = tokenizer->peek().value();
+    expect(tokenizer->peek(), Token::SymbolType, "Expected argument to be a symbol");
+    Variable *arg = new Variable(name);
+    scope.add_symbol(name, arg, UndefinedTy);
+    return arg;
+}
+
+Name Parser::namespacedvar() {
     Token t = tokenizer->peek();
     expect(t, Token::SymbolType, "Expected symbol.");
     if (tokenizer->peek().isa(Token::DotType)) {
@@ -664,6 +635,35 @@ Name Parser::symbol() {
         return Name(t1.value(), t.value());
     }
     return Name(t.value());
+}
+
+// Parse an interpolated string. The given token parameter is the
+// stopping token. E.g. if the interpolated string should be parsed
+// between double quotes, the caller would consume the initial double
+// quote and call this function with stop = Token::Quote().
+InterpolatedString *Parser::interpolated_string(const Token &stop, bool keep_literal_backslash) {
+    const Token scan_tokens_arr[] = {stop, Token::Dollar()};
+    const std::vector<Token> scan_tokens(scan_tokens_arr, scan_tokens_arr+2);
+    InterpolatedString *result = new InterpolatedString();
+    while (true) {
+        std::string str = scan_until(scan_tokens, keep_literal_backslash);
+        result->push_str(str);
+        if (tokenizer->peek().isa(Token::DollarType)) {
+            tokenizer->next();
+            if (tokenizer->peek().isa(Token::LParenType)) {
+                tokenizer->next();
+                str = scan_until(Token::RParen());
+                tokenizer->next();
+                result->push_str("$" + str);
+            } else {
+                Variable *v = var();
+                result->push_var(v);
+            }
+        } else if (tokenizer->peek().isa(stop.type())) {
+            break;
+        }
+    }
+    return result;
 }
 
 }
