@@ -785,7 +785,15 @@ Function *Parser::functiondef() {
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     Block *body = block();
     delete pop_symbol_table();
+    // It's possible the function was called before it was defined. In
+    // that case we get that function instance, and initialize its
+    // arguments and body here.
     Function *f = lookup_or_new_function(name);
+    // If the arguments and body have already been initialized, throw
+    // a redefinition error.
+    if (f->body != NULL) {
+        abort_with_position("Function '" + name.name + "' is already defined.");
+    }
     f->set_args(args);
     f->set_body(body);
     return f;
