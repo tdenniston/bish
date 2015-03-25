@@ -19,7 +19,7 @@ void CodeGen_Bash::visit(Module *n) {
     // Define the functions first.
     for (std::vector<Function *>::const_iterator I = n->functions.begin(),
              E = n->functions.end(); I != E; ++I) {
-	if(!(compile_as_library && (*I)->name.name == "main"))
+	if (!(compile_as_library && (*I)->name.name == "main"))
             (*I)->accept(this);
     }
     // Global variables next.
@@ -28,7 +28,7 @@ void CodeGen_Bash::visit(Module *n) {
         (*I)->accept(this);
         stream << ";\n";
     }
-    if(!compile_as_library) {
+    if (!compile_as_library) {
         // Insert a call to bish_main().
         assert(n->main);
         FunctionCall *call_main = new FunctionCall(n->main);
