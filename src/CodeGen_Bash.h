@@ -40,6 +40,7 @@ public:
     virtual void visit(Module *);
     virtual void visit(Block *);
     virtual void visit(Variable *);
+    virtual void visit(Location *);
     virtual void visit(ReturnStatement *);
     virtual void visit(LoopControlStatement *);
     virtual void visit(IfStatement *);

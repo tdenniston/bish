@@ -86,7 +86,7 @@ public:
         }
         return false;
     }
-    
+
     // Define lexicographic sort so this may be a key for std::map.
     bool operator<(const Name &b) const {
         return (namespace_id < b.namespace_id ||
@@ -103,6 +103,17 @@ public:
     Name name;
     bool global;
     Variable(const Name &n) : name(n), global(false) {}
+};
+
+class Location : public BaseIRNode<Location> {
+public:
+    Variable *variable;
+    IRNode *offset;
+    Location(Variable *v) : variable(v), offset(NULL) {}
+    Location(Variable *v, IRNode *o) : variable(v), offset(o) {}
+
+    bool is_array_ref() const { return offset != NULL; }
+    bool is_variable() const { return offset == NULL; }
 };
 
 class Function : public BaseIRNode<Function> {
@@ -146,7 +157,7 @@ public:
     std::string path;
     // Namespace identifier
     std::string namespace_id;
-    
+
     Module() : main(NULL) {}
 
     // Set the module's main function.
@@ -167,9 +178,9 @@ public:
 
 class Assignment : public BaseIRNode<Assignment> {
 public:
-    Variable *variable;
+    Location *location;
     IRNode *value;
-    Assignment(Variable *var, IRNode *val) : variable(var), value(val) {}
+    Assignment(Location *loc, IRNode *val) : location(loc), value(val) {}
 };
 
 class ImportStatement : public BaseIRNode<ImportStatement> {
@@ -184,7 +195,7 @@ public:
         assert(!module_name.empty());
     }
 };
- 
+
 class ReturnStatement : public BaseIRNode<ReturnStatement> {
 public:
     IRNode *value;

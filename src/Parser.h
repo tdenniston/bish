@@ -25,7 +25,7 @@ stmt ::= assign ';'
        | 'for' '(' var 'in' atom [ '..' atom ] ')' block
        | 'def' var '(' varlist ')' block
        | block
-assign ::= namespacedvar '=' expr
+assign ::= location '=' exprlist
 funcall ::= namespacedvar '(' exprlist ')'
 externcall ::= '@' '(' interp ')'
 expr ::= expr '|' logical | logical
@@ -38,11 +38,12 @@ arith ::= arith '+' term | arith '-' term | term
 term ::= term '*' unary | term '/' unary | term '%' unary | unary
 unary ::= '-' unary | 'not' unary | factor
 factor ::= '( expr ')' | funcall | externcall | atom
-atom ::= namespacedvar | NUMBER | '"' STRING '"' | 'true' | 'false'
+atom ::= location | NUMBER | '"' STRING '"' | 'true' | 'false'
 var ::= { ALPHANUM | '_' }
+location ::= namespacedvar | namespacedvar '[' expr ']'
 namespacedvar ::= [ var '.' ] var
 varlist ::= var { ',' var }
-atomlist ::= expr { ',' expr }
+exprlist ::= expr { ',' expr }
 interp ::= { str | '$' namespacedvar | '$' '(' any ')'}
 */
 

@@ -34,6 +34,13 @@ void IRVisitor::visit(Variable *node) {
     visited_set.insert(node);
 }
 
+void IRVisitor::visit(Location *node) {
+    if (visited(node)) return;
+    visited_set.insert(node);
+    node->variable->accept(this);
+    if (node->offset) node->offset->accept(this);
+}
+
 void IRVisitor::visit(ReturnStatement *node) {
     if (visited(node)) return;
     visited_set.insert(node);
@@ -114,7 +121,7 @@ void IRVisitor::visit(Assignment *node) {
     if (visited(node)) return;
     visited_set.insert(node);
 
-    node->variable->accept(this);
+    node->location->accept(this);
     node->value->accept(this);
 }
 

@@ -62,15 +62,17 @@ void TypeChecker::visit(IORedirection *node) {
 void TypeChecker::visit(Assignment *node) {
     if (visited(node) || node->type() != UndefinedTy) return;
     visited_set.insert(node);
-    node->variable->accept(this);
+    node->location->accept(this);
     node->value->accept(this);
-    if (node->variable->type() != UndefinedTy && node->value->type() != UndefinedTy) {
-        assert(node->variable->type() == node->value->type() &&
+    Location *loc = node->location;
+    if (loc->variable->type() != UndefinedTy && node->value->type() != UndefinedTy) {
+        assert(loc->variable->type() == node->value->type() &&
                "Invalid type in assignment.");
     } else {
-        node->variable->set_type(node->value->type());
+        loc->variable->set_type(node->value->type());
+        loc->set_type(node->value->type());
     }
-    node->set_type(node->variable->type());
+    node->set_type(loc->type());
 }
 
 void TypeChecker::visit(BinOp *node) {

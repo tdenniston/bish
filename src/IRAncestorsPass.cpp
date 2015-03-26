@@ -71,7 +71,7 @@ void IRAncestorsPass::visit(ExternCall *node) {
 }
 
 void IRAncestorsPass::visit(Assignment *node) {
-    node->variable->accept(this);
+    node->location->accept(this);
     node->value->accept(this);
     node->set_parent(block_stack.top());
 }

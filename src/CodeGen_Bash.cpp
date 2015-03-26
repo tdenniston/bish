@@ -72,6 +72,19 @@ void CodeGen_Bash::visit(Variable *n) {
     if (should_quote_variable()) stream << "\"";
 }
 
+void CodeGen_Bash::visit(Location *n) {
+    if (should_quote_variable()) stream << "\"";
+    if (n->is_variable()) {
+        stream << "$" << lookup_name(n->variable);
+    } else {
+        assert(n->is_array_ref());
+        stream << "${" << lookup_name(n->variable) << "[";
+        n->offset->accept(this);
+        stream << "]}";
+    }
+    if (should_quote_variable()) stream << "\"";
+}
+
 void CodeGen_Bash::visit(ReturnStatement *n) {
     bool external = dynamic_cast<ExternCall*>(n->value) != NULL;
     stream << "echo ";
@@ -219,8 +232,16 @@ void CodeGen_Bash::visit(IORedirection *n) {
 }
 
 void CodeGen_Bash::visit(Assignment *n) {
-    if (!n->variable->global) stream << "local ";
-    stream << lookup_name(n->variable) << "=";
+    Location *loc = n->location;
+    if (!loc->variable->global) stream << "local ";
+    if (loc->is_variable()) {
+        stream << lookup_name(loc->variable) << "=";
+    } else {
+        assert(loc->is_array_ref());
+        stream << lookup_name(loc->variable) << "[";
+        loc->offset->accept(this);
+        stream << "]=";
+    }
     enable_functioncall_wrap();
     n->value->accept(this);
     reset_functioncall_wrap();

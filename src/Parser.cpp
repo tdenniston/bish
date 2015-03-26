@@ -249,9 +249,10 @@ void Parser::setup_global_variables(Module *m) {
     bish_assert(m->main != NULL);
     for (Block::iterator I = m->main->body->begin(), E = m->main->body->end(); I != E; ++I) {
         if (Assignment *a = dynamic_cast<Assignment*>(*I)) {
-            if (handled.find(a->variable) == handled.end()) {
-                handled.insert(a->variable);
-                a->variable->global = true;
+            Location *loc = a->location;
+            if (handled.find(loc->variable) == handled.end()) {
+                handled.insert(loc->variable);
+                loc->variable->global = true;
                 m->add_global(a);
                 to_erase.push_back(I);
             }
@@ -318,6 +319,7 @@ IRNode *Parser::otherstmt() {
     Name sym = namespacedvar();
     IRNode *s = NULL;
     switch (tokenizer->peek().type()) {
+    case Token::LBracketType:
     case Token::EqualsType:
         s = assignment(sym);
         break;
@@ -336,6 +338,14 @@ IRNode *Parser::otherstmt() {
 Assignment *Parser::assignment(const Name &name) {
     bish_assert(!scope.lookup_function(name)) << "Cannot assign to function \"" <<
         name.str() << "\" near " << tokenizer->position();
+
+    IRNode *offset = NULL;
+    if (tokenizer->peek().isa(Token::LBracketType)) {
+        tokenizer->next();
+        offset = expr();
+        expect(tokenizer->peek(), Token::RBracketType, "Expected matching ']'");
+    }
+
     expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
     Variable *v = scope.lookup_or_new_var(name);
     IRNode *e = expr();
@@ -343,7 +353,8 @@ Assignment *Parser::assignment(const Name &name) {
     if (t != UndefinedTy) {
         scope.add_symbol(name, v, t);
     }
-    return new Assignment(v, e);
+    Location *loc = new Location(v, offset);
+    return new Assignment(loc, e);
 }
 
 FunctionCall *Parser::funcall(const Name &name) {
@@ -565,14 +576,14 @@ IRNode *Parser::factor() {
     } else {
         IRNode *a = atom();
         if (tokenizer->peek().isa(Token::LParenType)) {
-            Variable *v = dynamic_cast<Variable*>(a);
-            if (v == NULL) {
+            Location *loc = dynamic_cast<Location*>(a);
+            if (loc == NULL) {
                 abort_with_position("Invalid atom type for function call");
             }
-            a = funcall(v->name);
-        } else if (Variable *v = dynamic_cast<Variable*>(a)) {
-            Variable *sym = scope.get_defined_variable(v);
-            a = sym;
+            a = funcall(loc->variable->name);
+        } else if (Location *loc = dynamic_cast<Location*>(a)) {
+            Variable *sym = scope.get_defined_variable(loc->variable);
+            loc->variable = sym;
         }
         return a;
     }
@@ -584,6 +595,8 @@ IRNode *Parser::atom() {
 
     switch(t.type()) {
     case Token::SymbolType: {
+        Variable *v = NULL;
+        IRNode *offset = NULL;
         if (tokenizer->peek().isa(Token::DotType)) {
             tokenizer->next();
             Token t1 = tokenizer->peek();
@@ -591,9 +604,17 @@ IRNode *Parser::atom() {
             if (namespaces.find(t.value()) == namespaces.end()) {
                 abort_with_position("Unknown namespace");
             }
-            return new Variable(Name(t1.value(), t.value()));
+            v = new Variable(Name(t1.value(), t.value()));
+        } else {
+            v = new Variable(Name(t.value()));
         }
-        return new Variable(Name(t.value()));
+        if (tokenizer->peek().isa(Token::LBracketType)) {
+            tokenizer->next();
+            offset = expr();
+            expect(tokenizer->peek(), Token::RBracketType, "Expected matching ']'");
+        }
+        assert(v);
+        return new Location(v, offset);
     }
     case Token::TrueType:
         return new Boolean(true);
