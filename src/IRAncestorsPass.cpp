@@ -72,7 +72,10 @@ void IRAncestorsPass::visit(ExternCall *node) {
 
 void IRAncestorsPass::visit(Assignment *node) {
     node->location->accept(this);
-    node->value->accept(this);
+    for (std::vector<IRNode *>::const_iterator I = node->values.begin(),
+             E = node->values.end(); I != E; ++I) {
+        (*I)->accept(this);
+    }
     node->set_parent(block_stack.top());
 }
 

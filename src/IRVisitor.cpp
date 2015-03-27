@@ -122,7 +122,10 @@ void IRVisitor::visit(Assignment *node) {
     visited_set.insert(node);
 
     node->location->accept(this);
-    node->value->accept(this);
+    for (std::vector<IRNode *>::const_iterator I = node->values.begin(),
+             E = node->values.end(); I != E; ++I) {
+        (*I)->accept(this);
+    }
 }
 
 void IRVisitor::visit(BinOp *node) {

@@ -338,7 +338,8 @@ IRNode *Parser::otherstmt() {
 Assignment *Parser::assignment(const Name &name) {
     bish_assert(!scope.lookup_function(name)) << "Cannot assign to function \"" <<
         name.str() << "\" near " << tokenizer->position();
-
+    Variable *v = scope.lookup_or_new_var(name);
+    scope.add_symbol(name, v);
     IRNode *offset = NULL;
     if (tokenizer->peek().isa(Token::LBracketType)) {
         tokenizer->next();
@@ -347,11 +348,18 @@ Assignment *Parser::assignment(const Name &name) {
     }
 
     expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
-    Variable *v = scope.lookup_or_new_var(name);
-    scope.add_symbol(name, v);
-    IRNode *e = expr();
+
+    std::vector<IRNode *> values;
+    if (tokenizer->peek().isa(Token::LBracketType)) {
+        tokenizer->next();
+        values = exprlist();
+        expect(tokenizer->peek(), Token::RBracketType, "Expected matching ']'");
+    } else {
+        values.push_back(expr());
+    }
+
     Location *loc = new Location(v, offset);
-    return new Assignment(loc, e);
+    return new Assignment(loc, values);
 }
 
 FunctionCall *Parser::funcall(const Name &name) {
@@ -360,11 +368,7 @@ FunctionCall *Parser::funcall(const Name &name) {
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     std::vector<IRNode *> args;
     if (!tokenizer->peek().isa(Token::RParenType)) {
-        args.push_back(expr());
-        while (tokenizer->peek().isa(Token::CommaType)) {
-            tokenizer->next();
-            args.push_back(expr());
-        }
+        args = exprlist();
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     Function *f = scope.lookup_or_new_function(name);
@@ -494,6 +498,16 @@ IRNode *Parser::expr() {
         a = new IORedirection(get_redirection_operator(t), a, logical());
     }
     return a;
+}
+
+std::vector<IRNode *> Parser::exprlist() {
+    std::vector<IRNode *> result;
+    result.push_back(expr());
+    while (tokenizer->peek().isa(Token::CommaType)) {
+        tokenizer->next();
+        result.push_back(expr());
+    }
+    return result;
 }
 
 IRNode *Parser::logical() {

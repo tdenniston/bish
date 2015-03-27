@@ -243,7 +243,14 @@ void CodeGen_Bash::visit(Assignment *n) {
         stream << "]=";
     }
     enable_functioncall_wrap();
-    n->value->accept(this);
+    const int nvals = n->values.size();
+    assert(nvals > 0);
+    if (nvals > 1) stream << "( ";
+    for (int i = 0; i < nvals; i++) {
+        n->values[i]->accept(this);
+        if (i < nvals - 1) stream << " ";
+    }
+    if (nvals > 1) stream << " )";
     reset_functioncall_wrap();
 }
 

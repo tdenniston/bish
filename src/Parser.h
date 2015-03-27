@@ -25,7 +25,8 @@ stmt ::= assign ';'
        | 'for' '(' var 'in' atom [ '..' atom ] ')' block
        | 'def' var '(' varlist ')' block
        | block
-assign ::= location '=' exprlist
+assign ::= location '=' expr
+         | location '=' '[' exprlist ']'
 funcall ::= namespacedvar '(' exprlist ')'
 externcall ::= '@' '(' interp ')'
 expr ::= expr '|' logical | logical
@@ -136,6 +137,7 @@ private:
     ForLoop *forloop();
     Function *functiondef();
     IRNode *expr();
+    std::vector<IRNode *> exprlist();
     IRNode *logical();
     IRNode *equality();
     IRNode *relative();

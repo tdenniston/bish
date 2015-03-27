@@ -63,14 +63,23 @@ void TypeChecker::visit(Assignment *node) {
     if (visited(node) || node->type() != UndefinedTy) return;
     visited_set.insert(node);
     node->location->accept(this);
-    node->value->accept(this);
+    Type ty = UndefinedTy;
+    for (std::vector<IRNode *>::const_iterator I = node->values.begin(),
+             E = node->values.end(); I != E; ++I) {
+        (*I)->accept(this);
+        if (ty != UndefinedTy) {
+            assert((*I)->type() == ty && "Mixed types in array assignment.");
+        } else {
+            ty = (*I)->type();
+        }
+    }
     Location *loc = node->location;
-    if (loc->variable->type() != UndefinedTy && node->value->type() != UndefinedTy) {
-        assert(loc->variable->type() == node->value->type() &&
+    if (loc->variable->type() != UndefinedTy && ty != UndefinedTy) {
+        assert(loc->variable->type() == ty &&
                "Invalid type in assignment.");
     } else {
-        loc->variable->set_type(node->value->type());
-        loc->set_type(node->value->type());
+        loc->variable->set_type(ty);
+        loc->set_type(ty);
     }
     node->set_type(loc->type());
 }

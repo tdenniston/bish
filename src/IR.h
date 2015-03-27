@@ -179,8 +179,8 @@ public:
 class Assignment : public BaseIRNode<Assignment> {
 public:
     Location *location;
-    IRNode *value;
-    Assignment(Location *loc, IRNode *val) : location(loc), value(val) {}
+    std::vector<IRNode *> values;
+    Assignment(Location *loc, const std::vector<IRNode *> &val) : location(loc), values(val.begin(), val.end()) {}
 };
 
 class ImportStatement : public BaseIRNode<ImportStatement> {

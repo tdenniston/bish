@@ -25,6 +25,9 @@ def run_all() {
 
     import imports;
     imports.test();
+
+    import arrays;
+    arrays.test();
 }
 
 run_all();

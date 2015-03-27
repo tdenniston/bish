@@ -1,0 +1,19 @@
+# Tests for arrays.
+
+def arrays() {
+    arr = [1, 2, 3];
+    assert(arr[0] == 1 and arr[1] == 2 and arr[2] == 3);
+    arr[0] = 2;
+    assert(arr[0] == 2 and arr[1] == 2 and arr[2] == 3);
+    arr[0] = arr[2];
+    assert(arr[0] == 3 and arr[1] == 2 and arr[2] == 3);
+    arr[0] = arr[0] + 1;
+    assert(arr[0] == 4 and arr[1] == 2 and arr[2] == 3);
+}
+
+def test() {
+    arrays();
+    println("Array tests passed.");
+}
+
+test();
