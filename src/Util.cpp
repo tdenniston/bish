@@ -1,6 +1,8 @@
+#include <fstream>
 #include <sys/stat.h>
 #include <cassert>
 #include <cstdlib>
+#include "Errors.h"
 #include "Config.h"
 #include "Util.h"
 
@@ -75,4 +77,16 @@ std::string strip(const std::string &s) {
 
 std::string module_name_from_path(const std::string &path) {
     return remove_suffix(basename(path), ".bish");
+}
+
+// Return the given line number from the given file.
+std::string read_line_from_file(const std::string &path, unsigned lineno) {
+    std::ifstream t(path.c_str());
+    if (!is_file(path) || !t.is_open()) {
+        bish_abort() << "Failed to open file at " << path;
+    }
+    std::string line;
+    while (std::getline(t, line) && --lineno > 0) ;
+    bish_assert(lineno == 0) << "Failed to read line " << lineno << " from file " << path;
+    return line;
 }

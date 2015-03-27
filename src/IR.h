@@ -29,6 +29,13 @@ public:
         file(f), start(s), end(e), lineno(lno) {}
     IRDebugInfo(const IRDebugInfo &a) :
         file(a.file), start(a.start), end(a.end), lineno(a.lineno) {}
+
+    std::string str() const {
+        std::stringstream s;
+        s << "In file '" << file << "' line " << lineno << ":\n    ";
+        s << strip(read_line_from_file(file, lineno));
+        return s.str();
+    }
 };
 
 class IRNode {
@@ -41,6 +48,7 @@ public:
     void set_type(Type t) { type_ = t; }
     IRNode *parent() const { return parent_; }
     void set_parent(IRNode *p) { parent_ = p; }
+    IRDebugInfo debug_info() const { return debug_info_; }
 protected:
     Type type_;
     IRNode *parent_;

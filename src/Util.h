@@ -37,4 +37,6 @@ std::string strip(const std::string &s);
 // Return the name of a module from a pathname.
 // E.g. module_name_from_path("/a/b/test.bish") returns "test"
 std::string module_name_from_path(const std::string &path);
+// Return the given line number from the given file.
+std::string read_line_from_file(const std::string &path, unsigned lineno);
 #endif
