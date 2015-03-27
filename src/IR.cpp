@@ -116,4 +116,9 @@ Type get_primitive_type(const IRNode *n) {
     }
 }
 
+std::ostream &operator<<(std::ostream &os, const IRDebugInfo &a) {
+    os << a.str();
+    return os;
+}
+
 }

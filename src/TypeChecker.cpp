@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cassert>
+#include "Errors.h"
 #include "IR.h"
 #include "TypeChecker.h"
 
@@ -14,7 +15,8 @@ void TypeChecker::visit(ReturnStatement *node) {
     Function *f = dynamic_cast<Function*>(node->parent()->parent());
     assert(f);
     if (f->type() != UndefinedTy) {
-        assert(f->type() == node->value->type() && "Invalid return type for function.");
+        bish_assert(f->type() == node->value->type()) <<
+            "Invalid return type for function " << node->debug_info();
     }
     propagate_if_undef(f, node);
 }
@@ -34,13 +36,14 @@ void TypeChecker::visit(FunctionCall *node) {
     visited_set.insert(node);
     node->function->accept(this);
     unsigned i = 0;
-    assert(node->function->body != NULL && "Calling an undefined function.");
+    bish_assert(node->function->body != NULL) <<
+        "Calling an undefined function " << node->debug_info();
     for (std::vector<IRNode *>::const_iterator I = node->args.begin(),
              E = node->args.end(); I != E; ++I, ++i) {
         (*I)->accept(this);
         if (node->function->args[i]->type() != UndefinedTy) {
-            assert((*I)->type() == node->function->args[i]->type() &&
-                   "Invalid argument type for function call.");
+            bish_assert((*I)->type() == node->function->args[i]->type()) <<
+                "Invalid argument type for function call " << node->debug_info();
         }
     }
     node->set_type(node->function->type());
@@ -68,15 +71,16 @@ void TypeChecker::visit(Assignment *node) {
              E = node->values.end(); I != E; ++I) {
         (*I)->accept(this);
         if (ty != UndefinedTy) {
-            assert((*I)->type() == ty && "Mixed types in array assignment.");
+            bish_assert((*I)->type() == ty) <<
+                "Mixed types in array assignment " << node->debug_info();
         } else {
             ty = (*I)->type();
         }
     }
     Location *loc = node->location;
     if (loc->variable->type() != UndefinedTy && ty != UndefinedTy) {
-        assert(loc->variable->type() == ty &&
-               "Invalid type in assignment.");
+        bish_assert(loc->variable->type() == ty) <<
+            "Invalid type in assignment " << node->debug_info();
     } else {
         loc->variable->set_type(ty);
         loc->set_type(ty);
@@ -90,7 +94,8 @@ void TypeChecker::visit(BinOp *node) {
     node->a->accept(this);
     node->b->accept(this);
     propagate_if_undef(node->a, node->b);
-    assert(node->a->type() == node->b->type());
+    bish_assert(node->a->type() == node->b->type()) <<
+        "Invalid operand types for binary operator " << node->debug_info();
     switch (node->op) {
     case BinOp::Eq:
     case BinOp::NotEq:

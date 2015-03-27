@@ -32,11 +32,12 @@ public:
 
     std::string str() const {
         std::stringstream s;
-        s << "In file '" << file << "' line " << lineno << ":\n    ";
+        s << "in file '" << file << "' line " << lineno << ":\n    ";
         s << strip(read_line_from_file(file, lineno));
         return s.str();
     }
 };
+std::ostream &operator<<(std::ostream &os, const IRDebugInfo &a);
 
 class IRNode {
 public:
