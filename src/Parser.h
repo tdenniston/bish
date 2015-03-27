@@ -5,6 +5,7 @@
 #include <string>
 #include "IR.h"
 #include "SymbolTable.h"
+#include "Tokenizer.h"
 
 /*
 Grammar:
@@ -25,6 +26,8 @@ stmt ::= assign ';'
        | 'def' var '(' varlist ')' block
        | block
 assign ::= namespacedvar '=' expr
+funcall ::= namespacedvar '(' exprlist ')'
+externcall ::= '@' '(' interp ')'
 expr ::= expr '|' logical | logical
 logical ::= logical 'and' equality | logical 'or' equality | equality
 equality ::= equality '==' relative | equality '!=' relative | relative
@@ -35,8 +38,6 @@ arith ::= arith '+' term | arith '-' term | term
 term ::= term '*' unary | term '/' unary | term '%' unary | unary
 unary ::= '-' unary | 'not' unary | factor
 factor ::= '( expr ')' | funcall | externcall | atom
-funcall ::= namespacedvar '(' exprlist ')'
-externcall ::= '@' '(' interp ')'
 atom ::= namespacedvar | NUMBER | '"' STRING '"' | 'true' | 'false'
 var ::= { ALPHANUM | '_' }
 namespacedvar ::= [ var '.' ] var
@@ -47,317 +48,92 @@ interp ::= { str | '$' namespacedvar | '$' '(' any ')'}
 
 namespace Bish {
 
-class Tokenizer;
-
-class Token {
+/* Class which encapsulates all of the scoping information needed
+ * during parsing (e.g. symbol tables). */
+class ParseScope {
 public:
-    typedef enum { LParenType,
-                   RParenType,
-                   LBraceType,
-                   RBraceType,
-                   LBracketType,
-                   RBracketType,
-                   UnderscoreType,
-                   AtType,
-                   PipeType,
-                   DollarType,
-                   SharpType,
-                   SemicolonType,
-                   CommaType,
-                   ImportType,
-                   ReturnType,
-                   BreakType,
-                   ContinueType,
-                   IfType,
-                   ElseType,
-                   DefType,
-                   ForType,
-                   InType,
-                   AndType,
-                   OrType,
-                   NotType,
-                   DotType,
-                   DoubleDotType,
-                   EqualsType,
-                   DoubleEqualsType,
-                   NotEqualsType,
-                   LAngleType,
-                   LAngleEqualsType,
-                   RAngleType,
-                   RAngleEqualsType,
-                   PlusType,
-                   MinusType,
-                   StarType,
-                   SlashType,
-                   BackslashType,
-                   PercentType,
-                   QuoteType,
-                   SymbolType,
-                   TrueType,
-                   FalseType,
-                   IntType,
-                   FractionalType,
-                   EOSType,
-                   NoneType } Type;
-
-    Token() : type_(NoneType) {}
-    Token(Type t) : type_(t) {}
-    Token(Type t, const std::string &s) : type_(t), value_(s) {}
-
-    bool defined() const { return type_ != NoneType; }
-    bool isa(Type t) const { return type_ == t; }
-    Type type() const { return type_; }
-    const std::string &value() const { return value_; }
-
-    static Token LParen() {
-        return Token(LParenType, "(");
+    ParseScope() {
+        function_symbol_table = new SymbolTable();
     }
 
-    static Token RParen() {
-        return Token(RParenType, ")");
+    ~ParseScope() {
+        delete function_symbol_table;
     }
 
-    static Token LBrace() {
-        return Token(LBraceType, "{");
-    }
-
-    static Token RBrace() {
-        return Token(RBraceType, "}");
-    }
-
-    static Token LBracket() {
-        return Token(LBracketType, "[");
-    }
-
-    static Token RBracket() {
-        return Token(RBracketType, "]");
-    }
-
-    static Token Underscore() {
-        return Token(UnderscoreType, "_");
-    }
-
-    static Token At() {
-        return Token(AtType, "@");
-    }
-
-    static Token Pipe() {
-        return Token(PipeType, "|");
-    }
-
-    static Token Dollar() {
-        return Token(DollarType, "$");
-    }
-
-    static Token Sharp() {
-        return Token(SharpType, "#");
-    }
-
-    static Token Semicolon() {
-        return Token(SemicolonType, ";");
-    }
-
-    static Token Comma() {
-        return Token(CommaType, ",");
-    }
-
-    static Token Import() {
-        return Token(ImportType, "import");
-    }
-
-    static Token Return() {
-        return Token(ReturnType, "return");
-    }
-
-    static Token Break() {
-      return Token(BreakType, "break");
-    }
-
-    static Token Continue() {
-      return Token(ContinueType, "continue");
-    }
-
-    static Token If() {
-        return Token(IfType, "if");
-    }
-
-    static Token Else() {
-        return Token(ElseType, "else");
-    }
-
-    static Token Def() {
-        return Token(DefType, "def");
-    }
-
-    static Token For() {
-        return Token(ForType, "for");
-    }
-
-    static Token In() {
-        return Token(InType, "in");
-    }
-
-    static Token And() {
-        return Token(AndType, "and");
-    }
-
-    static Token Or() {
-        return Token(OrType, "or");
-    }
-
-    static Token Not() {
-        return Token(NotType, "not");
-    }
-
-    static Token Dot() {
-        return Token(DotType, ".");
-    }
-
-    static Token DoubleDot() {
-        return Token(DoubleDotType, "..");
-    }
-
-    static Token Equals() {
-        return Token(EqualsType, "=");
-    }
-
-    static Token DoubleEquals() {
-        return Token(DoubleEqualsType, "==");
-    }
-
-    static Token NotEquals() {
-        return Token(NotEqualsType, "!=");
-    }
-
-    static Token LAngle() {
-        return Token(LAngleType, "<");
-    }
-
-    static Token LAngleEquals() {
-        return Token(LAngleEqualsType, "<=");
-    }
-
-    static Token RAngle() {
-        return Token(RAngleType, ">");
-    }
-
-    static Token RAngleEquals() {
-        return Token(DoubleEqualsType, ">=");
-    }
-
-    static Token Plus() {
-        return Token(PlusType, "+");
-    }
-
-    static Token Minus() {
-        return Token(MinusType, "-");
-    }
-
-    static Token Star() {
-        return Token(StarType, "*");
-    }
-
-    static Token Slash() {
-        return Token(SlashType, "/");
-    }
-
-    static Token Backslash() {
-        return Token(BackslashType, "\\");
-    }
-
-    static Token Percent() {
-        return Token(PercentType, "%");
-    }
-
-    static Token Quote() {
-      return Token(QuoteType, "\"");
-    }
-
-    static Token True() {
-        return Token(TrueType, "true");
-    }
-
-    static Token False() {
-        return Token(FalseType, "false");
-    }
-
-    static Token Symbol(const std::string &s) {
-        return Token(SymbolType, s);
-    }
-
-    static Token Int(const std::string &s) {
-        return Token(IntType, s);
-    }
-
-    static Token Fractional(const std::string &s) {
-        return Token(FractionalType, s);
-    }
-
-    static Token EOS() {
-        return Token(EOSType, "<EOS>");
-    }
+    // Set the current module.
+    void set_module(Module *m);
+    // Unset the current module.
+    void pop_module();
+    // Return the current module.
+    Module *module();
+    // Create a new scope for variables.
+    void push_symbol_table();
+    // Remove the topmost scope for variables.
+    void pop_symbol_table();
+    // Add the given symbol to the current variable scope.
+    void add_symbol(const Name &name, Variable *v, Type ty);
+    // Return the variable from the symbol table corresponding to the
+    // given variable. The given variable is then deleted. If there is no
+    // symbol table entry, abort.
+    Variable *get_defined_variable(Variable *v);
+    // Return the symbol table entry corresponding to the given variable
+    // name, or NULL if none exists.
+    Variable *lookup_variable(const Name &name);
+    // Return the symbol table entry corresponding to the given function
+    // name, or NULL if none exists.
+    Function *lookup_function(const Name &name);
+    // Return the symbol table entry corresponding to the given variable
+    // name. If no entry exists, create one first.
+    Variable *lookup_or_new_var(const Name &name);
+    // Return the symbol table entry corresponding to the given function
+    // name. If no entry exists, create one first.
+    Function *lookup_or_new_function(const Name &name);
 private:
-    Type type_;
-    std::string value_;
+    // Current Module being parsed.
+    Module *current_module;
+    // Current scope stack of symbol tables for variables.
+    std::stack<SymbolTable *> symbol_table_stack;
+    // Symbol table for functions (which are defined globally).
+    SymbolTable *function_symbol_table;
 };
 
 class Parser {
 public:
- Parser() : tokenizer(NULL) {}
+    Parser() : tokenizer(NULL) {}
     ~Parser();
     Module *parse(const std::string &path);
     Module *parse(std::istream &is);
     Module *parse_string(const std::string &text, const std::string &path="");
 private:
+    ParseScope scope;
     Tokenizer *tokenizer;
     std::set<std::string> namespaces;
-    std::stack<Module *> module_stack;
-    std::stack<SymbolTable *> symbol_table_stack;
-    SymbolTable *function_symbol_table;
 
     std::string read_stream(std::istream &is);
     std::string read_file(const std::string &path);
-    void abort(const std::string &msg);
     void abort_with_position(const std::string &msg);
-    bool is_unop_token(const Token &t);
-    bool is_binop_token(const Token &t);
-    BinOp::Operator get_binop_operator(const Token &t);
-    UnaryOp::Operator get_unaryop_operator(const Token &t);
-    IORedirection::Operator get_redirection_operator(const Token &t);
-    Type get_primitive_type(const IRNode *n);
     void expect(const Token &t, Token::Type ty, const std::string &msg);
     std::string scan_until(const std::vector<Token> &tokens, bool keep_literal_backslash=true);
     std::string scan_until(Token a, Token b);
     std::string scan_until(Token t);
     std::string scan_until(char c);
-    void push_module(Module *m);
-    Module *pop_module();
-    void push_symbol_table(SymbolTable *s);
-    SymbolTable *pop_symbol_table();
     void setup_global_variables(Module *m);
-    Variable *get_defined_variable(Variable *v);
-    Variable *lookup_variable(const Name &name);
-    Variable *lookup_or_new_var(const Name &name);
-    Function *lookup_or_new_function(const Name &name);
     void post_parse_passes(Module *m);
 
     Module *module(const std::string &path);
     Block *block();
     IRNode *stmt();
     IRNode *otherstmt();
-    IRNode *ifstmt();
-    IRNode *importstmt();
-    IRNode *returnstmt();
-    IRNode *breakstmt();
-    IRNode *continuestmt();
-    IRNode *forloop();
+    Assignment *assignment(const Name &name);
+    FunctionCall *funcall(const Name &name);
+    ExternCall *externcall();
+    ImportStatement *importstmt();
+    ReturnStatement *returnstmt();
+    LoopControlStatement *breakstmt();
+    LoopControlStatement *continuestmt();
+    IfStatement *ifstmt();
+    ForLoop *forloop();
     Function *functiondef();
-    IRNode *externcall();
-    InterpolatedString *interpolated_string(const Token &stop, bool keep_literal_backslash);
-    IRNode *funcall(const Name &name);
-    IRNode *assignment(const Name &name);
-    Variable *var();
-    Variable *arg();
     IRNode *expr();
     IRNode *logical();
     IRNode *equality();
@@ -367,7 +143,10 @@ private:
     IRNode *unary();
     IRNode *factor();
     IRNode *atom();
-    Name symbol();
+    Variable *var();
+    Variable *arg();
+    Name namespacedvar();
+    InterpolatedString *interpolated_string(const Token &stop, bool keep_literal_backslash);
 
 };
 

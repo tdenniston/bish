@@ -10,8 +10,13 @@ void TypeChecker::visit(ReturnStatement *node) {
     visited_set.insert(node);
     node->value->accept(this);
     node->set_type(node->value->type());
-    assert(node->parent()->type() == UndefinedTy);
-    propagate_if_undef(node->parent(), node);
+    // Propagate type of this return statement to the parent function.
+    Function *f = dynamic_cast<Function*>(node->parent()->parent());
+    assert(f);
+    if (f->type() != UndefinedTy) {
+        assert(f->type() == node->value->type() && "Invalid return type for function.");
+    }
+    propagate_if_undef(f, node);
 }
 
 void TypeChecker::visit(Function *node) {
@@ -28,9 +33,15 @@ void TypeChecker::visit(FunctionCall *node) {
     if (visited(node) || node->type() != UndefinedTy) return;
     visited_set.insert(node);
     node->function->accept(this);
+    unsigned i = 0;
+    assert(node->function->body != NULL && "Calling an undefined function.");
     for (std::vector<IRNode *>::const_iterator I = node->args.begin(),
-           E = node->args.end(); I != E; ++I) {
-      (*I)->accept(this);
+             E = node->args.end(); I != E; ++I, ++i) {
+        (*I)->accept(this);
+        if (node->function->args[i]->type() != UndefinedTy) {
+            assert((*I)->type() == node->function->args[i]->type() &&
+                   "Invalid argument type for function call.");
+        }
     }
     node->set_type(node->function->type());
 }

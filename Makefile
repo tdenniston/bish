@@ -1,13 +1,13 @@
-CXX?=c++
-CXXFLAGS?=-g -O0
-RM=rm -f
+CXX ?= c++
+CXXFLAGS ?= -g -O0 -Wall
+RM = rm -f
 
-SRC=src
-OBJ=obj
-BIN=/usr/bin
+SRC = src
+OBJ = obj
+BIN = /usr/bin
 
-SOURCE_FILES=CallGraph.cpp Compile.cpp FindCalls.cpp IR.cpp IRVisitor.cpp IRAncestorsPass.cpp LinkImportsPass.cpp CodeGen_Bash.cpp Parser.cpp SymbolTable.cpp TypeChecker.cpp Util.cpp
-HEADER_FILES=CallGraph.h Compile.h FindCalls.h IR.h IRVisitor.h IRAncestorsPass.h LinkImportsPass.h CodeGen_Bash.h Parser.h SymbolTable.h TypeChecker.h Util.h
+SOURCE_FILES = CallGraph.cpp CodeGen.cpp CodeGen_Bash.cpp Compile.cpp FindCalls.cpp IR.cpp IRAncestorsPass.cpp IRVisitor.cpp LinkImportsPass.cpp Parser.cpp SymbolTable.cpp Tokenizer.cpp TypeChecker.cpp Util.cpp
+HEADER_FILES = CallGraph.h CodeGen.h CodeGen_Bash.h Compile.h FindCalls.h IR.h IRAncestorsPass.h IRVisitor.h LinkImportsPass.h Parser.h SymbolTable.h Tokenizer.h TypeChecker.h Util.h
 
 OBJECTS = $(SOURCE_FILES:%.cpp=$(OBJ)/%.o)
 HEADERS = $(HEADER_FILES:%.h=$(SRC)/%.h)
@@ -16,7 +16,6 @@ ROOT_DIR = $(realpath $(dir $(firstword $(MAKEFILE_LIST))))
 CONFIG_CONSTANTS = -DSTDLIB_PATH="\"$(ROOT_DIR)/src/StdLib.bish\""
 
 all: bish
-
 -include $(OBJ)/*.d
 
 $(OBJ)/%.o: $(SRC)/%.cpp $(SRC)/%.h
@@ -39,8 +38,12 @@ clean:
 
 .PHONY: install
 install:
-	@-cp bish $(BIN)
+	cp bish $(BIN)
 
 .PHONY: uninstall
 uninstall:
 	$(RM) $(BIN)/bish
+
+.PHONY: test
+test: bish
+	@./bish -r tests/tests.bish

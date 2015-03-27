@@ -349,5 +349,8 @@ public:
     Boolean(bool v) : value(v) {}
 };
 
+// Return the Bish Type to represent the given IR node.
+Type get_primitive_type(const IRNode *n);
+
 }
 #endif

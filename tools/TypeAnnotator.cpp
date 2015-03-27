@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include <cassert>
+#include "CodeGen.h"
 #include "Compile.h"
 #include "IR.h"
 #include "Type.h"
@@ -12,6 +13,21 @@ using namespace Bish;
 class TypeAnnotator : public IRVisitor {
 public:
     TypeAnnotator(std::ostream &os) : stream(os), indent_level(0) {}
+
+    void visit(Module *n) {
+        if (visited(n)) return;
+        visited_set.insert(n);
+
+        for (std::vector<Function *>::const_iterator I = n->functions.begin(),
+                 E = n->functions.end(); I != E; ++I) {
+            (*I)->accept(this);
+        }
+        for (std::vector<Assignment *>::const_iterator I = n->global_variables.begin(),
+                 E = n->global_variables.end(); I != E; ++I) {
+            (*I)->accept(this);
+            stream << ";\n";
+        }
+    }
     
     void visit(ReturnStatement *n) {
         if (visited(n)) return;
@@ -38,7 +54,7 @@ public:
     }
 
     void visit(Variable *n) {
-        stream << n->name << "[:" << strtype(n) << "]";
+        stream << n->name.str() << "[:" << strtype(n) << "]";
     }
 
     void visit(IfStatement *n) {
@@ -78,7 +94,7 @@ public:
     void visit(Function *n) {
         if (visited(n)) return;
         visited_set.insert(n);
-        stream << "def " << n->name << "(";
+        stream << "def " << n->name.str() << "[:" << strtype(n) << "] (";
         const int nargs = n->args.size();
         int i = 0;
         for (std::vector<Variable *>::const_iterator I = n->args.begin(),
@@ -94,7 +110,7 @@ public:
         if (visited(n)) return;
         visited_set.insert(n);
         const int nargs = n->args.size();
-        stream << n->function->name << "(";
+        stream << n->function->name.str() << "(";
         for (int i = 0; i < nargs; i++) {
             n->args[i]->accept(this);
             if (i < nargs - 1) stream << ", ";
@@ -165,6 +181,12 @@ public:
         case BinOp::GTE:
             bash_op = ">=";
             break;
+        case BinOp::And:
+            bash_op = "and";
+            break;
+        case BinOp::Or:
+            bash_op = "or";
+            break;
         case BinOp::Add:
             bash_op = "+";
             break;
@@ -193,6 +215,9 @@ public:
         switch (n->op) {
         case UnaryOp::Negate:
             stream << "-";
+            break;
+        case UnaryOp::Not:
+            stream << "!";
             break;
         }
         n->a->accept(this);
@@ -253,7 +278,11 @@ int main(int argc, char **argv) {
     std::stringstream s;
     // Don't actually care about the output, just need the compile
     // pipeline to run.
-    compile_to_bash(s, m);
+    CodeGenerators::initialize();
+    CodeGenerators::CodeGeneratorConstructor cg_constructor =
+        CodeGenerators::get("bash");
+    assert(cg_constructor);
+    compile_to(m, cg_constructor(s));
 
     TypeAnnotator annotate(std::cout);
     m->accept(&annotate);

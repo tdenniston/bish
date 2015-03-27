@@ -4,312 +4,112 @@
 #include <sstream>
 #include <iostream>
 
+#include "Errors.h"
 #include "Util.h"
 #include "Parser.h"
 #include "TypeChecker.h"
 #include "LinkImportsPass.h"
 #include "IRAncestorsPass.h"
 
-namespace {
-inline bool is_newline(char c) {
-    return c == '\n';
-}
-
-inline bool is_whitespace(char c) {
-    return c == ' ' || c == '\t' || is_newline(c);
-}
-
-inline bool is_digit(char c) {
-    return c >= 0x30 && c <= 0x39;
-}
-
-inline bool is_alphanumeric(char c) {
-    return is_digit(c) || (c >= 0x41 && c <= 0x5a) || (c >= 0x61 && c <= 0x7a);
-}
-
-// Return true if c is a valid character for a symbol (e.g. variable or function name);
-inline bool is_symbol_char(char c) {
-    return is_alphanumeric(c) || c == '_';
-}
-
-}
-
 namespace Bish {
 
-/*
- * The Bish tokenizer. Given a string to tokenize, use the peek() and
- * next() methods to produce a stream of tokens.
- */
-class Tokenizer {
-public:
-    Tokenizer(const std::string &t) : text(t), idx(0), lineno(1) {}
+void ParseScope::set_module(Module *m) {
+    current_module = m;
+}
 
-    // Return the token at the head of the stream, but do not skip it.
-    Token peek() {
-        ResultState st = get_token();
-        return st.first;
+void ParseScope::pop_module() {
+    current_module = NULL;
+}
+
+Module *ParseScope::module() {
+    return current_module;
+}
+
+void ParseScope::push_symbol_table() {
+    symbol_table_stack.push(new SymbolTable());
+}
+
+void ParseScope::pop_symbol_table() {
+    delete symbol_table_stack.top();
+    symbol_table_stack.pop();
+}
+
+void ParseScope::add_symbol(const Name &name, Variable *v, Type ty) {
+    symbol_table_stack.top()->insert(name, v, UndefinedTy);
+}
+
+// Return the variable from the symbol table corresponding to the
+// given variable. The given variable is then deleted. If there is no
+// symbol table entry, abort.
+Variable *ParseScope::get_defined_variable(Variable *v) {
+    Variable *sym = lookup_variable(v->name);
+    if (!sym) {
+        bish_abort() << "Undefined variable \"" << v->name.name << "\"";
     }
+    bish_assert(sym != v);
+    delete v;
+    return sym;
+}
 
-    // Skip the token currently at the head of the stream.
-    void next() {
-        ResultState st = get_token();
-        idx = st.second;
-    }
-
-    // Return the substring beginning at the current index and
-    // continuing until the first occurrence of one of the given
-    // tokens. Any of the given tokens prefixed by '\' are ignored
-    // during scanning. If the keep_literal_backslash parameter is
-    // true, '\' characters are kept in the output.  E.g. scanning for
-    // '(' in the string "test\))" would return "test\)" with
-    // keep_literal_backslash set to true, and "test)" with
-    // keep_literal_backslash set to false.
-    std::string scan_until(const std::vector<Token> &tokens, bool keep_literal_backslash) {
-        bool found = false, escape = false;
-        std::string result;
-        const unsigned n = tokens.size();
-        std::set<char> firstchars;
-        std::vector<unsigned> lengths;
-        for (std::vector<Token>::const_iterator I = tokens.begin(), E = tokens.end(); I != E; ++I) {
-            firstchars.insert((*I).value()[0]);
-            lengths.push_back((*I).value().size());
+// Return the symbol table entry corresponding to the given variable
+// name, or NULL if none exists.
+Variable *ParseScope::lookup_variable(const Name &name) {
+    IRNode *result = NULL;
+    std::stack<SymbolTable *> aux;
+    while (!symbol_table_stack.empty()) {
+        SymbolTableEntry *e = symbol_table_stack.top()->lookup(name);
+        if (e) {
+            result = e->node;
+            break;
         }
-
-        while (!eos() && !found) {
-            unsigned i = 0;
-            while (!eos() && (firstchars.find(curchar()) == firstchars.end() || escape)) {
-                if (curchar() == '\\') {
-                    escape = !escape;
-                    if (keep_literal_backslash) result += curchar();
-                } else {
-                    escape = false;
-                    result += curchar();
-                }
-                idx++;
-            }
-            if (eos()) break;
-            for (i = 0; i < n; i++) {
-                const std::string &s = tokens[i].value();
-                unsigned len = lengths[i];
-                if (s.compare(lookahead(len)) == 0) {
-                    found = true;
-                    idx += len - 1;
-                    break;
-                }
-            }
-        }
-        return result;
+        aux.push(symbol_table_stack.top());
+        symbol_table_stack.pop();
     }
-
-    // Return the substring beginning at the current index and
-    // continuing until the first occurrence of a character of the
-    // given value.
-    std::string scan_until(char c) {
-        unsigned start = idx;
-        while (curchar() != c) {
-            idx++;
-        }
-        return text.substr(start, idx - start);
+    while (!aux.empty()) {
+        symbol_table_stack.push(aux.top());
+        aux.pop();
     }
+    Variable *v = dynamic_cast<Variable*>(result);
+    if (result) bish_assert(v);
+    return v;
+}
 
-    // Return a human-readable representation of the current position
-    // in the string.
-    std::string position() const {
-        std::stringstream s;
-        s << "character '" << text[idx] << "', line " << lineno;
-        return s.str();
+// Return the symbol table entry corresponding to the given function
+// name, or NULL if none exists.
+Function *ParseScope::lookup_function(const Name &name) {
+    SymbolTableEntry *e = function_symbol_table->lookup(name);
+    if (e) {
+        Function *f = dynamic_cast<Function*>(e->node);
+        assert(f);
+        return f;
+    } else {
+        return NULL;
     }
+}
 
-private:
-    typedef std::pair<Token, unsigned> ResultState;
-    const std::string &text;
-    unsigned idx;
-    unsigned lineno;
-
-    // Return the current character.
-    inline char curchar() const {
-        return text[idx];
+// Return the symbol table entry corresponding to the given variable
+// name. If no entry exists, create one first.
+Variable *ParseScope::lookup_or_new_var(const Name &name) {
+    Variable *result = lookup_variable(name);
+    if (result == NULL) {
+        result = new Variable(name);
+        add_symbol(name, result, UndefinedTy);
     }
+    bish_assert(result);
+    return result;
+}
 
-    // Return the next character
-    inline char nextchar() const {
-        return text[idx + 1];
+// Return the symbol table entry corresponding to the given function
+// name. If no entry exists, create one first.
+Function *ParseScope::lookup_or_new_function(const Name &name) {
+    Function *f = lookup_function(name);
+    if (f == NULL) {
+        f = new Function(name);
+        function_symbol_table->insert(name, f, UndefinedTy);
     }
-
-    inline std::string lookahead(int n) const {
-        if (idx + n >= text.length()) return "";
-        return text.substr(idx, n);
-    }
-
-    // Return true if the tokenizer is at "end of string".
-    inline bool eos() const {
-        return idx >= text.length();
-    }
-
-    // Skip ahead until the next non-whitespace character.
-    inline void skip_whitespace() {
-        while (!eos() && is_whitespace(curchar())) {
-            if (is_newline(curchar())) ++lineno;
-            ++idx;
-        }
-    }
-
-    // Form the next token. The result is a pair (T, n) where T is the
-    // token and n is the new index after skipping past T.
-    ResultState get_token() {
-        skip_whitespace();
-        char c = curchar();
-        if (eos()) {
-            return ResultState(Token::EOS(), idx);
-        } else if (c == '(') {
-            return ResultState(Token::LParen(), idx + 1);
-        } else if (c == ')') {
-            return ResultState(Token::RParen(), idx + 1);
-        } else if (c == '{') {
-            return ResultState(Token::LBrace(), idx + 1);
-        } else if (c == '}') {
-            return ResultState(Token::RBrace(), idx + 1);
-        } else if (c == '[') {
-            return ResultState(Token::LBracket(), idx + 1);
-        } else if (c == ']') {
-            return ResultState(Token::RBracket(), idx + 1);
-        } else if (c == '@') {
-            return ResultState(Token::At(), idx + 1);
-        } else if (c == '|') {
-            return ResultState(Token::Pipe(), idx + 1);
-        } else if (c == '$') {
-            return ResultState(Token::Dollar(), idx + 1);
-        } else if (c == '#') {
-            return ResultState(Token::Sharp(), idx + 1);
-        } else if (c == ';') {
-            return ResultState(Token::Semicolon(), idx + 1);
-        } else if (c == '.') {
-            if (nextchar() == '.') {
-                return ResultState(Token::DoubleDot(), idx + 2);
-            } else {
-                return ResultState(Token::Dot(), idx + 1);
-            }
-        } else if (c == ',') {
-            return ResultState(Token::Comma(), idx + 1);
-        } else if (c == '=') {
-            if (nextchar() == '=') {
-                return ResultState(Token::DoubleEquals(), idx + 2);
-            } else {
-                return ResultState(Token::Equals(), idx + 1);
-            }
-        } else if (c == '!' && nextchar() == '=') {
-            return ResultState(Token::NotEquals(), idx + 2);
-        } else if (c == '<') {
-            if (nextchar() == '=') {
-                return ResultState(Token::LAngleEquals(), idx + 2);
-            } else {
-                return ResultState(Token::LAngle(), idx + 1);
-            }
-        } else if (c == '>') {
-            if (nextchar() == '=') {
-                return ResultState(Token::RAngleEquals(), idx + 2);
-            } else {
-                return ResultState(Token::RAngle(), idx + 1);
-            }
-        } else if (c == '+') {
-            return ResultState(Token::Plus(), idx + 1);
-        } else if (c == '-') {
-            return ResultState(Token::Minus(), idx + 1);
-        } else if (c == '*') {
-            return ResultState(Token::Star(), idx + 1);
-        } else if (c == '/') {
-            return ResultState(Token::Slash(), idx + 1);
-        } else if (c == '\\') {
-            return ResultState(Token::Backslash(), idx + 1);
-        } else if (c == '%') {
-            return ResultState(Token::Percent(), idx + 1);
-        } else if (c == '"') {
-            return ResultState(Token::Quote(), idx + 1);
-        } else if (is_digit(c)) {
-            return read_number();
-        } else {
-            ResultState result = read_symbol();
-            if (result.second == idx) {
-                std::cerr << "Unhandled token character at " << position() << "\n";
-                assert(false);
-            }
-            return result;
-        }
-    }
-
-    // Read a multi-digit (and possibly fractional) number token.
-    ResultState read_number() {
-        char c = curchar();
-        bool fractional = false;
-        std::string snum;
-        unsigned newidx = idx;
-        while (is_digit(text[newidx])) {
-            snum += text[newidx];
-            newidx++;
-        }
-        if (text[newidx] == '.') {
-            fractional = true;
-            snum += ".";
-            newidx++;
-            while (is_digit(text[newidx])) {
-                snum += text[newidx];
-                newidx++;
-            }
-        }
-        if (fractional) {
-            return ResultState(Token::Fractional(snum), newidx);
-        } else {
-            return ResultState(Token::Int(snum), newidx);
-        }
-    }
-
-    // Read a multi-character string of characters.
-    ResultState read_symbol() {
-        std::string sym = "";
-        unsigned newidx = idx;
-        while (is_symbol_char(text[newidx])) {
-            sym += text[newidx];
-            newidx++;
-        }
-        return ResultState(get_multichar_token(sym), newidx);
-    }
-
-    // Return the correct token type for a string of letters. This
-    // checks for reserved keywords.
-    Token get_multichar_token(const std::string &s) {
-        if (s.compare(Token::Return().value()) == 0) {
-            return Token::Return();
-        } else if (s.compare(Token::Import().value()) == 0) {
-            return Token::Import();
-        } else if (s.compare(Token::Break().value()) == 0) {
-            return Token::Break();
-        } else if (s.compare(Token::Continue().value()) == 0) {
-            return Token::Continue();
-        } else if (s.compare(Token::If().value()) == 0) {
-            return Token::If();
-        } else if (s.compare(Token::Else().value()) == 0) {
-            return Token::Else();
-        } else if (s.compare(Token::Def().value()) == 0) {
-            return Token::Def();
-        } else if (s.compare(Token::For().value()) == 0) {
-            return Token::For();
-        } else if (s.compare(Token::In().value()) == 0) {
-            return Token::In();
-        } else if (s.compare(Token::And().value()) == 0) {
-            return Token::And();
-        } else if (s.compare(Token::Or().value()) == 0) {
-            return Token::Or();
-        } else if (s.compare(Token::Not().value()) == 0) {
-            return Token::Not();
-        } else if (s.compare(Token::True().value()) == 0) {
-            return Token::True();
-        }  else if (s.compare(Token::False().value()) == 0) {
-            return Token::False();
-        } else {
-            return Token::Symbol(s);
-        }
-    }
-};
+    bish_assert(f);
+    return f;
+}
 
 Parser::~Parser() {
     if (tokenizer) delete tokenizer;
@@ -327,8 +127,7 @@ std::string Parser::read_stream(std::istream &is) {
 std::string Parser::read_file(const std::string &path) {
     std::ifstream t(path.c_str());
     if (!is_file(path) || !t.is_open()) {
-        std::string msg = "Failed to open file at " + path;
-        abort(msg);
+        bish_abort() << "Failed to open file at " << path;
     }
     std::string result = read_stream(t);
     t.close();
@@ -339,7 +138,7 @@ std::string Parser::read_file(const std::string &path) {
 Module *Parser::parse(const std::string &path) {
     std::string contents = read_file(path);
     Module *m = parse_string(contents, path);
-    assert(m->path.size() > 0 && "Unable to resolve module path");
+    bish_assert(m->path.size() > 0) << "Unable to resolve module path";
     return m;
 }
 
@@ -375,19 +174,13 @@ void Parser::post_parse_passes(Module *m) {
     // Construct IRNode hierarchy
     IRAncestorsPass ancestors;
     m->accept(&ancestors);
-
-    // Type checking
-    TypeChecker types;
-    m->accept(&types);
 }
 
 // Assert that the given token is of the given type. If true, advance
 // the tokenizer. If false, produce an error message.
 void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
     if (!t.isa(ty)) {
-        std::stringstream errstr;
-        errstr << "Parsing error: " << msg;
-        abort_with_position(errstr.str());
+        abort_with_position(msg);
     }
     tokenizer->next();
 }
@@ -397,7 +190,7 @@ void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
 std::string Parser::scan_until(const std::vector<Token> &tokens, bool keep_literal_backslash) {
     std::string result = tokenizer->scan_until(tokens, keep_literal_backslash);
     if (tokenizer->peek().isa(Token::EOSType)) {
-        abort("Unexpected end of input.");
+        bish_abort() << "Unexpected end of input.";
     }
     return result;
 }
@@ -424,142 +217,25 @@ std::string Parser::scan_until(Token a) {
 std::string Parser::scan_until(char c) {
     std::string result = tokenizer->scan_until(c);
     if (tokenizer->peek().isa(Token::EOSType)) {
-        abort("Unexpected end of input.");
+        bish_abort() << "Unexpected end of input.";
     }
     return result;
-}
-
-// Terminate the parsing process with the given error message.
-void Parser::abort(const std::string &msg) {
-    std::cerr << "Bish parsing error: " << msg << "\n";
-    exit(1);
 }
 
 // Terminate the parsing process with the given error message, and the
 // position of the tokenizer.
 void Parser::abort_with_position(const std::string &msg) {
-    std::cerr << "Bish parsing error: " << msg << " near " << tokenizer->position() << "\n";
-    exit(1);
-}
-
-// Return true if the given token is a unary operator.
-bool Parser::is_unop_token(const Token &t) {
-    return t.isa(Token::MinusType) || t.isa(Token::NotType);
-}
-
-// Return true if the given token is a binary operator.
-bool Parser::is_binop_token(const Token &t) {
-    return t.isa(Token::PlusType) || t.isa(Token::MinusType) ||
-        t.isa(Token::StarType) || t.isa(Token::SlashType) ||
-        t.isa(Token::PercentType) || t.isa(Token::AndType) ||
-        t.isa(Token::OrType);
-}
-
-// Return the binary Operator corresponding to the given token.
-BinOp::Operator Parser::get_binop_operator(const Token &t) {
-    switch (t.type()) {
-    case Token::DoubleEqualsType:
-        return BinOp::Eq;
-    case Token::NotEqualsType:
-        return BinOp::NotEq;
-    case Token::AndType:
-        return BinOp::And;
-    case Token::OrType:
-        return BinOp::Or;
-    case Token::LAngleType:
-        return BinOp::LT;
-    case Token::LAngleEqualsType:
-        return BinOp::LTE;
-    case Token::RAngleType:
-        return BinOp::GT;
-    case Token::RAngleEqualsType:
-        return BinOp::GTE;
-    case Token::PlusType:
-        return BinOp::Add;
-    case Token::MinusType:
-        return BinOp::Sub;
-    case Token::StarType:
-        return BinOp::Mul;
-    case Token::SlashType:
-        return BinOp::Div;
-    case Token::PercentType:
-        return BinOp::Mod;
-    default:
-        abort("Invalid operator for binary operation.");
-        return BinOp::Add;
-    }
-}
-
-// Return the unary Operator corresponding to the given token.
-UnaryOp::Operator Parser::get_unaryop_operator(const Token &t) {
-    switch (t.type()) {
-    case Token::MinusType:
-        return UnaryOp::Negate;
-    case Token::NotType:
-        return UnaryOp::Not;
-    default:
-        abort("Invalid operator for unary operation.");
-        return UnaryOp::Negate;
-    }
-}
-
-// Return the I/O redirection Operator corresponding to the given Token.
-IORedirection::Operator Parser::get_redirection_operator(const Token &t) {
-    switch (t.type()) {
-    case Token::PipeType:
-        return IORedirection::Pipe;
-    default:
-        abort("Invalid operator for I/O redirection.");
-        return IORedirection::Pipe;
-    }
-}
-
-
-// Return the Bish Type to represent the given IR node.
-Type Parser::get_primitive_type(const IRNode *n) {
-    if (const Integer *v = dynamic_cast<const Integer*>(n)) {
-        return IntegerTy;
-    } else if (const Fractional *v = dynamic_cast<const Fractional*>(n)) {
-        return FractionalTy;
-    } else if (const String *v = dynamic_cast<const String*>(n)) {
-        return StringTy;
-    } else if (const Boolean *v = dynamic_cast<const Boolean*>(n)) {
-        return BooleanTy;
-    } else {
-        return UndefinedTy;
-    }
-}
-
-void Parser::push_module(Module *m) {
-    module_stack.push(m);
-}
-
-Module *Parser::pop_module() {
-    Module *m = module_stack.top();
-    module_stack.pop();
-    return m;
-}
-
-void Parser::push_symbol_table(SymbolTable *s) {
-    symbol_table_stack.push(s);
-}
-
-SymbolTable *Parser::pop_symbol_table() {
-    SymbolTable *s = symbol_table_stack.top();
-    symbol_table_stack.pop();
-    return s;
+    bish_abort() << ": parsing error: " << msg << " near " << tokenizer->position() << "\n";
 }
 
 Module *Parser::module(const std::string &path) {
     Module *m = new Module();
     m->set_path(path);
-    push_module(m);
-    function_symbol_table = new SymbolTable();
+    scope.set_module(m);
     Function *main = new Function(Name("main"), block());
     m->set_main(main);
     setup_global_variables(m);
-    pop_module();
-    delete function_symbol_table;
+    scope.pop_module();
     return m;
 }
 
@@ -570,7 +246,7 @@ void Parser::setup_global_variables(Module *m) {
     // they will go into the main function.
     std::vector<Block::iterator> to_erase;
     std::set<Variable *> handled;
-    assert(m->main != NULL);
+    bish_assert(m->main != NULL);
     for (Block::iterator I = m->main->body->begin(), E = m->main->body->end(); I != E; ++I) {
         if (Assignment *a = dynamic_cast<Assignment*>(*I)) {
             if (handled.find(a->variable) == handled.end()) {
@@ -590,7 +266,7 @@ void Parser::setup_global_variables(Module *m) {
 // Parse a Bish block.
 Block *Parser::block() {
     std::vector<IRNode *> statements;
-    push_symbol_table(new SymbolTable());
+    scope.push_symbol_table();
     expect(tokenizer->peek(), Token::LBraceType, "Expected block to begin with '{'");
     do {
         while (tokenizer->peek().isa(Token::SharpType)) {
@@ -602,7 +278,7 @@ Block *Parser::block() {
     } while (!tokenizer->peek().isa(Token::RBraceType));
     expect(tokenizer->peek(), Token::RBraceType, "Expected block to end with '}'");
     Block *result = new Block(statements);
-    delete pop_symbol_table();
+    scope.pop_symbol_table();
     return result;
 }
 
@@ -630,7 +306,7 @@ IRNode *Parser::stmt() {
         return forloop();
     case Token::DefType: {
         Function *f = functiondef();
-        module_stack.top()->add_function(f);
+        scope.module()->add_function(f);
         return NULL;
     }
     default:
@@ -639,7 +315,7 @@ IRNode *Parser::stmt() {
 }
 
 IRNode *Parser::otherstmt() {
-    Name sym = symbol();
+    Name sym = namespacedvar();
     IRNode *s = NULL;
     switch (tokenizer->peek().type()) {
     case Token::EqualsType:
@@ -649,7 +325,7 @@ IRNode *Parser::otherstmt() {
         s = funcall(sym);
         break;
     default:
-        abort("Unexpected token in statement.");
+        abort_with_position("Unexpected token in statement.");
         s = NULL;
         break;
     }
@@ -657,7 +333,37 @@ IRNode *Parser::otherstmt() {
     return s;
 }
 
-IRNode *Parser::externcall() {
+Assignment *Parser::assignment(const Name &name) {
+    bish_assert(!scope.lookup_function(name)) << "Cannot assign to function \"" <<
+        name.str() << "\" near " << tokenizer->position();
+    expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
+    Variable *v = scope.lookup_or_new_var(name);
+    IRNode *e = expr();
+    Type t = get_primitive_type(e);
+    if (t != UndefinedTy) {
+        scope.add_symbol(name, v, t);
+    }
+    return new Assignment(v, e);
+}
+
+FunctionCall *Parser::funcall(const Name &name) {
+    bish_assert(!scope.lookup_variable(name)) << "Symbol \"" <<
+        name.str() << "\" near " << tokenizer->position() << " is not a function.";
+    expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
+    std::vector<IRNode *> args;
+    if (!tokenizer->peek().isa(Token::RParenType)) {
+        args.push_back(expr());
+        while (tokenizer->peek().isa(Token::CommaType)) {
+            tokenizer->next();
+            args.push_back(expr());
+        }
+    }
+    expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
+    Function *f = scope.lookup_or_new_function(name);
+    return new FunctionCall(f, args);
+}
+
+ExternCall *Parser::externcall() {
     expect(tokenizer->peek(), Token::AtType, "Expected '@' to begin extern call.");
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     InterpolatedString *body = interpolated_string(Token::RParen(), false);
@@ -665,68 +371,39 @@ IRNode *Parser::externcall() {
     return new ExternCall(body);
 }
 
-// Parse an interpolated string. The given token parameter is the
-// stopping token. E.g. if the interpolated string should be parsed
-// between double quotes, the caller would consume the initial double
-// quote and call this function with stop = Token::Quote().
-InterpolatedString *Parser::interpolated_string(const Token &stop, bool keep_literal_backslash) {
-    const Token scan_tokens_arr[] = {stop, Token::Dollar()};
-    const std::vector<Token> scan_tokens(scan_tokens_arr, scan_tokens_arr+2);
-    InterpolatedString *result = new InterpolatedString();
-    while (true) {
-        std::string str = scan_until(scan_tokens, keep_literal_backslash);
-        result->push_str(str);
-        if (tokenizer->peek().isa(Token::DollarType)) {
-            tokenizer->next();
-            if (tokenizer->peek().isa(Token::LParenType)) {
-                tokenizer->next();
-                str = scan_until(Token::RParen());
-                tokenizer->next();
-                result->push_str("$" + str);
-            } else {
-                Variable *v = var();
-                result->push_var(v);
-            }
-        } else if (tokenizer->peek().isa(stop.type())) {
-            break;
-        }
-    }
-    return result;
-}
-
-IRNode *Parser::importstmt() {
+ImportStatement *Parser::importstmt() {
     expect(tokenizer->peek(), Token::ImportType, "Expected import statement");
     std::string module_name = strip(scan_until(Token::Semicolon()));
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     if (namespaces.find(module_name) == namespaces.end()) {
         namespaces.insert(module_name);
-        return new ImportStatement(module_stack.top(), module_name);
+        return new ImportStatement(scope.module(), module_name);
     } else {
         // Ignore duplicate imports.
         return NULL;
     }
 }
 
-IRNode *Parser::returnstmt() {
+ReturnStatement *Parser::returnstmt() {
     expect(tokenizer->peek(), Token::ReturnType, "Expected return statement");
     IRNode *ret = expr();
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     return new ReturnStatement(ret);
 }
 
-IRNode *Parser::breakstmt() {
+LoopControlStatement *Parser::breakstmt() {
     expect(tokenizer->peek(), Token::BreakType, "Expected break statement");
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     return new LoopControlStatement(LoopControlStatement::Break);
 }
 
-IRNode *Parser::continuestmt() {
+LoopControlStatement *Parser::continuestmt() {
     expect(tokenizer->peek(), Token::ContinueType, "Expected continue statement");
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     return new LoopControlStatement(LoopControlStatement::Continue);
 }
 
-IRNode *Parser::ifstmt() {
+IfStatement *Parser::ifstmt() {
     expect(tokenizer->peek(), Token::IfType, "Expected if statement");
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     IRNode *cond = expr();
@@ -750,7 +427,7 @@ IRNode *Parser::ifstmt() {
     return new IfStatement(cond, body, elses, elseblock);
 }
 
-IRNode *Parser::forloop() {
+ForLoop *Parser::forloop() {
     expect(tokenizer->peek(), Token::ForType, "Expected for statement");
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     Variable *v = var();
@@ -761,10 +438,10 @@ IRNode *Parser::forloop() {
         upper = atom();
     }
     if (Variable *lv = dynamic_cast<Variable*>(lower)) {
-        lower = get_defined_variable(lv);
+        lower = scope.get_defined_variable(lv);
     }
     if (Variable *uv = dynamic_cast<Variable*>(upper)) {
-        upper = get_defined_variable(uv);
+        upper = scope.get_defined_variable(uv);
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     IRNode *body = block();
@@ -773,10 +450,10 @@ IRNode *Parser::forloop() {
 
 Function *Parser::functiondef() {
     expect(tokenizer->peek(), Token::DefType, "Expected def statement");
-    Name name = symbol();
+    Name name = namespacedvar();
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     std::vector<Variable *> args;
-    push_symbol_table(new SymbolTable());
+    scope.push_symbol_table();
     if (!tokenizer->peek().isa(Token::RParenType)) {
         args.push_back(arg());
         while (tokenizer->peek().isa(Token::CommaType)) {
@@ -786,52 +463,19 @@ Function *Parser::functiondef() {
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     Block *body = block();
-    delete pop_symbol_table();
-    Function *f = lookup_or_new_function(name);
+    scope.pop_symbol_table();
+    // It's possible the function was called before it was defined. In
+    // that case we get that function instance, and initialize its
+    // arguments and body here.
+    Function *f = scope.lookup_or_new_function(name);
+    // If the arguments and body have already been initialized, throw
+    // a redefinition error.
+    if (f->body != NULL) {
+        abort_with_position("Function '" + name.name + "' is already defined.");
+    }
     f->set_args(args);
     f->set_body(body);
     return f;
-}
-
-IRNode *Parser::funcall(const Name &name) {
-    expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
-    std::vector<IRNode *> args;
-    if (!tokenizer->peek().isa(Token::RParenType)) {
-        args.push_back(expr());
-        while (tokenizer->peek().isa(Token::CommaType)) {
-            tokenizer->next();
-            args.push_back(expr());
-        }
-    }
-    expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
-    Function *f = lookup_or_new_function(name);
-    return new FunctionCall(f, args);
-}
-
-IRNode *Parser::assignment(const Name &name) {
-    expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
-    Variable *v = lookup_or_new_var(name);
-    IRNode *e = expr();
-    Type t = get_primitive_type(e);
-    if (t != UndefinedTy) {
-        symbol_table_stack.top()->insert(name, v, t);
-    }
-    return new Assignment(v, e);
-}
-
-Variable *Parser::var() {
-    std::string name = tokenizer->peek().value();
-    expect(tokenizer->peek(), Token::SymbolType, "Expected variable to be a symbol");
-    return lookup_or_new_var(name);
-}
-
-Variable *Parser::arg() {
-    // Similar to var() but this always creates a new symbol.
-    std::string name = tokenizer->peek().value();
-    expect(tokenizer->peek(), Token::SymbolType, "Expected argument to be a symbol");
-    Variable *arg = new Variable(name);
-    symbol_table_stack.top()->insert(name, arg, UndefinedTy);
-    return arg;
 }
 
 IRNode *Parser::expr() {
@@ -927,7 +571,7 @@ IRNode *Parser::factor() {
             }
             a = funcall(v->name);
         } else if (Variable *v = dynamic_cast<Variable*>(a)) {
-            Variable *sym = get_defined_variable(v);
+            Variable *sym = scope.get_defined_variable(v);
             a = sym;
         }
         return a;
@@ -965,12 +609,27 @@ IRNode *Parser::atom() {
         return new String(str);
     }
     default:
-        abort("Invalid token type for atom.");
+        abort_with_position("Invalid token type for atom.");
         return NULL;
     }
 }
 
-Name Parser::symbol() {
+Variable *Parser::var() {
+    std::string name = tokenizer->peek().value();
+    expect(tokenizer->peek(), Token::SymbolType, "Expected variable to be a symbol");
+    return scope.lookup_or_new_var(name);
+}
+
+Variable *Parser::arg() {
+    // Similar to var() but this always creates a new symbol.
+    std::string name = tokenizer->peek().value();
+    expect(tokenizer->peek(), Token::SymbolType, "Expected argument to be a symbol");
+    Variable *arg = new Variable(name);
+    scope.add_symbol(name, arg, UndefinedTy);
+    return arg;
+}
+
+Name Parser::namespacedvar() {
     Token t = tokenizer->peek();
     expect(t, Token::SymbolType, "Expected symbol.");
     if (tokenizer->peek().isa(Token::DotType)) {
@@ -985,70 +644,33 @@ Name Parser::symbol() {
     return Name(t.value());
 }
 
-// Return the variable from the symbol table corresponding to the
-// given variable. The given variable is then deleted. If there is no
-// symbol table entry, abort.
-Variable *Parser::get_defined_variable(Variable *v) {
-    Variable *sym = lookup_variable(v->name);
-    if (!sym) {
-        abort_with_position("Undefined variable \"" + v->name.name + "\"");
-    }
-    assert(sym != v);
-    delete v;
-    return sym;
-}
-
-// Return the symbol table entry corresponding to the given variable
-// name. If no entry exists, create one first.
-Variable *Parser::lookup_or_new_var(const Name &name) {
-    IRNode *result = lookup_variable(name);
-    if (result) {
-        Variable *v = dynamic_cast<Variable*>(result);
-        assert(v);
-        return v;
-    } else {
-        Variable *v = new Variable(name);
-        symbol_table_stack.top()->insert(name, v, UndefinedTy);
-        return v;
-    }
-}
-
-// Return the symbol table entry corresponding to the given function
-// name. If no entry exists, create one first.
-Function *Parser::lookup_or_new_function(const Name &name) {
-    SymbolTableEntry *e = function_symbol_table->lookup(name);
-    Function *f = NULL;
-    if (e) {
-        f = dynamic_cast<Function*>(e->node);
-    } else {
-        f = new Function(name);
-        function_symbol_table->insert(name, f, UndefinedTy);
-    }
-    assert(f);
-    return f;
-}
-
-// Return the symbol table entry corresponding to the given variable
-// name, or NULL if none exists.
-Variable *Parser::lookup_variable(const Name &name) {
-    IRNode *result = NULL;
-    std::stack<SymbolTable *> aux;
-    while (!symbol_table_stack.empty()) {
-        SymbolTableEntry *e = symbol_table_stack.top()->lookup(name);
-        if (e) {
-            result = e->node;
+// Parse an interpolated string. The given token parameter is the
+// stopping token. E.g. if the interpolated string should be parsed
+// between double quotes, the caller would consume the initial double
+// quote and call this function with stop = Token::Quote().
+InterpolatedString *Parser::interpolated_string(const Token &stop, bool keep_literal_backslash) {
+    const Token scan_tokens_arr[] = {stop, Token::Dollar()};
+    const std::vector<Token> scan_tokens(scan_tokens_arr, scan_tokens_arr+2);
+    InterpolatedString *result = new InterpolatedString();
+    while (true) {
+        std::string str = scan_until(scan_tokens, keep_literal_backslash);
+        result->push_str(str);
+        if (tokenizer->peek().isa(Token::DollarType)) {
+            tokenizer->next();
+            if (tokenizer->peek().isa(Token::LParenType)) {
+                tokenizer->next();
+                str = scan_until(Token::RParen());
+                tokenizer->next();
+                result->push_str("$" + str);
+            } else {
+                Variable *v = var();
+                result->push_var(v);
+            }
+        } else if (tokenizer->peek().isa(stop.type())) {
             break;
         }
-        aux.push(symbol_table_stack.top());
-        symbol_table_stack.pop();
     }
-    while (!aux.empty()) {
-        symbol_table_stack.push(aux.top());
-        aux.pop();
-    }
-    Variable *v = dynamic_cast<Variable*>(result);
-    if (result) assert(v);
-    return v;
+    return result;
 }
 
 }

@@ -3,9 +3,9 @@
 
 #include <stack>
 #include <map>
-#include <iostream>
 #include "IR.h"
 #include "IRVisitor.h"
+#include "CodeGen.h"
 
 namespace Bish {
 
@@ -28,9 +28,9 @@ private:
     std::map<const Variable *, std::string> rename;
 };
  
-class CodeGen_Bash : public IRVisitor {
+class CodeGen_Bash : public CodeGenerator {
 public:
-    CodeGen_Bash(std::ostream &os, bool cal = false) : stream(os) {
+    CodeGen_Bash(std::ostream &os, bool cal = false) : CodeGenerator(os) {
         indent_level = 0;
         enable_block_braces();
         disable_functioncall_wrap();
@@ -63,7 +63,6 @@ private:
     std::stack<bool> functioncall_wrap;
     std::stack<bool> quote_variable;
     std::stack<bool> comparison_wrap;
-    std::ostream &stream;
     unsigned indent_level;
     bool compile_as_library;
 

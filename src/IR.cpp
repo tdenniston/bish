@@ -63,7 +63,7 @@ void Module::import(Module *m) {
         for (std::vector<Function *>::iterator CI = calls.begin(), CE = calls.end(); CI != CE; ++CI) {
             f = *CI;
             // Avoid dummy functions and duplicates.
-            if (f->body == NULL || to_link.count(f->name)) continue;
+            if (f->body == NULL || to_link.count(f->name) || linked.count(f->name)) continue;
             f->name.add_namespace(m->namespace_id);
             add_function(f);
             linked[f->name] = f;
@@ -77,16 +77,17 @@ void Module::import(Module *m) {
     std::set<Function *> to_erase;
     for (std::vector<FunctionCall *>::iterator I = calls.begin(), E = calls.end(); I != E; ++I) {
         FunctionCall *call = *I;
-        Name name = call->function->name;
+        Name &name = call->function->name;
         // Special case for stdlib functions: they can be called
         // without a namespace, so add it here.
         if (m->path == get_stdlib_path()) {
-            if (!name.has_namespace("StdLib")) call->function->name.add_namespace("StdLib");
+            if (!name.has_namespace("StdLib")) name.add_namespace("StdLib");
         }
         if (linked.find(name) != linked.end()) {
             assert(call->function->body == NULL);
             to_erase.insert(call->function);
             call->function = linked[name];
+            assert(call->function->body != NULL);
         }
     }
 
@@ -98,6 +99,20 @@ void Module::import(Module *m) {
         } else {
             ++I;
         }
+    }
+}
+
+Type get_primitive_type(const IRNode *n) {
+    if (const Integer *v = dynamic_cast<const Integer*>(n)) {
+        return IntegerTy;
+    } else if (const Fractional *v = dynamic_cast<const Fractional*>(n)) {
+        return FractionalTy;
+    } else if (const String *v = dynamic_cast<const String*>(n)) {
+        return StringTy;
+    } else if (const Boolean *v = dynamic_cast<const Boolean*>(n)) {
+        return BooleanTy;
+    } else {
+        return UndefinedTy;
     }
 }
 
