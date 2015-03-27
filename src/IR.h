@@ -12,9 +12,29 @@
 
 namespace Bish {
 
+// Encapsulates information required for emitting error messages
+// related to IRNodes.
+class IRDebugInfo {
+public:
+    // Name of source file
+    std::string file;
+    // Index into source text where the IRNode begins.
+    unsigned start;
+    // Index into source text where the IRNode ends.
+    unsigned end;
+    // Line number in source text where IRNode resides.
+    unsigned lineno;
+    IRDebugInfo() : file(""), start(0), end(0), lineno(0) {}
+    IRDebugInfo(const std::string &f, unsigned s, unsigned e, unsigned lno) :
+        file(f), start(s), end(e), lineno(lno) {}
+    IRDebugInfo(const IRDebugInfo &a) :
+        file(a.file), start(a.start), end(a.end), lineno(a.lineno) {}
+};
+
 class IRNode {
 public:
     IRNode() : type_(UndefinedTy), parent_(NULL) {}
+    IRNode(const IRDebugInfo &info) : type_(UndefinedTy), parent_(NULL), debug_info_(info) {}
     virtual ~IRNode() {}
     virtual void accept(IRVisitor *v) = 0;
     Type type() const { return type_; }
@@ -24,6 +44,7 @@ public:
 protected:
     Type type_;
     IRNode *parent_;
+    IRDebugInfo debug_info_;
 };
 
 // This is the "curiously recurring template" pattern. It's used to
@@ -32,6 +53,8 @@ protected:
 template<typename T>
 class BaseIRNode : public IRNode {
 public:
+    BaseIRNode() {}
+    BaseIRNode(const IRDebugInfo &info) : IRNode(info) {}
     void accept(IRVisitor *v) {
         v->visit((T *)this);
     }
@@ -180,14 +203,15 @@ class Assignment : public BaseIRNode<Assignment> {
 public:
     Location *location;
     std::vector<IRNode *> values;
-    Assignment(Location *loc, const std::vector<IRNode *> &val) : location(loc), values(val.begin(), val.end()) {}
+    Assignment(Location *loc, const std::vector<IRNode *> &val, const IRDebugInfo &info) :
+        location(loc), values(val.begin(), val.end()), BaseIRNode(info) {}
 };
 
 class ImportStatement : public BaseIRNode<ImportStatement> {
 public:
     std::string module_name;
     std::string path;
-    ImportStatement(const Module *m, const std::string &qual_name) {
+    ImportStatement(const Module *m, const std::string &qual_name, const IRDebugInfo &info) : BaseIRNode(info) {
         std::string path_ = dirname(m->path) + "/" + qual_name + ".bish";
         path = abspath(path_);
         assert(!path.empty() && "Could not resolve module path from import.");
@@ -199,14 +223,14 @@ public:
 class ReturnStatement : public BaseIRNode<ReturnStatement> {
 public:
     IRNode *value;
-    ReturnStatement(IRNode *v) : value(v) {}
+    ReturnStatement(IRNode *v, const IRDebugInfo &info) : value(v), BaseIRNode(info) {}
 };
 
 class LoopControlStatement : public BaseIRNode<LoopControlStatement> {
 public:
     typedef enum { Break, Continue } Operator;
     Operator op;
-    LoopControlStatement(Operator op_) : op(op_) {}
+    LoopControlStatement(Operator op_, const IRDebugInfo &info) : op(op_), BaseIRNode(info) {}
 };
 
 // Helper class for IfStatement
@@ -256,10 +280,10 @@ class FunctionCall : public BaseIRNode<FunctionCall> {
 public:
     Function *function;
     std::vector<IRNode *> args;
-    FunctionCall(Function *f) {
+    FunctionCall(Function *f, const IRDebugInfo &info) : BaseIRNode(info) {
         function = f;
     }
-    FunctionCall(Function *f, const std::vector<IRNode *> &a) {
+    FunctionCall(Function *f, const std::vector<IRNode *> &a, const IRDebugInfo &info) : BaseIRNode(info) {
         function = f;
         args.insert(args.begin(), a.begin(), a.end());
     }
@@ -307,7 +331,7 @@ private:
 class ExternCall : public BaseIRNode<ExternCall> {
 public:
     InterpolatedString *body;
-    ExternCall(InterpolatedString *b) : body(b) {}
+    ExternCall(InterpolatedString *b, const IRDebugInfo &info) : body(b), BaseIRNode(info) {}
 };
 
 class IORedirection : public BaseIRNode<IORedirection> {
@@ -315,7 +339,7 @@ public:
     typedef enum { Pipe } Operator;
     Operator op;
     IRNode *a, *b;
-    IORedirection(Operator op_, IRNode *a_, IRNode *b_) : op(op_), a(a_), b(b_) {}
+    IORedirection(Operator op_, IRNode *a_, IRNode *b_, const IRDebugInfo &info) : op(op_), a(a_), b(b_), BaseIRNode(info) {}
 };
 
 class BinOp : public BaseIRNode<BinOp> {
@@ -323,7 +347,7 @@ public:
     typedef enum { Add, Sub, Mul, Div, Mod, Eq, NotEq, LT, LTE, GT, GTE, And, Or } Operator;
     Operator op;
     IRNode *a, *b;
-    BinOp(Operator op_, IRNode *a_, IRNode *b_) : op(op_), a(a_), b(b_) {}
+    BinOp(Operator op_, IRNode *a_, IRNode *b_, const IRDebugInfo &info) : op(op_), a(a_), b(b_), BaseIRNode(info) {}
 };
 
 class UnaryOp : public BaseIRNode<UnaryOp> {
@@ -331,20 +355,18 @@ public:
     typedef enum { Negate, Not } Operator;
     Operator op;
     IRNode *a;
-    UnaryOp(Operator op_, IRNode *a_) : op(op_), a(a_) {}
+    UnaryOp(Operator op_, IRNode *a_, const IRDebugInfo &info) : op(op_), a(a_), BaseIRNode(info) {}
 };
 
 class Integer : public BaseIRNode<Integer> {
 public:
     int value;
-    Integer(int i) : value(i) {}
     Integer(const std::string &s) : value(convert_string<int>(s)) {}
 };
 
 class Fractional : public BaseIRNode<Fractional> {
 public:
     double value;
-    Fractional(double d) : value(d) {}
     Fractional(const std::string &s) : value(convert_string<double>(s)) {}
 };
 

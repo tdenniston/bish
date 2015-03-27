@@ -104,6 +104,20 @@ std::string Tokenizer::position() const {
     return s.str();
 }
 
+// Start a debug record.
+void Tokenizer::start_debug_info() {
+    IRDebugInfo record(path, idx, 0, lineno);
+    debug_info_stack.push(record);
+}
+
+// Finish a debug record and return it.
+IRDebugInfo Tokenizer::end_debug_info() {
+    IRDebugInfo record = debug_info_stack.top();
+    debug_info_stack.pop();
+    record.end = idx;
+    return record;
+}
+
 // Return the current character.
 inline char Tokenizer::curchar() const {
     return text[idx];

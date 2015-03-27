@@ -2,6 +2,7 @@
 #define __BISH_TOKENIZER_H__
 
 #include <set>
+#include <stack>
 #include <string>
 #include <vector>
 #include "IR.h"
@@ -266,7 +267,7 @@ private:
  */
 class Tokenizer {
 public:
-    Tokenizer(const std::string &t) : text(t), idx(0), lineno(0) {}
+    Tokenizer(const std::string &p, const std::string &t) : path(p), text(t), idx(0), lineno(0) {}
 
     // Return the token at the head of the stream, but do not skip it.
     Token peek();
@@ -288,8 +289,14 @@ public:
     // Return a human-readable representation of the current position
     // in the string.
     std::string position() const;
+    // Start a debug record.
+    void start_debug_info();
+    // Finish a debug record and return it.
+    IRDebugInfo end_debug_info();
 private:
     typedef std::pair<Token, unsigned> ResultState;
+    std::stack<IRDebugInfo> debug_info_stack;
+    const std::string path;
     const std::string &text;
     unsigned idx;
     unsigned lineno;

@@ -156,7 +156,7 @@ Module *Parser::parse_string(const std::string &text, const std::string &path) {
 
     // Insert a dummy block for root scope.
     std::string preprocessed = "{\n" + text + "\n}";
-    tokenizer = new Tokenizer(preprocessed);
+    tokenizer = new Tokenizer(path, preprocessed);
 
     Module *m = module(path);
     expect(tokenizer->peek(), Token::EOSType, "Expected end of string.");
@@ -336,6 +336,7 @@ IRNode *Parser::otherstmt() {
 }
 
 Assignment *Parser::assignment(const Name &name) {
+    tokenizer->start_debug_info();
     bish_assert(!scope.lookup_function(name)) << "Cannot assign to function \"" <<
         name.str() << "\" near " << tokenizer->position();
     Variable *v = scope.lookup_or_new_var(name);
@@ -359,10 +360,11 @@ Assignment *Parser::assignment(const Name &name) {
     }
 
     Location *loc = new Location(v, offset);
-    return new Assignment(loc, values);
+    return new Assignment(loc, values, tokenizer->end_debug_info());
 }
 
 FunctionCall *Parser::funcall(const Name &name) {
+    tokenizer->start_debug_info();
     bish_assert(!scope.lookup_variable(name)) << "Symbol \"" <<
         name.str() << "\" near " << tokenizer->position() << " is not a function.";
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
@@ -372,47 +374,53 @@ FunctionCall *Parser::funcall(const Name &name) {
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     Function *f = scope.lookup_or_new_function(name);
-    return new FunctionCall(f, args);
+    return new FunctionCall(f, args, tokenizer->end_debug_info());
 }
 
 ExternCall *Parser::externcall() {
+    tokenizer->start_debug_info();
     expect(tokenizer->peek(), Token::AtType, "Expected '@' to begin extern call.");
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     InterpolatedString *body = interpolated_string(Token::RParen(), false);
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
-    return new ExternCall(body);
+    return new ExternCall(body, tokenizer->end_debug_info());
 }
 
 ImportStatement *Parser::importstmt() {
+    tokenizer->start_debug_info();
     expect(tokenizer->peek(), Token::ImportType, "Expected import statement");
     std::string module_name = strip(scan_until(Token::Semicolon()));
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     if (namespaces.find(module_name) == namespaces.end()) {
         namespaces.insert(module_name);
-        return new ImportStatement(scope.module(), module_name);
+        return new ImportStatement(scope.module(), module_name, tokenizer->end_debug_info());
     } else {
         // Ignore duplicate imports.
+        tokenizer->end_debug_info();
         return NULL;
     }
 }
 
 ReturnStatement *Parser::returnstmt() {
+    tokenizer->start_debug_info();
     expect(tokenizer->peek(), Token::ReturnType, "Expected return statement");
     IRNode *ret = expr();
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
-    return new ReturnStatement(ret);
+    return new ReturnStatement(ret, tokenizer->end_debug_info());
 }
 
 LoopControlStatement *Parser::breakstmt() {
+    tokenizer->start_debug_info();
     expect(tokenizer->peek(), Token::BreakType, "Expected break statement");
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
-    return new LoopControlStatement(LoopControlStatement::Break);
+    return new LoopControlStatement(LoopControlStatement::Break, tokenizer->end_debug_info());
 }
 
 LoopControlStatement *Parser::continuestmt() {
+    tokenizer->start_debug_info();
     expect(tokenizer->peek(), Token::ContinueType, "Expected continue statement");
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
-    return new LoopControlStatement(LoopControlStatement::Continue);
+    return new LoopControlStatement(LoopControlStatement::Continue, tokenizer->end_debug_info());
 }
 
 IfStatement *Parser::ifstmt() {
@@ -491,11 +499,14 @@ Function *Parser::functiondef() {
 }
 
 IRNode *Parser::expr() {
+    tokenizer->start_debug_info();
     IRNode *a = logical();
     Token t = tokenizer->peek();
     if (t.isa(Token::PipeType)) {
         tokenizer->next();
-        a = new IORedirection(get_redirection_operator(t), a, logical());
+        a = new IORedirection(get_redirection_operator(t), a, logical(), tokenizer->end_debug_info());
+    } else {
+        tokenizer->end_debug_info();
     }
     return a;
 }
@@ -511,67 +522,84 @@ std::vector<IRNode *> Parser::exprlist() {
 }
 
 IRNode *Parser::logical() {
+    tokenizer->start_debug_info();
     IRNode *a = equality();
     Token t = tokenizer->peek();
     while (t.isa(Token::AndType) || t.isa(Token::OrType)) {
         tokenizer->next();
-        a = new BinOp(get_binop_operator(t), a, equality());
+        a = new BinOp(get_binop_operator(t), a, equality(), tokenizer->end_debug_info());
+        tokenizer->start_debug_info();
         t = tokenizer->peek();
     }
+    tokenizer->end_debug_info();
     return a;
 }
 
 IRNode *Parser::equality() {
+    tokenizer->start_debug_info();
     IRNode *a = relative();
     Token t = tokenizer->peek();
     if (t.isa(Token::DoubleEqualsType) || t.isa(Token::NotEqualsType)) {
         tokenizer->next();
-        a = new BinOp(get_binop_operator(t), a, relative());
+        a = new BinOp(get_binop_operator(t), a, relative(), tokenizer->end_debug_info());
         t = tokenizer->peek();
+    } else {
+        tokenizer->end_debug_info();
     }
     return a;
 }
 
 IRNode *Parser::relative() {
+    tokenizer->start_debug_info();
     IRNode *a = arith();
     Token t = tokenizer->peek();
     if (t.isa(Token::LAngleType) || t.isa(Token::LAngleEqualsType) ||
         t.isa(Token::RAngleType) || t.isa(Token::RAngleEqualsType)) {
         tokenizer->next();
-        a = new BinOp(get_binop_operator(t), a, arith());
+        a = new BinOp(get_binop_operator(t), a, arith(), tokenizer->end_debug_info());
         t = tokenizer->peek();
+    } else {
+        tokenizer->end_debug_info();
     }
     return a;
 }
 
 IRNode *Parser::arith() {
+    tokenizer->start_debug_info();
     IRNode *a = term();
     Token t = tokenizer->peek();
     while (t.isa(Token::PlusType) || t.isa(Token::MinusType)) {
         tokenizer->next();
-        a = new BinOp(get_binop_operator(t), a, term());
+        a = new BinOp(get_binop_operator(t), a, term(), tokenizer->end_debug_info());
+        tokenizer->start_debug_info();
         t = tokenizer->peek();
     }
+    tokenizer->end_debug_info();
     return a;
 }
 
 IRNode *Parser::term() {
+    tokenizer->start_debug_info();
     IRNode *a = unary();
     Token t = tokenizer->peek();
     while (t.isa(Token::StarType) || t.isa(Token::SlashType) || t.isa(Token::PercentType)) {
         tokenizer->next();
-        a = new BinOp(get_binop_operator(t), a, unary());
+        a = new BinOp(get_binop_operator(t), a, unary(), tokenizer->end_debug_info());
+        tokenizer->start_debug_info();
         t = tokenizer->peek();
     }
+    tokenizer->end_debug_info();
     return a;
 }
 
 IRNode *Parser::unary() {
+    tokenizer->start_debug_info();
     Token t = tokenizer->peek();
     if (is_unop_token(t)) {
         tokenizer->next();
-        return new UnaryOp(get_unaryop_operator(t), factor());
+        return new UnaryOp(get_unaryop_operator(t), factor(), tokenizer->end_debug_info());
     } else {
+        tokenizer->end_debug_info();
         return factor();
     }
 }

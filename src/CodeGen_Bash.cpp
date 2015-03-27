@@ -29,7 +29,7 @@ void CodeGen_Bash::visit(Module *n) {
     }
     // Insert a call to bish_main().
     assert(n->main);
-    FunctionCall *call_main = new FunctionCall(n->main);
+    FunctionCall *call_main = new FunctionCall(n->main, IRDebugInfo());
     visit(call_main);
     stream << ";\n";
     delete call_main;
