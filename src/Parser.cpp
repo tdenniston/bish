@@ -34,8 +34,8 @@ void ParseScope::pop_symbol_table() {
     symbol_table_stack.pop();
 }
 
-void ParseScope::add_symbol(const Name &name, Variable *v, Type ty) {
-    symbol_table_stack.top()->insert(name, v, UndefinedTy);
+void ParseScope::add_symbol(const Name &name, Variable *v) {
+    symbol_table_stack.top()->insert(name, v);
 }
 
 // Return the variable from the symbol table corresponding to the
@@ -93,7 +93,7 @@ Variable *ParseScope::lookup_or_new_var(const Name &name) {
     Variable *result = lookup_variable(name);
     if (result == NULL) {
         result = new Variable(name);
-        add_symbol(name, result, UndefinedTy);
+        add_symbol(name, result);
     }
     bish_assert(result);
     return result;
@@ -105,7 +105,7 @@ Function *ParseScope::lookup_or_new_function(const Name &name) {
     Function *f = lookup_function(name);
     if (f == NULL) {
         f = new Function(name);
-        function_symbol_table->insert(name, f, UndefinedTy);
+        function_symbol_table->insert(name, f);
     }
     bish_assert(f);
     return f;
@@ -348,11 +348,8 @@ Assignment *Parser::assignment(const Name &name) {
 
     expect(tokenizer->peek(), Token::EqualsType, "Expected assignment operator");
     Variable *v = scope.lookup_or_new_var(name);
+    scope.add_symbol(name, v);
     IRNode *e = expr();
-    Type t = get_primitive_type(e);
-    if (t != UndefinedTy) {
-        scope.add_symbol(name, v, t);
-    }
     Location *loc = new Location(v, offset);
     return new Assignment(loc, e);
 }
@@ -646,7 +643,7 @@ Variable *Parser::arg() {
     std::string name = tokenizer->peek().value();
     expect(tokenizer->peek(), Token::SymbolType, "Expected argument to be a symbol");
     Variable *arg = new Variable(name);
-    scope.add_symbol(name, arg, UndefinedTy);
+    scope.add_symbol(name, arg);
     return arg;
 }
 

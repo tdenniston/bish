@@ -72,7 +72,7 @@ public:
     // Remove the topmost scope for variables.
     void pop_symbol_table();
     // Add the given symbol to the current variable scope.
-    void add_symbol(const Name &name, Variable *v, Type ty);
+    void add_symbol(const Name &name, Variable *v);
     // Return the variable from the symbol table corresponding to the
     // given variable. The given variable is then deleted. If there is no
     // symbol table entry, abort.
