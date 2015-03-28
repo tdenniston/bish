@@ -41,8 +41,8 @@ std::ostream &operator<<(std::ostream &os, const IRDebugInfo &a);
 
 class IRNode {
 public:
-    IRNode() : type_(UndefinedTy), parent_(NULL) {}
-    IRNode(const IRDebugInfo &info) : type_(UndefinedTy), parent_(NULL), debug_info_(info) {}
+    IRNode() : type_(Type::Undef()), parent_(NULL) {}
+    IRNode(const IRDebugInfo &info) : type_(Type::Undef()), parent_(NULL), debug_info_(info) {}
     virtual ~IRNode() {}
     virtual void accept(IRVisitor *v) = 0;
     Type type() const { return type_; }

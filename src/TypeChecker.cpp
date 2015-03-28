@@ -7,14 +7,14 @@
 using namespace Bish;
 
 void TypeChecker::visit(ReturnStatement *node) {
-    if (visited(node) || node->type() != UndefinedTy) return;
+    if (visited(node) || node->type().defined()) return;
     visited_set.insert(node);
     node->value->accept(this);
     node->set_type(node->value->type());
     // Propagate type of this return statement to the parent function.
     Function *f = dynamic_cast<Function*>(node->parent()->parent());
     assert(f);
-    if (f->type() != UndefinedTy) {
+    if (f->type().defined()) {
         bish_assert(f->type() == node->value->type()) <<
             "Invalid return type for function " << node->debug_info();
     }
@@ -22,7 +22,7 @@ void TypeChecker::visit(ReturnStatement *node) {
 }
 
 void TypeChecker::visit(Function *node) {
-    if (visited(node) || node->type() != UndefinedTy) return;
+    if (visited(node) || node->type().defined()) return;
     visited_set.insert(node);
     for (std::vector<Variable *>::const_iterator I = node->args.begin(),
              E = node->args.end(); I != E; ++I) {
@@ -32,7 +32,7 @@ void TypeChecker::visit(Function *node) {
 }
 
 void TypeChecker::visit(FunctionCall *node) {
-    if (visited(node) || node->type() != UndefinedTy) return;
+    if (visited(node) || node->type().defined()) return;
     visited_set.insert(node);
     node->function->accept(this);
     unsigned i = 0;
@@ -41,7 +41,7 @@ void TypeChecker::visit(FunctionCall *node) {
     for (std::vector<IRNode *>::const_iterator I = node->args.begin(),
              E = node->args.end(); I != E; ++I, ++i) {
         (*I)->accept(this);
-        if (node->function->args[i]->type() != UndefinedTy) {
+        if (node->function->args[i]->type().defined()) {
             bish_assert((*I)->type() == node->function->args[i]->type()) <<
                 "Invalid argument type for function call " << node->debug_info();
         }
@@ -50,27 +50,27 @@ void TypeChecker::visit(FunctionCall *node) {
 }
 
 void TypeChecker::visit(ExternCall *node) {
-    if (visited(node) || node->type() != UndefinedTy) return;
+    if (visited(node) || node->type().defined()) return;
     visited_set.insert(node);
-    node->set_type(UndefinedTy);
+    node->set_type(Type::Undef());
 }
 
 void TypeChecker::visit(IORedirection *node) {
-    if (node->type() != UndefinedTy) return;
+    if (node->type().defined()) return;
     node->a->accept(this);
     node->b->accept(this);
-    node->set_type(UndefinedTy);
+    node->set_type(Type::Undef());
 }
 
 void TypeChecker::visit(Assignment *node) {
-    if (visited(node) || node->type() != UndefinedTy) return;
+    if (visited(node) || node->type().defined()) return;
     visited_set.insert(node);
     node->location->accept(this);
-    Type ty = UndefinedTy;
+    Type ty = Type::Undef();
     for (std::vector<IRNode *>::const_iterator I = node->values.begin(),
              E = node->values.end(); I != E; ++I) {
         (*I)->accept(this);
-        if (ty != UndefinedTy) {
+        if (ty.defined()) {
             bish_assert((*I)->type() == ty) <<
                 "Mixed types in array assignment " << node->debug_info();
         } else {
@@ -78,7 +78,7 @@ void TypeChecker::visit(Assignment *node) {
         }
     }
     Location *loc = node->location;
-    if (loc->variable->type() != UndefinedTy && ty != UndefinedTy) {
+    if (loc->variable->type().defined() && ty.defined()) {
         bish_assert(loc->variable->type() == ty) <<
             "Invalid type in assignment " << node->debug_info();
     } else {
@@ -89,7 +89,7 @@ void TypeChecker::visit(Assignment *node) {
 }
 
 void TypeChecker::visit(BinOp *node) {
-    if (visited(node) || node->type() != UndefinedTy) return;
+    if (visited(node) || node->type().defined()) return;
     visited_set.insert(node);
     node->a->accept(this);
     node->b->accept(this);
@@ -105,7 +105,7 @@ void TypeChecker::visit(BinOp *node) {
     case BinOp::GTE:
     case BinOp::And:
     case BinOp::Or:
-        node->set_type(BooleanTy);
+        node->set_type(Type::Boolean());
         break;
     case BinOp::Add:
     case BinOp::Sub:
@@ -125,25 +125,25 @@ void TypeChecker::visit(UnaryOp *node) {
 }
 
 void TypeChecker::visit(Integer *node) {
-    node->set_type(IntegerTy);
+    node->set_type(Type::Integer());
 }
 
 void TypeChecker::visit(Fractional *node) {
-    node->set_type(FractionalTy);
+    node->set_type(Type::Fractional());
 }
 
 void TypeChecker::visit(String *node) {
-    node->set_type(StringTy);
+    node->set_type(Type::String());
 }
 
 void TypeChecker::visit(Boolean *node) {
-    node->set_type(BooleanTy);
+    node->set_type(Type::Boolean());
 }
 
 void TypeChecker::propagate_if_undef(IRNode *a, IRNode *b) {
-    if (a->type() == UndefinedTy) {
+    if (a->type().undef()) {
         a->set_type(b->type());
-    } else if (b->type() == UndefinedTy) {
+    } else if (b->type().undef()) {
         b->set_type(a->type());
     }
 }

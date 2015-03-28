@@ -104,15 +104,15 @@ void Module::import(Module *m) {
 
 Type get_primitive_type(const IRNode *n) {
     if (const Integer *v = dynamic_cast<const Integer*>(n)) {
-        return IntegerTy;
+        return Type::Integer();
     } else if (const Fractional *v = dynamic_cast<const Fractional*>(n)) {
-        return FractionalTy;
+        return Type::Fractional();
     } else if (const String *v = dynamic_cast<const String*>(n)) {
-        return StringTy;
+        return Type::String();
     } else if (const Boolean *v = dynamic_cast<const Boolean*>(n)) {
-        return BooleanTy;
+        return Type::Boolean();
     } else {
-        return UndefinedTy;
+        return Type::Undef();
     }
 }
 
