@@ -336,7 +336,7 @@ IRNode *Parser::otherstmt() {
 }
 
 Assignment *Parser::assignment(const Name &name) {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     bish_assert(!scope.lookup_function(name)) << "Cannot assign to function \"" <<
         name.str() << "\" near " << tokenizer->position();
     Variable *v = scope.lookup_or_new_var(name);
@@ -360,11 +360,11 @@ Assignment *Parser::assignment(const Name &name) {
     }
 
     Location *loc = new Location(v, offset);
-    return new Assignment(loc, values, tokenizer->end_debug_info());
+    return new Assignment(loc, values, debug_info.get());
 }
 
 FunctionCall *Parser::funcall(const Name &name) {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     bish_assert(!scope.lookup_variable(name)) << "Symbol \"" <<
         name.str() << "\" near " << tokenizer->position() << " is not a function.";
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
@@ -374,53 +374,52 @@ FunctionCall *Parser::funcall(const Name &name) {
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     Function *f = scope.lookup_or_new_function(name);
-    return new FunctionCall(f, args, tokenizer->end_debug_info());
+    return new FunctionCall(f, args, debug_info.get());
 }
 
 ExternCall *Parser::externcall() {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     expect(tokenizer->peek(), Token::AtType, "Expected '@' to begin extern call.");
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     InterpolatedString *body = interpolated_string(Token::RParen(), false);
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
-    return new ExternCall(body, tokenizer->end_debug_info());
+    return new ExternCall(body, debug_info.get());
 }
 
 ImportStatement *Parser::importstmt() {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     expect(tokenizer->peek(), Token::ImportType, "Expected import statement");
     std::string module_name = strip(scan_until(Token::Semicolon()));
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
     if (namespaces.find(module_name) == namespaces.end()) {
         namespaces.insert(module_name);
-        return new ImportStatement(scope.module(), module_name, tokenizer->end_debug_info());
+        return new ImportStatement(scope.module(), module_name, debug_info.get());
     } else {
         // Ignore duplicate imports.
-        tokenizer->end_debug_info();
         return NULL;
     }
 }
 
 ReturnStatement *Parser::returnstmt() {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     expect(tokenizer->peek(), Token::ReturnType, "Expected return statement");
     IRNode *ret = expr();
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
-    return new ReturnStatement(ret, tokenizer->end_debug_info());
+    return new ReturnStatement(ret, debug_info.get());
 }
 
 LoopControlStatement *Parser::breakstmt() {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     expect(tokenizer->peek(), Token::BreakType, "Expected break statement");
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
-    return new LoopControlStatement(LoopControlStatement::Break, tokenizer->end_debug_info());
+    return new LoopControlStatement(LoopControlStatement::Break, debug_info.get());
 }
 
 LoopControlStatement *Parser::continuestmt() {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     expect(tokenizer->peek(), Token::ContinueType, "Expected continue statement");
     expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
-    return new LoopControlStatement(LoopControlStatement::Continue, tokenizer->end_debug_info());
+    return new LoopControlStatement(LoopControlStatement::Continue, debug_info.get());
 }
 
 IfStatement *Parser::ifstmt() {
@@ -499,14 +498,12 @@ Function *Parser::functiondef() {
 }
 
 IRNode *Parser::expr() {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     IRNode *a = logical();
     Token t = tokenizer->peek();
     if (t.isa(Token::PipeType)) {
         tokenizer->next();
-        a = new IORedirection(get_redirection_operator(t), a, logical(), tokenizer->end_debug_info());
-    } else {
-        tokenizer->end_debug_info();
+        a = new IORedirection(get_redirection_operator(t), a, logical(), debug_info.get());
     }
     return a;
 }
@@ -522,84 +519,76 @@ std::vector<IRNode *> Parser::exprlist() {
 }
 
 IRNode *Parser::logical() {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     IRNode *a = equality();
     Token t = tokenizer->peek();
     while (t.isa(Token::AndType) || t.isa(Token::OrType)) {
         tokenizer->next();
-        a = new BinOp(get_binop_operator(t), a, equality(), tokenizer->end_debug_info());
-        tokenizer->start_debug_info();
+        a = new BinOp(get_binop_operator(t), a, equality(), debug_info.get());
+        debug_info = Tokenizer::Info(tokenizer);
         t = tokenizer->peek();
     }
-    tokenizer->end_debug_info();
     return a;
 }
 
 IRNode *Parser::equality() {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     IRNode *a = relative();
     Token t = tokenizer->peek();
     if (t.isa(Token::DoubleEqualsType) || t.isa(Token::NotEqualsType)) {
         tokenizer->next();
-        a = new BinOp(get_binop_operator(t), a, relative(), tokenizer->end_debug_info());
+        a = new BinOp(get_binop_operator(t), a, relative(), debug_info.get());
         t = tokenizer->peek();
-    } else {
-        tokenizer->end_debug_info();
     }
     return a;
 }
 
 IRNode *Parser::relative() {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     IRNode *a = arith();
     Token t = tokenizer->peek();
     if (t.isa(Token::LAngleType) || t.isa(Token::LAngleEqualsType) ||
         t.isa(Token::RAngleType) || t.isa(Token::RAngleEqualsType)) {
         tokenizer->next();
-        a = new BinOp(get_binop_operator(t), a, arith(), tokenizer->end_debug_info());
+        a = new BinOp(get_binop_operator(t), a, arith(), debug_info.get());
         t = tokenizer->peek();
-    } else {
-        tokenizer->end_debug_info();
     }
     return a;
 }
 
 IRNode *Parser::arith() {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     IRNode *a = term();
     Token t = tokenizer->peek();
     while (t.isa(Token::PlusType) || t.isa(Token::MinusType)) {
         tokenizer->next();
-        a = new BinOp(get_binop_operator(t), a, term(), tokenizer->end_debug_info());
-        tokenizer->start_debug_info();
+        a = new BinOp(get_binop_operator(t), a, term(), debug_info.get());
+        debug_info = Tokenizer::Info(tokenizer);
         t = tokenizer->peek();
     }
-    tokenizer->end_debug_info();
     return a;
 }
 
 IRNode *Parser::term() {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     IRNode *a = unary();
     Token t = tokenizer->peek();
     while (t.isa(Token::StarType) || t.isa(Token::SlashType) || t.isa(Token::PercentType)) {
         tokenizer->next();
-        a = new BinOp(get_binop_operator(t), a, unary(), tokenizer->end_debug_info());
-        tokenizer->start_debug_info();
+        a = new BinOp(get_binop_operator(t), a, unary(), debug_info.get());
+        debug_info = Tokenizer::Info(tokenizer);
         t = tokenizer->peek();
     }
-    tokenizer->end_debug_info();
     return a;
 }
 
 IRNode *Parser::unary() {
-    tokenizer->start_debug_info();
+    Tokenizer::Info debug_info(tokenizer);
     Token t = tokenizer->peek();
     if (is_unop_token(t)) {
         tokenizer->next();
-        return new UnaryOp(get_unaryop_operator(t), factor(), tokenizer->end_debug_info());
+        return new UnaryOp(get_unaryop_operator(t), factor(), debug_info.get());
     } else {
-        tokenizer->end_debug_info();
         return factor();
     }
 }

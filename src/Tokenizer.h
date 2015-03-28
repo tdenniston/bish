@@ -289,10 +289,23 @@ public:
     // Return a human-readable representation of the current position
     // in the string.
     std::string position() const;
-    // Start a debug record.
-    void start_debug_info();
-    // Finish a debug record and return it.
-    IRDebugInfo end_debug_info();
+
+    // Helper class used to manage fetching debug info.
+    class Info {
+    public:
+        Info(Tokenizer *t) : tokenizer(t) {
+            tokenizer->start_debug_info();
+        }
+        ~Info() {
+            tokenizer->end_debug_info();
+        }
+        IRDebugInfo get() {
+            return tokenizer->get_debug_info();
+        }
+    private:
+        Tokenizer *tokenizer;
+    };
+
 private:
     typedef std::pair<Token, unsigned> ResultState;
     std::stack<IRDebugInfo> debug_info_stack;
@@ -300,6 +313,13 @@ private:
     const std::string &text;
     unsigned idx;
     unsigned lineno;
+
+    // Start a debug record.
+    void start_debug_info();
+    // Finish a debug record.
+    void end_debug_info();
+    // Return the top debug record.
+    IRDebugInfo get_debug_info();
 
     // Return the current character.
     inline char curchar() const;

@@ -110,10 +110,14 @@ void Tokenizer::start_debug_info() {
     debug_info_stack.push(record);
 }
 
-// Finish a debug record and return it.
-IRDebugInfo Tokenizer::end_debug_info() {
-    IRDebugInfo record = debug_info_stack.top();
+// Finish a debug record.
+void Tokenizer::end_debug_info() {
     debug_info_stack.pop();
+}
+
+// Return the top debug record.
+IRDebugInfo Tokenizer::get_debug_info() {
+    IRDebugInfo record = debug_info_stack.top();
     record.end = idx;
     return record;
 }
