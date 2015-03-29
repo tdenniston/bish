@@ -1,6 +1,7 @@
 #ifndef __BISH_ERRORS_H__
 #define __BISH_ERRORS_H__
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <sstream>
