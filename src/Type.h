@@ -13,7 +13,6 @@ private:
     InternalType type;
     Type *element_type;
     Type(InternalType ty) : type(ty), element_type(NULL) {}
-    Type(InternalType ty, Type elty) : type(ty), element_type(new Type(elty)) {}
 public:
     Type(const Type &ty) : type(ty.type) {
         if (ty.element_type) {
@@ -65,6 +64,10 @@ public:
         case ArrayTy:
             return "array[?]";
         }
+    }
+
+    Type operator=(const Type &b) {
+        return Type(b);
     }
     
     bool operator==(const Type &b) const {

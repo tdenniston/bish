@@ -45,8 +45,8 @@ public:
     IRNode(const IRDebugInfo &info) : type_(Type::Undef()), parent_(NULL), debug_info_(info) {}
     virtual ~IRNode() {}
     virtual void accept(IRVisitor *v) = 0;
-    Type type() const { return type_; }
-    void set_type(Type t) { type_ = t; }
+    const Type &type() const { return type_; }
+    void set_type(const Type &t) { type_ = t; }
     IRNode *parent() const { return parent_; }
     void set_parent(IRNode *p) { parent_ = p; }
     IRDebugInfo debug_info() const { return debug_info_; }

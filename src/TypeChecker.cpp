@@ -78,11 +78,25 @@ void TypeChecker::visit(Assignment *node) {
         }
     }
     Location *loc = node->location;
-    if (loc->variable->type().defined() && ty.defined()) {
-        bish_assert(loc->variable->type() == ty) <<
-            "Invalid type in assignment " << node->debug_info();
+    bool array_initialization = node->values.size() > 1;
+    Type dest_ty = loc->is_array_ref() && loc->variable->type().defined() ? loc->variable->type().element() : loc->variable->type();
+    Type array_ty = Type::Array(ty);
+    if (dest_ty.defined() && ty.defined()) {
+        if (array_initialization) {
+            bish_assert(dest_ty == array_ty) <<
+                "Invalid type in array assignment " << node->debug_info();
+        } else {
+            bish_assert(dest_ty == ty) <<
+                "Invalid type in assignment " << node->debug_info();
+        }
     } else {
-        loc->variable->set_type(ty);
+        if (loc->variable->type().undef()) {
+            if (array_initialization) {
+                loc->variable->set_type(array_ty);
+            } else {
+                loc->variable->set_type(ty);
+            }
+        }
         loc->set_type(ty);
     }
     node->set_type(loc->type());
