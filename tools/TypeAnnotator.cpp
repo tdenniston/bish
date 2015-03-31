@@ -155,9 +155,16 @@ public:
     void visit(Assignment *n) {
         if (visited(n)) return;
         visited_set.insert(n);
-        n->variable->accept(this);
+        bool array_init = n->values.size() > 1;
+        n->location->accept(this);
         stream << " = ";
-        n->value->accept(this);
+        if (array_init) stream << "[";
+        const unsigned sz = n->values.size();
+        for (unsigned i = 0; i < sz; i++) {
+            n->values[i]->accept(this);
+            if (i < sz - 1) stream << ", ";
+        }
+        if (array_init) stream << "]";
     }
 
     void visit(BinOp *n) {
@@ -249,20 +256,8 @@ private:
         }
     }
     std::string strtype(IRNode *n) {
-        switch (n->type()) {
-        case UndefinedTy:
-            return "undef";
-        case IntegerTy:
-            return "int";
-        case FractionalTy:
-            return "float";
-        case StringTy:
-            return "string";
-        case BooleanTy:
-            return "bool";
-        }
+        return n->type().str();
     }
-
 };
 
 int main(int argc, char **argv) {

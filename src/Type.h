@@ -22,7 +22,9 @@ public:
             element_type = NULL;
         }
     }
-    ~Type() { if (element_type) delete element_type; }
+    ~Type() {
+        if (element_type) delete element_type;
+    }
 
     static Type Undef() { return Type(UndefinedTy); }
     static Type Integer() { return Type(IntegerTy); }
@@ -48,6 +50,23 @@ public:
         return *element_type;
     }
 
+    std::string str() const {
+        switch (type) {
+        case UndefinedTy:
+            return "undef";
+        case IntegerTy:
+            return "int";
+        case FractionalTy:
+            return "frac";
+        case StringTy:
+            return "string";
+        case BooleanTy:
+            return "bool";
+        case ArrayTy:
+            return "array[?]";
+        }
+    }
+    
     bool operator==(const Type &b) const {
         return type == b.type && element_type == b.element_type;
     }
