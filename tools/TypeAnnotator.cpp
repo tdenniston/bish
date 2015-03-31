@@ -28,7 +28,7 @@ public:
             stream << ";\n";
         }
     }
-    
+
     void visit(ReturnStatement *n) {
         if (visited(n)) return;
         visited_set.insert(n);
@@ -54,7 +54,17 @@ public:
     }
 
     void visit(Variable *n) {
-        stream << n->name.str() << "[:" << strtype(n) << "]";
+        stream << n->name.str() << strtype(n);
+    }
+
+    void visit(Location *n) {
+        n->variable->accept(this);
+        if (n->offset) {
+            stream << "[";
+            n->offset->accept(this);
+            stream << "]";
+            stream << strtype(n);
+        }
     }
 
     void visit(IfStatement *n) {
@@ -94,7 +104,7 @@ public:
     void visit(Function *n) {
         if (visited(n)) return;
         visited_set.insert(n);
-        stream << "def " << n->name.str() << "[:" << strtype(n) << "] (";
+        stream << "def " << n->name.str() << strtype(n) << " (";
         const int nargs = n->args.size();
         int i = 0;
         for (std::vector<Variable *>::const_iterator I = n->args.begin(),
@@ -256,7 +266,7 @@ private:
         }
     }
     std::string strtype(IRNode *n) {
-        return n->type().str();
+        return "{:" + n->type().str() + "}";
     }
 };
 
