@@ -13,6 +13,14 @@ private:
     InternalType type;
     Type *element_type;
     Type(InternalType ty) : type(ty), element_type(NULL) {}
+    void swap(Type &b) {
+        InternalType tmpty = type;
+        Type *tmpelt = element_type;
+        type = b.type;
+        element_type = b.element_type;
+        b.type = tmpty;
+        b.element_type = tmpelt;
+    }
 public:
     Type(const Type &ty) : type(ty.type) {
         if (ty.element_type) {
@@ -66,10 +74,11 @@ public:
         }
     }
 
-    Type operator=(const Type &b) {
-        return Type(b);
+    Type &operator=(Type b) {
+        swap(b);
+        return *this;
     }
-    
+
     bool operator==(const Type &b) const {
         return type == b.type && element_type == b.element_type;
     }
