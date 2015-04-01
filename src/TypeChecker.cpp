@@ -6,6 +6,18 @@
 
 using namespace Bish;
 
+void TypeChecker::visit(Location *node) {
+    if (visited(node) || node->type().defined()) return;
+    visited_set.insert(node);
+    if (node->is_array_ref()) {
+        bish_assert(node->variable->type().array()) <<
+            "Invalid use of array reference on non-array variable";
+        node->set_type(node->variable->type().element());
+    } else {
+        node->set_type(node->variable->type());
+    }
+}
+
 void TypeChecker::visit(ReturnStatement *node) {
     if (visited(node) || node->type().defined()) return;
     visited_set.insert(node);
@@ -91,13 +103,21 @@ void TypeChecker::visit(Assignment *node) {
         }
     } else {
         if (loc->variable->type().undef()) {
+            loc->variable->set_type(array_initialization ? array_ty : ty);
+        } else {
+            dest_ty = loc->is_array_ref() ? loc->variable->type().element() : loc->variable->type();
             if (array_initialization) {
-                loc->variable->set_type(array_ty);
+                bish_assert(dest_ty == array_ty) <<
+                    "Invalid type in reassignment " << node->debug_info();
             } else {
-                loc->variable->set_type(ty);
+                bish_assert(dest_ty == ty) <<
+                    "Invalid type in reassignment " << node->debug_info() <<
+                    "\nexpected " << dest_ty.str() << " got " << ty.str();
             }
         }
-        loc->set_type(ty);
+    }
+    if (loc->type().undef()) {
+        loc->set_type(loc->is_array_ref() ? loc->variable->type().element() : loc->variable->type());
     }
     node->set_type(loc->type());
 }
