@@ -32,6 +32,7 @@ public:
 
     std::string str() const {
         std::stringstream s;
+        if (file.empty()) return "";
         s << "in file '" << file << "' line " << lineno << ":\n    ";
         s << strip(read_line_from_file(file, lineno));
         return s.str();
