@@ -56,6 +56,8 @@ void TypeChecker::visit(FunctionCall *node) {
         if (node->function->args[i]->type().defined()) {
             bish_assert((*I)->type() == node->function->args[i]->type()) <<
                 "Invalid argument type for function call " << node->debug_info();
+        } else {
+            node->function->args[i]->set_type((*I)->type());
         }
     }
     node->set_type(node->function->type());

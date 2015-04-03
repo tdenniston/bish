@@ -287,7 +287,7 @@ int main(int argc, char **argv) {
     CodeGenerators::CodeGeneratorConstructor cg_constructor =
         CodeGenerators::get("bash");
     assert(cg_constructor);
-    compile_to(m, cg_constructor(s));
+    compile(m, cg_constructor(s));
 
     TypeAnnotator annotate(std::cout);
     m->accept(&annotate);
