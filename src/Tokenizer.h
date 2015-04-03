@@ -202,7 +202,7 @@ public:
     }
 
     static Token RAngleEquals() {
-        return Token(DoubleEqualsType, ">=");
+        return Token(RAngleEqualsType, ">=");
     }
 
     static Token Plus() {
