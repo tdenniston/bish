@@ -80,7 +80,12 @@ public:
     }
 
     bool operator==(const Type &b) const {
-        return type == b.type && element_type == b.element_type;
+        bool result = type == b.type;
+        result &= (element_type == NULL) == (b.element_type == NULL);
+        if (result && element_type) {
+            result &= *element_type == *b.element_type;
+        }
+        return result;
     }
 };
 
