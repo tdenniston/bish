@@ -14,6 +14,15 @@ def arrays() {
     arr[0] = arr[0] + 1;
     assert(arr[0] == 4 and arr[1] == 2 and arr[2] == 3);
     assert(array_length(arr) == 3);
+    arr[3] = 4;
+    assert(array_length(arr) == 4);
+
+    values = [1, 2, 3, 4];
+    sum = 0;
+    for (v in values) {
+        sum = sum + v;
+    }
+    assert(sum == 10);
 }
 
 def test() {

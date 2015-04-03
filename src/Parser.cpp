@@ -490,11 +490,11 @@ ForLoop *Parser::forloop() {
         tokenizer->next();
         upper = atom();
     }
-    if (Variable *lv = dynamic_cast<Variable*>(lower)) {
-        lower = scope.get_defined_variable(lv);
+    if (Location *loc = dynamic_cast<Location*>(lower)) {
+        lower = scope.get_defined_variable(loc->variable);
     }
-    if (Variable *uv = dynamic_cast<Variable*>(upper)) {
-        upper = scope.get_defined_variable(uv);
+    if (Location *loc = dynamic_cast<Location*>(upper)) {
+        upper = scope.get_defined_variable(loc->variable);
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     IRNode *body = block();
