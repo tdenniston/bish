@@ -84,13 +84,12 @@ int main(int argc, char **argv) {
 
     Bish::CodeGenerators::CodeGeneratorConstructor cg_constructor =
         Bish::CodeGenerators::get(code_generator_name);
-
     if (cg_constructor == NULL) {
         std::cerr << "No code generator " << code_generator_name << std::endl;
         return 1;
     }
-
-    Bish::compile_to(m, cg_constructor(run_after_compile ? s : std::cout) );
+    Bish::CodeGenerator *cg = cg_constructor(run_after_compile ? s : std::cout);
+    Bish::compile(m, cg);
     if (run_after_compile) {
         const int exit_status = run_on(code_generator_name, s);
         exit(exit_status);
