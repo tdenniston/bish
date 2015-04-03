@@ -112,12 +112,14 @@ void CodeGen_Bash::visit(LoopControlStatement *n) {
 
 void CodeGen_Bash::visit(IfStatement *n) {
     stream << "if [[ ";
+    // Disable comparison wrap because this is within [[ ... ]]
+    disable_comparison_wrap();
     enable_functioncall_wrap();
     n->pblock->condition->accept(this);
-    if (is_equals_op(n->pblock->condition) ||
-        !dynamic_cast<BinOp*>(n->pblock->condition)) {
+    if (!dynamic_cast<BinOp*>(n->pblock->condition)) {
         stream << " -eq 1";
     }
+    enable_comparison_wrap();
     reset_functioncall_wrap();
     stream << " ]]; then\n";
     disable_block_braces();
@@ -250,17 +252,15 @@ void CodeGen_Bash::visit(Assignment *n) {
 
 void CodeGen_Bash::visit(BinOp *n) {
     std::string bash_op;
-    bool comparison = false, equals = false, string = false;
+    bool comparison = false, string = false;
     string = n->a->type().string() || n->b->type().string();
     switch (n->op) {
     case BinOp::Eq:
         bash_op = string ? "==" : "-eq";
-        equals = true;
         comparison = true;
         break;
     case BinOp::NotEq:
         bash_op = string ? "!=" : "-ne";
-        equals = true;
         comparison = true;
         break;
     case BinOp::LT:
@@ -313,13 +313,13 @@ void CodeGen_Bash::visit(BinOp *n) {
         stream << "$([[ ";
     }
 
-    if (equals && should_comparison_wrap()) stream << "$([[ ";
+    if (comparison && should_comparison_wrap()) stream << "$([[ ";
     if (!comparison) stream << "$((";
     if (!string) disable_quote_variable();
     n->a->accept(this);
     stream << " " << bash_op << " ";
     n->b->accept(this);
-    if (equals && should_comparison_wrap()) stream << " ]] && echo 1 || echo 0)";
+    if (comparison && should_comparison_wrap()) stream << " ]] && echo 1 || echo 0)";
     if (!comparison) stream << "))";
     if (!string) reset_quote_variable();
 
