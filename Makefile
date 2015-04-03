@@ -6,8 +6,8 @@ SRC=src
 OBJ=obj
 BIN=/usr/bin
 
-SOURCE_FILES=CallGraph.cpp CodeGen.cpp CodeGen_Bash.cpp Compile.cpp FindCalls.cpp IR.cpp IRAncestorsPass.cpp IRVisitor.cpp LineOrientedBuffer.cpp LinkImportsPass.cpp Parser.cpp SymbolTable.cpp Tokenizer.cpp TypeChecker.cpp Util.cpp
-HEADER_FILES=CallGraph.h CodeGen.h CodeGen_Bash.h Compile.h FindCalls.h IR.h IRAncestorsPass.h IRVisitor.h LineOrientedBuffer.h LinkImportsPass.h Parser.h SymbolTable.h Tokenizer.h TypeChecker.h Util.h
+SOURCE_FILES=ByReferencePass.cpp CallGraph.cpp CodeGen.cpp CodeGen_Bash.cpp Compile.cpp FindCalls.cpp IR.cpp IRAncestorsPass.cpp IRVisitor.cpp LineOrientedBuffer.cpp LinkImportsPass.cpp Parser.cpp SymbolTable.cpp Tokenizer.cpp TypeChecker.cpp Util.cpp
+HEADER_FILES=ByReferencePass.h CallGraph.h CodeGen.h CodeGen_Bash.h Compile.h FindCalls.h IR.h IRAncestorsPass.h IRVisitor.h LineOrientedBuffer.h LinkImportsPass.h Parser.h SymbolTable.h Tokenizer.h TypeChecker.h Util.h
 
 OBJECTS = $(SOURCE_FILES:%.cpp=$(OBJ)/%.o)
 HEADERS = $(HEADER_FILES:%.h=$(SRC)/%.h)

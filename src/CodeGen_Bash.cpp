@@ -43,9 +43,18 @@ void CodeGen_Bash::visit(Block *n) {
         Function *f = function_args_insert.top();
         function_args_insert.pop();
         unsigned i = 1;
-        for (std::vector<Variable *>::const_iterator I = f->args.begin(), E = f->args.end(); I != E; ++I, ++i) {
+        for (std::vector<Variable *>::const_iterator I = f->args.begin(), E = f->args.end(); I != E; ++I) {
             indent();
-            stream << "local " << (*I)->name.str() << "=\"$" << i << "\";\n";
+            stream << "local " << (*I)->name.str() << "=";
+            if ((*I)->is_reference()) {
+                bool array = (*I)->type().array();
+                if (array) stream << "( ";
+                (*I)->reference->accept(this);
+                if (array) stream << " )";
+                stream << ";\n";
+            } else {
+                stream << "\"$" << i++ << "\";\n";
+            }
         }
     }
 
@@ -68,14 +77,22 @@ void CodeGen_Bash::visit(Block *n) {
 
 void CodeGen_Bash::visit(Variable *n) {
     if (should_quote_variable()) stream << "\"";
-    stream << "$" << lookup_name(n);
+    bool array = n->type().array();
+    stream << "$";
+    if (array) stream << "{";
+    stream << lookup_name(n);
+    if (array) stream << "[@]}";
     if (should_quote_variable()) stream << "\"";
 }
 
 void CodeGen_Bash::visit(Location *n) {
     if (should_quote_variable()) stream << "\"";
     if (n->is_variable()) {
-        stream << "$" << lookup_name(n->variable);
+        bool array = n->variable->type().array();
+        stream << "$";
+        if (array) stream << "{";
+        stream << lookup_name(n->variable);
+        if (array) stream << "[@]}";
     } else {
         assert(n->is_array_ref());
         stream << "${" << lookup_name(n->variable) << "[";
@@ -180,6 +197,9 @@ void CodeGen_Bash::visit(FunctionCall *n) {
     if (should_functioncall_wrap()) stream << "$(";
     stream << n->function->name.str();
     for (int i = 0; i < nargs; i++) {
+        // Variables passed by reference are communicated by a global
+        // variable, not a function argument.
+        if (n->function->args[i]->is_reference()) continue;
         Variable *arg = n->args[i]->location->variable;
         assert(arg);
         stream << " ";
@@ -241,12 +261,13 @@ void CodeGen_Bash::visit(Assignment *n) {
     enable_functioncall_wrap();
     const int nvals = n->values.size();
     assert(nvals > 0);
-    if (nvals > 1) stream << "( ";
+    bool array = nvals > 1 || n->values[0]->type().array();
+    if (array) stream << "( ";
     for (int i = 0; i < nvals; i++) {
         n->values[i]->accept(this);
         if (i < nvals - 1) stream << " ";
     }
-    if (nvals > 1) stream << " )";
+    if (array) stream << " )";
     reset_functioncall_wrap();
 }
 

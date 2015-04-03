@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstdlib>
+#include "ByReferencePass.h"
 #include "CodeGen.h"
 #include "CodeGen_Bash.h"
 #include "Compile.h"
@@ -28,6 +29,11 @@ void link_time_passes(Bish::Module *m) {
     // Type checking
     TypeChecker types;
     m->accept(&types);
+
+    // Adjust the IR to handle values that should be passed by
+    // reference (e.g. arrays) to functions.
+    ByReferencePass refs;
+    m->accept(&refs);
 }
 
 }

@@ -134,9 +134,16 @@ public:
 
 class Variable : public BaseIRNode<Variable> {
 public:
+    // Name of the variable
     Name name;
+    // True if this variable is a global variable
     bool global;
-    Variable(const Name &n) : name(n), global(false) {}
+    // If non-NULL, this Variable is a reference to 'reference'.
+    Variable *reference;
+    Variable(const Name &n) : name(n), global(false), reference(NULL) {}
+    
+    void set_reference(Variable *r) { reference = r; }
+    bool is_reference() const { return reference != NULL; }
 };
 
 class Location : public BaseIRNode<Location> {
