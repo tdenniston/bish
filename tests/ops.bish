@@ -17,7 +17,17 @@ def ops() {
     assert(a == 3 and b == 4 and c == 5);
     assert(a + b == 7 and b + c == 9);
 
+    if (a > b) {
+       assert(false);
+    }
+
+    assert(a < b);
+    assert(b > a);
     assert(a < b and b > a);
+    assert(1 < 2);
+    assert(2 < a);
+    assert(1 <= 2);
+    assert(2 >= 1);
     assert(a + 1 <= b);
     assert(a + 1 >= b);
 }
@@ -26,3 +36,5 @@ def test() {
     ops();
     println("Operator tests passed.");
 }
+
+test();

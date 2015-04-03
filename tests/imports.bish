@@ -10,3 +10,5 @@ def test() {
     imports();
     println("Import tests passed.");
 }
+
+test();

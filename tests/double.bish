@@ -27,3 +27,5 @@ def test() {
 
     println("Loops test passed.");
 }
+
+test();

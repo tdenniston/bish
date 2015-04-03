@@ -9,3 +9,5 @@ def test() {
     assert(fib(5) == 8);
     println("Fib test passed.");
 }
+
+test();

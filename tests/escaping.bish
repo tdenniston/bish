@@ -15,3 +15,5 @@ def test() {
     output = escaping();
     println("Escaped tokens tests passed.");
 }
+
+test();

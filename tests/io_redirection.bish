@@ -25,3 +25,5 @@ def test() {
     pipes();
     println("I/O redirection tests passed.");
 }
+
+test();
