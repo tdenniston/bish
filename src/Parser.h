@@ -56,6 +56,7 @@ class ParseScope {
 public:
     ParseScope() {
         function_symbol_table = new SymbolTable();
+        unique_id = 0;
     }
 
     ~ParseScope() {
@@ -74,6 +75,8 @@ public:
     void pop_symbol_table();
     // Add the given symbol to the current variable scope.
     void add_symbol(const Name &name, Variable *v);
+    // Return a name that is guaranteed to be unique.
+    Name get_unique_name();
     // Return the variable from the symbol table corresponding to the
     // given variable. The given variable is then deleted. If there is no
     // symbol table entry, abort.
@@ -97,6 +100,8 @@ private:
     std::stack<SymbolTable *> symbol_table_stack;
     // Symbol table for functions (which are defined globally).
     SymbolTable *function_symbol_table;
+    // Counter for unique names.
+    unsigned unique_id;
 };
 
 class Parser {
@@ -110,6 +115,7 @@ private:
     ParseScope scope;
     Tokenizer *tokenizer;
     std::set<std::string> namespaces;
+    std::stack<Block *> block_stack;
 
     std::string read_stream(std::istream &is);
     std::string read_file(const std::string &path);
@@ -121,7 +127,9 @@ private:
     std::string scan_until(char c);
     void setup_global_variables(Module *m);
     void post_parse_passes(Module *m);
-
+    void push_block(Block *b);
+    void pop_block();
+    
     Module *module(const std::string &path);
     Block *block();
     IRNode *stmt();

@@ -59,7 +59,7 @@ void IRAncestorsPass::visit(Function *node) {
 }
 
 void IRAncestorsPass::visit(FunctionCall *node) {
-    for (std::vector<IRNode *>::const_iterator I = node->args.begin(),
+    for (std::vector<Assignment *>::const_iterator I = node->args.begin(),
              E = node->args.end(); I != E; ++I) {
         (*I)->accept(this);
     }

@@ -50,7 +50,7 @@ void TypeChecker::visit(FunctionCall *node) {
     unsigned i = 0;
     bish_assert(node->function->body != NULL) <<
         "Calling an undefined function " << node->debug_info();
-    for (std::vector<IRNode *>::const_iterator I = node->args.begin(),
+    for (std::vector<Assignment *>::const_iterator I = node->args.begin(),
              E = node->args.end(); I != E; ++I, ++i) {
         (*I)->accept(this);
         if (node->function->args[i]->type().defined()) {

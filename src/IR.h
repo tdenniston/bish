@@ -74,6 +74,7 @@ class Block : public BaseIRNode<Block> {
 public:
     typedef std::vector<IRNode *>::iterator iterator;
     std::vector<IRNode *> nodes;
+    Block() {}
     Block(const std::vector<IRNode *> &n) {
         nodes.insert(nodes.begin(), n.begin(), n.end());
     }
@@ -289,11 +290,11 @@ public:
 class FunctionCall : public BaseIRNode<FunctionCall> {
 public:
     Function *function;
-    std::vector<IRNode *> args;
+    std::vector<Assignment *> args;
     FunctionCall(Function *f, const IRDebugInfo &info) : BaseIRNode(info) {
         function = f;
     }
-    FunctionCall(Function *f, const std::vector<IRNode *> &a, const IRDebugInfo &info) : BaseIRNode(info) {
+    FunctionCall(Function *f, const std::vector<Assignment *> &a, const IRDebugInfo &info) : BaseIRNode(info) {
         function = f;
         args.insert(args.begin(), a.begin(), a.end());
     }

@@ -38,6 +38,14 @@ void ParseScope::add_symbol(const Name &name, Variable *v) {
     symbol_table_stack.top()->insert(name, v);
 }
 
+Name ParseScope::get_unique_name() {
+    Name name("_" + as_string(unique_id++));
+    while (lookup_variable(name)) {
+        name = Name("_" + as_string(unique_id++));
+    }
+    return name;
+}
+
 // Return the variable from the symbol table corresponding to the
 // given variable. The given variable is then deleted. If there is no
 // symbol table entry, abort.
@@ -176,6 +184,16 @@ void Parser::post_parse_passes(Module *m) {
     m->accept(&ancestors);
 }
 
+// Push a block on to the stack of blocks.
+void Parser::push_block(Block *b) {
+    block_stack.push(b);
+}
+
+// Remove topmost block from the stack.
+void Parser::pop_block() {
+    block_stack.pop();
+}
+
 // Assert that the given token is of the given type. If true, advance
 // the tokenizer. If false, produce an error message.
 void Parser::expect(const Token &t, Token::Type ty, const std::string &msg) {
@@ -266,8 +284,9 @@ void Parser::setup_global_variables(Module *m) {
 
 // Parse a Bish block.
 Block *Parser::block() {
-    std::vector<IRNode *> statements;
+    Block *result = new Block();
     scope.push_symbol_table();
+    push_block(result);
     expect(tokenizer->peek(), Token::LBraceType, "Expected block to begin with '{'");
     do {
         while (tokenizer->peek().isa(Token::SharpType)) {
@@ -275,11 +294,11 @@ Block *Parser::block() {
         }
         if (tokenizer->peek().isa(Token::RBraceType)) break;
         IRNode *s = stmt();
-        if (s) statements.push_back(s);
+        if (s) result->nodes.push_back(s);
     } while (!tokenizer->peek().isa(Token::RBraceType));
     expect(tokenizer->peek(), Token::RBraceType, "Expected block to end with '}'");
-    Block *result = new Block(statements);
     scope.pop_symbol_table();
+    pop_block();
     return result;
 }
 
@@ -374,7 +393,22 @@ FunctionCall *Parser::funcall(const Name &name) {
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
     Function *f = scope.lookup_or_new_function(name);
-    return new FunctionCall(f, args, debug_info.get());
+
+    // Convert the arg IRNodes into assignments to local
+    // variables. These assignment statements are added to the parent
+    // block preceding this function call.
+    std::vector<Assignment *> assignment_args;
+    for (std::vector<IRNode *>::iterator I = args.begin(), E = args.end(); I != E; ++I) {
+        Name vname = scope.get_unique_name();
+        Variable *v = scope.lookup_or_new_var(vname);
+        Location *loc = new Location(v, NULL);
+        std::vector<IRNode *> value(1, *I);
+        Assignment *a = new Assignment(loc, value, IRDebugInfo());
+        assignment_args.push_back(a);
+        block_stack.top()->nodes.push_back(a);
+    }
+
+    return new FunctionCall(f, assignment_args, debug_info.get());
 }
 
 ExternCall *Parser::externcall() {

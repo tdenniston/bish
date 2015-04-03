@@ -178,16 +178,10 @@ void CodeGen_Bash::visit(FunctionCall *n) {
     if (should_functioncall_wrap()) stream << "$(";
     stream << n->function->name.str();
     for (int i = 0; i < nargs; i++) {
+        Variable *arg = n->args[i]->location->variable;
+        assert(arg);
         stream << " ";
-        enable_functioncall_wrap();
-        if (const FunctionCall *FC = dynamic_cast<const FunctionCall*>(n->args[i])) {
-          if (should_quote_variable()) stream << "\"";
-          n->args[i]->accept(this);
-          if (should_quote_variable()) stream << "\"";
-        } else {
-            n->args[i]->accept(this);
-        }
-        reset_functioncall_wrap();
+        arg->accept(this);
     }
     if (should_functioncall_wrap()) stream << ")";
 }

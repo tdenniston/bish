@@ -21,7 +21,7 @@ std::vector<FunctionCall *> FindCallsToModule::function_calls() const {
 }
 
 void FindCallsToModule::visit(FunctionCall *call) {
-    for (std::vector<IRNode *>::const_iterator I = call->args.begin(),
+    for (std::vector<Assignment *>::const_iterator I = call->args.begin(),
              E = call->args.end(); I != E; ++I) {
         (*I)->accept(this);
     }
