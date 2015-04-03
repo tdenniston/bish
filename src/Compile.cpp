@@ -37,4 +37,6 @@ void Bish::compile_to(Module *m, CodeGenerator *cg) {
     << "# Bish version " << BISH_VERSION << "\n"
     << "# Please see " << BISH_URL << " for more information about Bish.\n\n";
     m->accept(cg);
+
+    cg->ostream().flush();
 }

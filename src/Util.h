@@ -15,8 +15,12 @@ inline T convert_string(const std::string &s) {
 }
 
 // Convert int to string
-inline std::string convert_string(int i) {
+inline std::string as_string(int i) {
   return dynamic_cast<std::ostringstream &>((std::ostringstream() << i )).str();
+}
+
+inline std::string as_string(const std::string &s) {
+  return s;
 }
 
 // Return true if the given path is a valid file.
