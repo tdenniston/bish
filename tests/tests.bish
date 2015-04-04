@@ -1,5 +1,14 @@
 # Run the tests for the bish compiler.
 
+# Make sure we're in the "tests" directory.
+def change_dir() {
+    dir = cwd();
+    dir = @(basename $dir);
+    if (dir != "tests") {
+        cd("tests");
+    }
+}
+
 # Run all tests
 def run_all() {
     import double;
@@ -28,7 +37,11 @@ def run_all() {
 
     import arrays;
     arrays.test();
+
+    @(../bish -r args.bish -a -b 3);
+    assert(success());
 }
 
+change_dir();
 run_all();
 println("All tests passed.");
