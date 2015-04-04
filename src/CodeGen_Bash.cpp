@@ -21,8 +21,8 @@ void CodeGen_Bash::visit(Module *n) {
              E = n->functions.end(); I != E; ++I) {
         (*I)->accept(this);
     }
-    // Special case for command-line arguments.
-    stream << "args=( \"$@\" );\n";
+    // Special case for command-line arguments. TODO: tie this into Builtins somehow.
+    stream << "args=( $0 \"$@\" );\n";
     // Global variables next.
     for (std::vector<Assignment *>::const_iterator I = n->global_variables.begin(),
              E = n->global_variables.end(); I != E; ++I) {
