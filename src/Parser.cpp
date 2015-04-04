@@ -262,7 +262,7 @@ void Parser::setup_global_variables(Module *m) {
     // The first assignment to a variable at module scope becomes the
     // global variable initializer. All later assignments are kept, as
     // they will go into the main function.
-    std::vector<Block::iterator> to_erase;
+    std::vector<Assignment *> to_erase;
     std::set<Variable *> handled;
     bish_assert(m->main != NULL);
     for (Block::iterator I = m->main->body->begin(), E = m->main->body->end(); I != E; ++I) {
@@ -272,13 +272,19 @@ void Parser::setup_global_variables(Module *m) {
                 handled.insert(loc->variable);
                 loc->variable->global = true;
                 m->add_global(a);
-                to_erase.push_back(I);
+                to_erase.push_back(a);
             }
         }
     }
-    for (std::vector<Block::iterator>::iterator I = to_erase.begin(), E = to_erase.end(); I != E; ++I) {
-        Block::iterator II = *I;
-        m->main->body->nodes.erase(II);
+    // TODO: this is O(n^2).
+    for (std::vector<Assignment *>::iterator I = to_erase.begin(), E = to_erase.end(); I != E; ++I) {
+        for (Block::iterator BI = m->main->body->begin(); BI != m->main->body->end(); ) {
+            if (*BI == *I) {
+                BI = m->main->body->nodes.erase(BI);
+            } else {
+                ++BI;
+            }
+        }
     }
 }
 
