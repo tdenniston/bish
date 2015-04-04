@@ -125,6 +125,7 @@ private:
     std::string scan_until(Token a, Token b);
     std::string scan_until(Token t);
     std::string scan_until(char c);
+    void setup_builtin_symbols();
     void setup_global_variables(Module *m);
     void post_parse_passes(Module *m);
     void push_block(Block *b);

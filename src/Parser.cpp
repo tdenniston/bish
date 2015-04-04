@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iostream>
 
+#include "Builtins.h"
 #include "Errors.h"
 #include "Util.h"
 #include "Parser.h"
@@ -35,6 +36,7 @@ void ParseScope::pop_symbol_table() {
 }
 
 void ParseScope::add_symbol(const Name &name, Variable *v) {
+    assert(!symbol_table_stack.empty());
     symbol_table_stack.top()->insert(name, v);
 }
 
@@ -250,11 +252,28 @@ Module *Parser::module(const std::string &path) {
     Module *m = new Module();
     m->set_path(path);
     scope.set_module(m);
+    scope.push_symbol_table();
+
+    // Install built-in symbols (e.g. 'args' for command line args).
+    setup_builtin_symbols();
+    
     Function *main = new Function(Name("main"), block());
     m->set_main(main);
     setup_global_variables(m);
     scope.pop_module();
+    scope.pop_symbol_table();
     return m;
+}
+
+// Built-in symbols (e.g. 'args' for command line args).
+void Parser::setup_builtin_symbols() {
+    const std::vector<Name> &names = builtins.names();
+    for (std::vector<Name>::const_iterator I = names.begin(), E = names.end(); I != E; ++I) {
+        Name n = *I;
+        Variable *v = new Variable(n);
+        v->set_type(builtins.type(n));
+        scope.add_symbol(n, v);
+    }
 }
 
 // Turn module-level assignments into global variables.
