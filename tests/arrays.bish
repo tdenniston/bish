@@ -4,6 +4,10 @@ def array_length(arr) {
     return @(echo \${#arr[@]});
 }
 
+def square(x) {
+    return x * x;
+}
+
 def arrays() {
     arr = [1, 2, 3];
     assert(arr[0] == 1 and arr[1] == 2 and arr[2] == 3);
@@ -23,6 +27,13 @@ def arrays() {
         sum = sum + v;
     }
     assert(sum == 10);
+
+    values = [3, 4, 5];
+    sum = square(2);
+    for (v in values) {
+        sum = sum + square(v);
+    }
+    assert(sum == 4+9+16+25);
 }
 
 def test() {

@@ -6,6 +6,18 @@
 
 using namespace Bish;
 
+void TypeChecker::visit(Module *node) {
+    if (visited(node)) return;
+    visited_set.insert(node);
+
+    for (std::vector<Assignment *>::const_iterator I = node->global_variables.begin(),
+             E = node->global_variables.end(); I != E; ++I) {
+        (*I)->accept(this);
+    }
+    // Functions are not visited here: only via function calls.
+    if (node->main) node->main->accept(this);
+}
+
 void TypeChecker::visit(Location *node) {
     if (visited(node) || node->type().defined()) return;
     visited_set.insert(node);
@@ -29,8 +41,9 @@ void TypeChecker::visit(ReturnStatement *node) {
     if (f->type().defined()) {
         bish_assert(f->type() == node->value->type()) <<
             "Invalid return type for function " << node->debug_info();
+    } else {
+        f->set_type(node->value->type());
     }
-    propagate_if_undef(f, node);
 }
 
 void TypeChecker::visit(ForLoop *node) {
@@ -52,20 +65,9 @@ void TypeChecker::visit(ForLoop *node) {
     node->body->accept(this);
 }
 
-void TypeChecker::visit(Function *node) {
-    if (visited(node) || node->type().defined()) return;
-    visited_set.insert(node);
-    for (std::vector<Variable *>::const_iterator I = node->args.begin(),
-             E = node->args.end(); I != E; ++I) {
-        (*I)->accept(this);
-    }
-    if (node->body) node->body->accept(this);
-}
-
 void TypeChecker::visit(FunctionCall *node) {
     if (visited(node) || node->type().defined()) return;
     visited_set.insert(node);
-    node->function->accept(this);
     unsigned i = 0;
     bish_assert(node->function->body != NULL) <<
         "Calling an undefined function " << node->debug_info();
@@ -79,6 +81,7 @@ void TypeChecker::visit(FunctionCall *node) {
             node->function->args[i]->set_type((*I)->type());
         }
     }
+    node->function->accept(this);
     node->set_type(node->function->type());
 }
 

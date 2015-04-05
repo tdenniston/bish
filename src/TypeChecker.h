@@ -8,10 +8,10 @@ namespace Bish {
 
 class TypeChecker : public IRVisitor {
 public:
+    virtual void visit(Module *);
     virtual void visit(Location *);
     virtual void visit(ReturnStatement *);
     virtual void visit(ForLoop *);
-    virtual void visit(Function *);
     virtual void visit(FunctionCall *);
     virtual void visit(ExternCall *);
     virtual void visit(IORedirection *);
