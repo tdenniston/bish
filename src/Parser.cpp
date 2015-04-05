@@ -506,6 +506,7 @@ IfStatement *Parser::ifstmt() {
 }
 
 ForLoop *Parser::forloop() {
+    Tokenizer::Info debug_info(tokenizer);
     expect(tokenizer->peek(), Token::ForType, "Expected for statement");
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     Variable *v = var();
@@ -522,8 +523,9 @@ ForLoop *Parser::forloop() {
         upper = scope.get_defined_variable(loc->variable);
     }
     expect(tokenizer->peek(), Token::RParenType, "Expected closing ')'");
+    IRDebugInfo info = debug_info.get();
     IRNode *body = block();
-    return new ForLoop(v, lower, upper, body);
+    return new ForLoop(v, lower, upper, body, info);
 }
 
 Function *Parser::functiondef() {

@@ -290,8 +290,8 @@ public:
     Variable *variable;
     IRNode *lower, *upper;
     IRNode *body;
-    ForLoop(Variable *v, IRNode *l, IRNode *u, IRNode *b) :
-        variable(v), lower(l), upper(u), body(b) {}
+    ForLoop(Variable *v, IRNode *l, IRNode *u, IRNode *b, const IRDebugInfo &info) :
+        variable(v), lower(l), upper(u), body(b), BaseIRNode(info) {}
 };
 
 class FunctionCall : public BaseIRNode<FunctionCall> {

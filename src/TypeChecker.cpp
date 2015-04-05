@@ -33,6 +33,25 @@ void TypeChecker::visit(ReturnStatement *node) {
     propagate_if_undef(f, node);
 }
 
+void TypeChecker::visit(ForLoop *node) {
+    if (visited(node) || node->type().defined()) return;
+    visited_set.insert(node);
+
+    node->variable->accept(this);
+    node->lower->accept(this);
+    if (node->upper) node->upper->accept(this);
+
+    if (node->upper) {
+        bish_assert(node->lower->type() == node->upper->type()) <<
+            "Type mismatch for lower and upper loop bounds " << node->debug_info();
+    }
+
+    Type ty = node->lower->type().array() ? node->lower->type().element() : node->lower->type();
+    node->variable->set_type(ty);
+
+    node->body->accept(this);
+}
+
 void TypeChecker::visit(Function *node) {
     if (visited(node) || node->type().defined()) return;
     visited_set.insert(node);
