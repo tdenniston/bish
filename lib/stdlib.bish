@@ -1,3 +1,9 @@
+# Bish standard library functions. The standard library is special in
+# that it is imported by default into all bish scripts. Additionally,
+# functions defined in this file can be called without a
+# namespace. For example, one can just call "println(...)" instead of
+# "stdlib.println(...)".
+
 # Print the given string without new line.
 def print(s) {
     @(echo -ne "$s");

@@ -81,7 +81,7 @@ void Module::import(Module *m) {
         // Special case for stdlib functions: they can be called
         // without a namespace, so add it here.
         if (m->path == get_stdlib_path()) {
-            if (!name.has_namespace("StdLib")) name.add_namespace("StdLib");
+            if (!name.has_namespace("stdlib")) name.add_namespace("stdlib");
         }
         if (linked.find(name) != linked.end()) {
             assert(call->function->body == NULL);

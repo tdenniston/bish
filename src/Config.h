@@ -10,7 +10,7 @@
 #endif
 
 #ifndef STDLIB_PATH
-# define STDLIB_PATH "src/StdLib.bish"
+# define STDLIB_PATH "lib/stdlib.bish"
 #endif
 
 #endif
