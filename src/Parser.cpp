@@ -169,7 +169,7 @@ Module *Parser::parse_string(const std::string &text, const std::string &path) {
     tokenizer = new Tokenizer(path, preprocessed);
 
     Module *m = module(path);
-    expect(tokenizer->peek(), Token::EOSType, "Expected end of string.");
+    expect(tokenizer->peek(), Token::EOSType, "Expected end of string");
 
     post_parse_passes(m);
     return m;
@@ -257,7 +257,7 @@ std::string Parser::scan_until_stmt_end() {
 // Terminate the parsing process with the given error message, and the
 // position of the tokenizer.
 void Parser::abort_with_position(const std::string &msg) {
-    bish_abort() << ": parsing error: " << msg << " near " << tokenizer->position() << "\n";
+    bish_abort() << msg << " near " << tokenizer->position() << "\n";
 }
 
 Module *Parser::module(const std::string &path) {
@@ -383,7 +383,7 @@ IRNode *Parser::otherstmt() {
         s = funcall(sym);
         break;
     default:
-        abort_with_position("Unexpected token in statement.");
+        abort_with_position("Unexpected token in statement");
         s = NULL;
         break;
     }
@@ -566,7 +566,7 @@ Function *Parser::functiondef() {
     // If the arguments and body have already been initialized, throw
     // a redefinition error.
     if (f->body != NULL) {
-        abort_with_position("Function '" + name.name + "' is already defined.");
+        abort_with_position("Function '" + name.name + "' is already defined");
     }
     f->set_args(args);
     f->set_body(body);
@@ -704,7 +704,7 @@ IRNode *Parser::atom() {
         if (tokenizer->peek().isa(Token::DotType)) {
             tokenizer->next();
             Token t1 = tokenizer->peek();
-            expect(t1, Token::SymbolType, "Expected symbol.");
+            expect(t1, Token::SymbolType, "Expected symbol");
             if (namespaces.find(t.value()) == namespaces.end()) {
                 abort_with_position("Unknown namespace");
             }
@@ -734,7 +734,7 @@ IRNode *Parser::atom() {
         return new String(str);
     }
     default:
-        abort_with_position("Invalid token type for atom.");
+        abort_with_position("Invalid token type for atom");
         return NULL;
     }
 }
@@ -756,11 +756,11 @@ Variable *Parser::arg() {
 
 Name Parser::namespacedvar() {
     Token t = tokenizer->peek();
-    expect(t, Token::SymbolType, "Expected symbol.");
+    expect(t, Token::SymbolType, "Invalid character for name,");
     if (tokenizer->peek().isa(Token::DotType)) {
         tokenizer->next();
         Token t1 = tokenizer->peek();
-        expect(t1, Token::SymbolType, "Expected symbol.");
+        expect(t1, Token::SymbolType, "Invalid character for name,");
         if (namespaces.find(t.value()) == namespaces.end()) {
             abort_with_position("Unknown namespace");
         }
@@ -803,7 +803,7 @@ void Parser::end_stmt() {
     if (tokenizer->peek().isa(Token::SemicolonType)) {
 	tokenizer->next();
     } else if (!tokenizer->was_newline()) {
-	abort_with_position("Expected end of statement.");
+	abort_with_position("Expected end of statement");
     }
 }
 
