@@ -334,7 +334,7 @@ IRNode *Parser::stmt() {
         return block();
     case Token::AtType: {
         IRNode *a = externcall();
-        expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+        end_stmt();
         return a;
     }
     case Token::ImportType:
@@ -375,7 +375,7 @@ IRNode *Parser::otherstmt() {
         s = NULL;
         break;
     }
-    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    end_stmt();
     return s;
 }
 
@@ -449,7 +449,7 @@ ImportStatement *Parser::importstmt() {
     Tokenizer::Info debug_info(tokenizer);
     expect(tokenizer->peek(), Token::ImportType, "Expected import statement");
     std::string module_name = strip(scan_until(Token::Semicolon()));
-    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    end_stmt();
     if (namespaces.find(module_name) == namespaces.end()) {
         namespaces.insert(module_name);
         return new ImportStatement(scope.module(), module_name, debug_info.get());
@@ -463,21 +463,21 @@ ReturnStatement *Parser::returnstmt() {
     Tokenizer::Info debug_info(tokenizer);
     expect(tokenizer->peek(), Token::ReturnType, "Expected return statement");
     IRNode *ret = expr();
-    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    end_stmt();
     return new ReturnStatement(ret, debug_info.get());
 }
 
 LoopControlStatement *Parser::breakstmt() {
     Tokenizer::Info debug_info(tokenizer);
     expect(tokenizer->peek(), Token::BreakType, "Expected break statement");
-    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    end_stmt();
     return new LoopControlStatement(LoopControlStatement::Break, debug_info.get());
 }
 
 LoopControlStatement *Parser::continuestmt() {
     Tokenizer::Info debug_info(tokenizer);
     expect(tokenizer->peek(), Token::ContinueType, "Expected continue statement");
-    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    end_stmt();
     return new LoopControlStatement(LoopControlStatement::Continue, debug_info.get());
 }
 
@@ -781,6 +781,11 @@ InterpolatedString *Parser::interpolated_string(const Token &stop, bool keep_lit
         }
     }
     return result;
+}
+
+// Advance the tokenizer to the beginning of the next statement.
+void Parser::end_stmt() {
+    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
 }
 
 }

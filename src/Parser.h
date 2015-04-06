@@ -159,7 +159,7 @@ private:
     Variable *arg();
     Name namespacedvar();
     InterpolatedString *interpolated_string(const Token &stop, bool keep_literal_backslash);
-
+    void end_stmt();
 };
 
 }
