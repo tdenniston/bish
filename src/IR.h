@@ -130,6 +130,10 @@ public:
     bool operator==(const Name &b) const {
         return namespace_id == b.namespace_id && name == b.name;
     }
+
+    bool operator!=(const Name &b) const {
+        return !(*this == b);
+    }
 };
 
 class Variable : public BaseIRNode<Variable> {

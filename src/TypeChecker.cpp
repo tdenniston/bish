@@ -9,7 +9,7 @@ using namespace Bish;
 void TypeChecker::visit(Module *node) {
     if (visited(node)) return;
     visited_set.insert(node);
-
+    module = node;
     for (std::vector<Assignment *>::const_iterator I = node->global_variables.begin(),
              E = node->global_variables.end(); I != E; ++I) {
         (*I)->accept(this);
@@ -69,6 +69,8 @@ void TypeChecker::visit(FunctionCall *node) {
     if (visited(node) || node->type().defined()) return;
     visited_set.insert(node);
     unsigned i = 0;
+    bish_assert(node->function->name != module->main->name) <<
+	"Cannot call default 'main' function directly " << node->debug_info();
     bish_assert(node->function->body != NULL) <<
         "Calling an undefined function " << node->debug_info();
     for (std::vector<Assignment *>::const_iterator I = node->args.begin(),

@@ -23,6 +23,7 @@ public:
     virtual void visit(String *);
     virtual void visit(Boolean *);
 private:
+    Module *module;
     std::set<IRNode *> visited_set;
     void propagate_if_undef(IRNode *a, IRNode *b);
     bool visited(IRNode *n) { return visited_set.find(n) != visited_set.end(); }

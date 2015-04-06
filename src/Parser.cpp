@@ -363,7 +363,7 @@ IRNode *Parser::stmt() {
         return forloop();
     case Token::DefType: {
         Function *f = functiondef();
-        scope.module()->add_function(f);
+        if (f) scope.module()->add_function(f);
         return NULL;
     }
     default:
@@ -543,6 +543,9 @@ ForLoop *Parser::forloop() {
 Function *Parser::functiondef() {
     expect(tokenizer->peek(), Token::DefType, "Expected def statement");
     Name name = namespacedvar();
+    if (name == Name("main")) {
+	abort_with_position("Cannot redefine default 'main' function");
+    }
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     std::vector<Variable *> args;
     scope.push_symbol_table();
