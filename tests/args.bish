@@ -3,16 +3,16 @@
 #   args.bish -a -b 3
 
 def array_length(arr) {
-    return @(echo \${#arr[@]});
+    return @(echo \${#arr[@]})
 }
 
 def test() {
     # args is a built in array.
-    assert(array_length(args) == 4);
-    assert(args[1] == "-a");
-    assert(args[2] == "-b");
-    assert(args[3] == "3");
+    assert(array_length(args) == 4)
+    assert(args[1] == "-a")
+    assert(args[2] == "-b")
+    assert(args[3] == "3")
 }
 
-test();
-println("Argument tests passed.");
+test()
+println("Argument tests passed.")

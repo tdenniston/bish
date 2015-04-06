@@ -1,44 +1,44 @@
 # Tests for arrays.
 
 def array_length(arr) {
-    return @(echo \${#arr[@]});
+    return @(echo \${#arr[@]})
 }
 
 def square(x) {
-    return x * x;
+    return x * x
 }
 
 def arrays() {
-    arr = [1, 2, 3];
-    assert(arr[0] == 1 and arr[1] == 2 and arr[2] == 3);
-    arr[0] = 2;
-    assert(arr[0] == 2 and arr[1] == 2 and arr[2] == 3);
-    arr[0] = arr[2];
-    assert(arr[0] == 3 and arr[1] == 2 and arr[2] == 3);
-    arr[0] = arr[0] + 1;
-    assert(arr[0] == 4 and arr[1] == 2 and arr[2] == 3);
-    assert(array_length(arr) == 3);
-    arr[3] = 4;
-    assert(array_length(arr) == 4);
+    arr = [1, 2, 3]
+    assert(arr[0] == 1 and arr[1] == 2 and arr[2] == 3)
+    arr[0] = 2
+    assert(arr[0] == 2 and arr[1] == 2 and arr[2] == 3)
+    arr[0] = arr[2]
+    assert(arr[0] == 3 and arr[1] == 2 and arr[2] == 3)
+    arr[0] = arr[0] + 1
+    assert(arr[0] == 4 and arr[1] == 2 and arr[2] == 3)
+    assert(array_length(arr) == 3)
+    arr[3] = 4
+    assert(array_length(arr) == 4)
 
-    values = [1, 2, 3, 4];
-    sum = 0;
+    values = [1, 2, 3, 4]
+    sum = 0
     for (v in values) {
-        sum = sum + v;
+        sum = sum + v
     }
-    assert(sum == 10);
+    assert(sum == 10)
 
-    values = [3, 4, 5];
-    sum = square(2);
+    values = [3, 4, 5]
+    sum = square(2)
     for (v in values) {
-        sum = sum + square(v);
+        sum = sum + square(v)
     }
-    assert(sum == 4+9+16+25);
+    assert(sum == 4+9+16+25)
 }
 
 def test() {
-    arrays();
-    println("Array tests passed.");
+    arrays()
+    println("Array tests passed.")
 }
 
-test();
+test()

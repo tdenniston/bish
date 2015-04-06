@@ -267,12 +267,14 @@ private:
  */
 class Tokenizer {
 public:
-    Tokenizer(const std::string &p, const std::string &t) : path(p), text(t), idx(0), lineno(0) {}
+    Tokenizer(const std::string &p, const std::string &t) : path(p), text(t), idx(0), lineno(0), got_newline(false) {}
 
     // Return the token at the head of the stream, but do not skip it.
     Token peek();
     // Skip the token currently at the head of the stream.
     void next();
+    // Return true if a newline was processed since the last call of was_newline.
+    bool was_newline();
     // Return the substring beginning at the current index and
     // continuing until the first occurrence of one of the given
     // tokens. Any of the given tokens prefixed by '\' are ignored
@@ -282,6 +284,10 @@ public:
     // keep_literal_backslash set to true, and "test)" with
     // keep_literal_backslash set to false.
     std::string scan_until(const std::vector<Token> &tokens, bool keep_literal_backslash);
+    // Return the substring beginning at the current index and
+    // continuing until the first occurrence of one of the given
+    // characters.
+    std::string scan_until(const std::set<char> &chars);
     // Return the substring beginning at the current index and
     // continuing until the first occurrence of a character of the
     // given value.
@@ -313,6 +319,7 @@ private:
     const std::string &text;
     unsigned idx;
     unsigned lineno;
+    bool got_newline;
 
     // Start a debug record.
     void start_debug_info();

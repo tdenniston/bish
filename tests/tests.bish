@@ -2,46 +2,46 @@
 
 # Make sure we're in the "tests" directory.
 def change_dir() {
-    dir = cwd();
-    dir = @(basename $dir);
+    dir = cwd()
+    dir = @(basename $dir)
     if (dir != "tests") {
-        cd("tests");
+        cd("tests")
     }
 }
 
 # Run all tests
 def run_all() {
-    import double;
-    double.test();
+    import double
+    double.test()
 
-    import io_redirection;
-    io_redirection.test();
+    import io_redirection
+    io_redirection.test()
 
-    import fib;
-    fib.test();
+    import fib
+    fib.test()
 
-    import ops;
-    ops.test();
+    import ops
+    ops.test()
 
-    import vars;
-    vars.test();
+    import vars
+    vars.test()
 
-    import booleans;
-    booleans.test();
+    import booleans
+    booleans.test()
 
-    import escaping;
-    escaping.test();
+    import escaping
+    escaping.test()
 
-    import imports;
-    imports.test();
+    import imports
+    imports.test()
 
-    import arrays;
-    arrays.test();
+    import arrays
+    arrays.test()
 
-    @(../bish -r args.bish -a -b 3);
-    assert(success());
+    @(../bish -r args.bish -a -b 3)
+    assert(success())
 }
 
-change_dir();
-run_all();
-println("All tests passed.");
+change_dir()
+run_all()
+println("All tests passed.")

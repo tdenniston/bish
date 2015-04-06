@@ -2,28 +2,28 @@
 
 # Simple wrapper function for testing.
 def grep(args) {
-  return @(grep $args);
+  return @(grep $args)
 }
 
 # Test the pipe feature.
 def pipes() {
-    filename = "testfile";
-    @(touch $filename);
+    filename = "testfile"
+    @(touch $filename)
     # Test piping between bish functions
-    matches = ls() | grep("testfile");
+    matches = ls() | grep("testfile")
     # Test piping from external function.
-    matches2 = @(ls) | grep("testfile");
+    matches2 = @(ls) | grep("testfile")
     # Test piping to external function.
-    nonmatches = ls() | @(grep "doesn't exist");
-    @(rm $filename);
-    assert(matches == "testfile");
-    assert(matches2 == "testfile");
-    assert(nonmatches == "");
+    nonmatches = ls() | @(grep "doesn't exist")
+    @(rm $filename)
+    assert(matches == "testfile")
+    assert(matches2 == "testfile")
+    assert(nonmatches == "")
 }
 
 def test() {
-    pipes();
-    println("I/O redirection tests passed.");
+    pipes()
+    println("I/O redirection tests passed.")
 }
 
-test();
+test()

@@ -1,31 +1,31 @@
 # Test with nested for loops.
 
 def double(val) {
-    return val * val;
+    return val * val
 }
 
 def test() {
-    sum = 0;
+    sum = 0
     for (i in 2 .. 4) {
-        d = i * i;
+        d = i * i
         for (j in i .. d) {
-            sum = sum + double(j/i+j*i);
+            sum = sum + double(j/i+j*i)
         }
     }
-    assert(sum == 29580);
+    assert(sum == 29580)
 
-    sum = 0;
+    sum = 0
     for (i in 2 .. 4) {
-        if (i == 3) { continue; }
-        d = i * i;
+        if (i == 3) { continue }
+        d = i * i
         for (j in i .. d) {
-            if (j == 7) { break; }
-            sum = sum + double(j/i+j*i);
+            if (j == 7) { break }
+            sum = sum + double(j/i+j*i)
         }
     }
-    assert(sum == 1529);
+    assert(sum == 1529)
 
-    println("Loops test passed.");
+    println("Loops test passed.")
 }
 
-test();
+test()

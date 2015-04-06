@@ -242,6 +242,18 @@ std::string Parser::scan_until(char c) {
     return result;
 }
 
+// Scan until a statement ending (semicolon or newline).
+std::string Parser::scan_until_stmt_end() {
+    std::set<char> ending_chars;
+    ending_chars.insert(';');
+    ending_chars.insert('\n');
+    std::string result = tokenizer->scan_until(ending_chars);
+    if (tokenizer->peek().isa(Token::EOSType)) {
+        bish_abort() << "Unexpected end of input.";
+    }
+    return result;
+}
+
 // Terminate the parsing process with the given error message, and the
 // position of the tokenizer.
 void Parser::abort_with_position(const std::string &msg) {
@@ -448,7 +460,7 @@ ExternCall *Parser::externcall() {
 ImportStatement *Parser::importstmt() {
     Tokenizer::Info debug_info(tokenizer);
     expect(tokenizer->peek(), Token::ImportType, "Expected import statement");
-    std::string module_name = strip(scan_until(Token::Semicolon()));
+    std::string module_name = strip(scan_until_stmt_end());
     end_stmt();
     if (namespaces.find(module_name) == namespaces.end()) {
         namespaces.insert(module_name);
@@ -785,7 +797,11 @@ InterpolatedString *Parser::interpolated_string(const Token &stop, bool keep_lit
 
 // Advance the tokenizer to the beginning of the next statement.
 void Parser::end_stmt() {
-    expect(tokenizer->peek(), Token::SemicolonType, "Expected statement to end with ';'");
+    if (tokenizer->peek().isa(Token::SemicolonType)) {
+	tokenizer->next();
+    } else if (!tokenizer->was_newline()) {
+	abort_with_position("Expected end of statement.");
+    }
 }
 
 }

@@ -2,39 +2,39 @@
 
 def ops() {
     a = 3; b = 4; c = 5;
-    x = a + b * c;
-    assert(x == 23);
+    x = a + b * c
+    assert(x == 23)
 
-    x = (a + b) * c;
-    assert(x == 35);
+    x = (a + b) * c
+    assert(x == 35)
 
-    assert(a == 3 and b == 4);
-    assert(a == 4 or b == 4);
-    assert(a == 3 and b != 5);
+    assert(a == 3 and b == 4)
+    assert(a == 4 or b == 4)
+    assert(a == 3 and b != 5)
     # Note that 'not b == 5' is equivalent to '(not b) == 5' due to the precedence of 'not'.
-    assert(a == 3 and not (b == 5));
-    assert(not (a == 2 and b == 3));
-    assert(a == 3 and b == 4 and c == 5);
-    assert(a + b == 7 and b + c == 9);
+    assert(a == 3 and not (b == 5))
+    assert(not (a == 2 and b == 3))
+    assert(a == 3 and b == 4 and c == 5)
+    assert(a + b == 7 and b + c == 9)
 
     if (a > b) {
-       assert(false);
+       assert(false)
     }
 
-    assert(a < b);
-    assert(b > a);
-    assert(a < b and b > a);
-    assert(1 < 2);
-    assert(2 < a);
-    assert(1 <= 2);
-    assert(2 >= 1);
-    assert(a + 1 <= b);
-    assert(a + 1 >= b);
+    assert(a < b)
+    assert(b > a)
+    assert(a < b and b > a)
+    assert(1 < 2)
+    assert(2 < a)
+    assert(1 <= 2)
+    assert(2 >= 1)
+    assert(a + 1 <= b)
+    assert(a + 1 >= b)
 }
 
 def test() {
-    ops();
-    println("Operator tests passed.");
+    ops()
+    println("Operator tests passed.")
 }
 
-test();
+test()
