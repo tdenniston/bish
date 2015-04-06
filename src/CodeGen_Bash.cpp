@@ -65,7 +65,9 @@ void CodeGen_Bash::visit(Block *n) {
         if (should_emit_statement(*I)) {
             indent();
             (*I)->accept(this);
-            stream << ";\n";
+	    if (!dynamic_cast<Block *>(*I)) {
+		stream << ";\n";
+	    }
         }
     }
     // Bash doesn't allow empty functions: must insert a call to a null command.
@@ -74,7 +76,10 @@ void CodeGen_Bash::visit(Block *n) {
         stream << ": # Empty function\n";
     }
     indent_level--;
-    if (should_print_block_braces()) stream << "}\n\n";
+    if (should_print_block_braces()) {
+	indent();
+	stream << "}\n";
+    }
 }
 
 void CodeGen_Bash::visit(Variable *n) {
@@ -188,7 +193,7 @@ void CodeGen_Bash::visit(ForLoop *n) {
 
 void CodeGen_Bash::visit(Function *n) {
     if (n->body == NULL) return;
-    stream << "function " << n->name.str() << " ";
+    stream << "\nfunction " << n->name.str() << " ";
     stream << "() ";
     push_function_args_insert(n);
     if (n->body) n->body->accept(this);
