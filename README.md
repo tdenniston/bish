@@ -18,35 +18,35 @@ Some small examples are below, but **see the [introduction](https://github.com/t
 
     def fib(n) {
         if (n < 2) {
-            return 1;
+            return 1
         }
-        return fib(n-1) + fib(n-2);
+        return fib(n-1) + fib(n-2)
     }
 
 ##### Shell commands
 
     def printall(files) {
         for (f in files) {
-            println(f);
+            println(f)
         }
     }
     # cwd, ls, and cd are all builtin functions.
-    dir = cwd();
-    files = ls();
-    println("Files in current directory $dir:");
-    printall(files);
-    cd("/");
-    println("Files in root directory:");
+    dir = cwd()
+    files = ls()
+    println("Files in current directory $dir:")
+    printall(files)
+    cd("/")
+    println("Files in root directory:")
     printall(ls());
 
 ##### Shell-like features
 
     # I/O redirection (like pipes) is a first-class language feature.
-    pattern = "bish";
-    matches = ls() | @(grep $pattern);
-    println("Files in current directory matching $pattern:");
+    pattern = "bish"
+    matches = ls() | @(grep $pattern)
+    println("Files in current directory matching $pattern:")
     for (m in matches) {
-        println(m);
+        println(m)
     }
 
 ## How
