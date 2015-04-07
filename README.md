@@ -67,8 +67,10 @@ However, I created this language first and foremost as a weekend project and exe
 
 ## To do
 
-The language and compiler are pretty bare-bones as of now. A selection of things I intend to do:
-- Improve parsing error messages
-- Implement type checking
-- Figure out what to do about floats
-- Expand standard library of builtin functions
+The language and compiler are pretty bare-bones as of now, but quite functional. There are numerous things in the pipeline (see the open issues for a list). Longer term, here are some ideas of features that might be implemented:
+
+* Additional compiler targets, e.g. `sh` for even wider compatability, or `ksh` for vanilla AIX support.
+* Multidimensional arrays, and potentially arrays of mixed types.
+* Syntactical sugar for more shell-like function invocation. For example, typing `cd("path")` or `ls("-l")` might get old when writing bish scripts. Bish could support an alternate invocation syntax of `function arg0 arg1...` so that these functions could be invoked like `cd path` or `ls -l` directly in the bish script.
+* Language support for executing portions of bish scripts as other users (e.g. the administrator).
+* Language support for executing commands on remote machines.
