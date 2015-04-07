@@ -4,17 +4,16 @@
 #include <iostream>
 #include <map>
 #include "IRVisitor.h"
-#include "LineOrientedBuffer.h"
 
 namespace Bish {
 
 class CodeGenerator : public IRVisitor {
 public:
     CodeGenerator(std::ostream &os): stream(os) {}
-    LineOrientedBuffer &ostream() { return stream; }
+    std::ostream &ostream() { return stream; }
 
 protected:
-    LineOrientedBuffer stream;
+    std::ostream &stream;
 };
 
 class CodeGenerators {
