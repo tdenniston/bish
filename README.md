@@ -59,6 +59,12 @@ Then run the compiled file:
 
     $ bash output.bash
 
+You can also perform this in a single step by using the `-r` (for "run") argument:
+
+    $ ./bish -r input.bish
+    
+This compiles and pipes the output directly to a bash process.
+
 ## Why
 
 I can't count the number of times when I wanted to write a quick shell script to automate an easy task, only to waste hours tracking down idiosyncrasies in Bash syntax and semantics. Bish tries to fill this niche: when you want a lightweight shell scripting language and don't wish to break out the larger hammer of Python, Perl, etc...
