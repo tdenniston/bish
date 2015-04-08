@@ -71,6 +71,10 @@ I can't count the number of times when I wanted to write a quick shell script to
 
 However, I created this language first and foremost as a weekend project and exercise in writing a compiler from scratch. I've dealt with pieces of compilers before, but have never written one from start to finish. Thus, I hope this project can also serve as a good teaching tool. I tried to design it with clarity in mind, so it should be simple to extend the language, or write a new back end.
 
+## News
+
+* Apr 8 2015 -- I've been caught up in my day job recently, and a few of the features I want to implement before doing a 0.1 release are requiring more infrastructure work than I anticipated. I'm hoping to do a 0.1 release within the next week or two weeks.
+
 ## To do
 
 The language and compiler are pretty bare-bones as of now, but quite functional. There are numerous things in the pipeline (see the open issues for a list). Longer term, here are some ideas of features that might be implemented:
