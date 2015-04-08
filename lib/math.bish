@@ -1,0 +1,77 @@
+# This file provides mathematical functions.
+
+# Square root of `x`.
+def sqrt(x) {
+    cmd = "sqrt($x)"
+    return @(echo $cmd | bc)
+}
+
+# The sine of `x`, `x` is in radians.
+def sin(x) {
+    cmd = "s($x)"
+    return @(echo $cmd | bc -l)
+}
+
+# The cosine of `x`, `x` is in radians.
+def cos(x) {
+    cmd = "c($x)"
+    return @(echo $cmd | bc -l)
+}
+
+# The arctangent of `x`, arctangent returns radians.
+def arctan(x) {
+    cmd = "a($x)"
+    return @(echo $cmd | bc -l)
+}
+
+# The natural logarithm of `x`.
+def ln(x) {
+    cmd = "l($x)"
+    return @(echo $cmd | bc -l)
+}
+
+# The exponential function of raising e to the value `x`.
+def exp(x) {
+    cmd = "e($x)"
+    return @(echo $cmd | bc -l)
+}
+
+# Divide `x` by `y`, scale indicates the number of decimal places.
+def div(x, y, scale) {
+    if (scale == "") {
+        cmd = "scale=11; $x/$y"
+    } else {
+        cmd = "scale=$scale; $x/$y"
+    }
+    return @(echo $cmd | bc)
+}
+
+# Multiplication `x` by `y`, scale indicates the number of decimal places.
+def mul(x, y, scale) {
+    if (scale == "") {
+        cmd = "scale=11; $x*$y"
+    } else {
+        cmd = "scale=$scale; $x*$y"
+    }
+    return @(echo $cmd | bc)
+}
+
+# Sum `x` by `y`, scale indicates the number of decimal places.
+def sum(x, y, scale) {
+    if (scale == "") {
+        cmd = "scale=11; $x+$y"
+    } else {
+        cmd = "scale=$scale; $x+$y"
+    }
+    return @(echo $cmd | bc)
+}
+
+# Subtraction `x` by `y`, scale indicates the number of decimal places.
+def sub(x, y, scale) {
+    if (scale == "") {
+        cmd = "scale=11; $x-($y)"
+    } else {
+        cmd = "scale=$scale; $x-($y)"
+    }
+    return @(echo $cmd | bc)
+}
