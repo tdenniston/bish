@@ -97,7 +97,6 @@ void IRVisitor::visit(FunctionCall *node) {
     if (visited(node)) return;
     visited_set.insert(node);
 
-    node->function->accept(this);
     for (std::vector<Assignment *>::const_iterator I = node->args.begin(),
              E = node->args.end(); I != E; ++I) {
         (*I)->accept(this);

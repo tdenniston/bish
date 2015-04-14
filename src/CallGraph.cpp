@@ -54,7 +54,6 @@ void CallGraphBuilder::visit(Function *f) {
 }
 
 void CallGraphBuilder::visit(FunctionCall *call) {
-    call->function->accept(this);
     for (std::vector<Assignment *>::const_iterator I = call->args.begin(),
              E = call->args.end(); I != E; ++I) {
         (*I)->accept(this);
