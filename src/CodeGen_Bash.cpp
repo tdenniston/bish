@@ -110,6 +110,10 @@ void CodeGen_Bash::visit(Location *n) {
 }
 
 void CodeGen_Bash::visit(ReturnStatement *n) {
+    if (n->value == NULL) {
+	stream << "return";
+	return;
+    }
     bool external = dynamic_cast<ExternCall*>(n->value) != NULL;
     stream << "echo ";
     enable_functioncall_wrap();

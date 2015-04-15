@@ -6,6 +6,7 @@
 #include "Compile.h"
 #include "Config.h"
 #include "Parser.h"
+#include "ReturnValuesPass.h"
 #include "TypeChecker.h"
 #include "Util.h"
 
@@ -34,6 +35,11 @@ void link_time_passes(Bish::Module *m) {
     // reference (e.g. arrays) to functions.
     ByReferencePass refs;
     m->accept(&refs);
+
+    // Convert function return values into global variable
+    // assignments.
+    ReturnValuesPass retvals;
+    m->accept(&retvals);
 }
 
 }

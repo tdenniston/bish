@@ -227,6 +227,8 @@ public:
     std::vector<IRNode *> values;
     Assignment(Location *loc, const std::vector<IRNode *> &val, const IRDebugInfo &info) :
         location(loc), values(val.begin(), val.end()), BaseIRNode(info) {}
+    Assignment(Location *loc, IRNode * val, const IRDebugInfo &info) :
+        location(loc), values(1, val), BaseIRNode(info) {}
 };
 
 class ImportStatement : public BaseIRNode<ImportStatement> {
