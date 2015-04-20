@@ -33,6 +33,7 @@ void TypeChecker::visit(Location *node) {
 void TypeChecker::visit(ReturnStatement *node) {
     if (visited(node) || node->type().defined()) return;
     visited_set.insert(node);
+    if (node->value == NULL) return;
     node->value->accept(this);
     node->set_type(node->value->type());
     // Propagate type of this return statement to the parent function.

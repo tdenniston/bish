@@ -23,7 +23,7 @@ void IRAncestorsPass::visit(Block *node) {
 }
 
 void IRAncestorsPass::visit(ReturnStatement *node) {
-    node->value->accept(this);
+    if (node->value) node->value->accept(this);
     node->set_parent(block_stack.top());
 }
 

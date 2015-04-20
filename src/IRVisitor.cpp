@@ -45,7 +45,7 @@ void IRVisitor::visit(ReturnStatement *node) {
     if (visited(node)) return;
     visited_set.insert(node);
 
-    node->value->accept(this);
+    if (node->value) node->value->accept(this);
 }
 
 void IRVisitor::visit(ImportStatement *node) {
