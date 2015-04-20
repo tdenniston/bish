@@ -197,7 +197,7 @@ void CodeGen_Bash::visit(ForLoop *n) {
 
 void CodeGen_Bash::visit(Function *n) {
     if (n->body == NULL) return;
-    stream << "\nfunction " << n->name.str() << " ";
+    stream << "\nfunction " << function_name(n) << " ";
     stream << "() ";
     push_function_args_insert(n);
     if (n->body) n->body->accept(this);
@@ -206,7 +206,7 @@ void CodeGen_Bash::visit(Function *n) {
 void CodeGen_Bash::visit(FunctionCall *n) {
     const int nargs = n->args.size();
     if (should_functioncall_wrap()) stream << "$(";
-    stream << n->function->name.str();
+    stream << function_name(n->function);
     for (int i = 0; i < nargs; i++) {
         // Variables passed by reference are communicated by a global
         // variable, not a function argument.
