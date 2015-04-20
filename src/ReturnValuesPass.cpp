@@ -131,7 +131,30 @@ void ReturnValuesPass::process_statements(std::vector<T *> &stmts) {
 void ReturnValuesPass::lower_function(Function *f) {
     GetAllBlocks get_blocks(f);
     std::vector<Block *> blocks = get_blocks.blocks();
+    std::set<Block *> block_set;
+    std::set<FunctionCall *> call_set;
     for (std::vector<Block *>::iterator BI = blocks.begin(), BE = blocks.end(); BI != BE; ++BI) {
+	Block *b = *BI;
+	for (std::vector<IRNode *>::iterator I = b->nodes.begin(), E = b->nodes.end(); I != E; ++I) {
+	    GetAllCalls get_calls(*I);
+	    std::vector<FunctionCall *> calls = get_calls.calls();
+	    call_set.insert(calls.begin(), calls.end());
+	}
+    }
+
+    // Create return values.
+    for (std::set<FunctionCall *>::iterator I = call_set.begin(), E = call_set.end(); I != E; ++I) {
+	Function *call = (*I)->function;
+	assert(call);
+	if (blacklist.count((*I)->function)) continue;
+	get_return_value(call);
+	Block *parent = dynamic_cast<Block*>((*I)->parent());
+	assert(parent);
+	block_set.insert(parent);
+    }
+
+    // Now convert function calls to use the return value.
+    for (std::set<Block *>::iterator BI = block_set.begin(), BE = block_set.end(); BI != BE; ++BI) {
 	Block *b = *BI;
 	process_statements(b->nodes);
     }

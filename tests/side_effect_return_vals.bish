@@ -5,12 +5,22 @@ def f(x) {
     return x + 1
 }
 
+def rec(x) {
+    if (x == 1) {
+       print(".");
+       return 1;
+    }
+    print(".");
+    return x + rec(x - 1);
+}
+
 def test() {
     x = f(1)
     assert(x == 2)
     x = f(1) + f(2)
     assert(x == 5)
     assert(f(2) == 3)
+    assert(rec(3) == 6);
     println("Side-effect print statements tests passed.")
 }
 
