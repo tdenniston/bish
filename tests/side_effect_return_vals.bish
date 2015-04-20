@@ -1,0 +1,17 @@
+# Tests for issue #51.
+
+def f(x) {
+    print(".")
+    return x + 1
+}
+
+def test() {
+    x = f(1)
+    assert(x == 2)
+    x = f(1) + f(2)
+    assert(x == 5)
+    assert(f(2) == 3)
+    println("Side-effect print statements tests passed.")
+}
+
+test()

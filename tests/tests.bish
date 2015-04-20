@@ -40,6 +40,9 @@ def run_all() {
 
     @(../bish -r args.bish -a -b 3)
     assert(success())
+
+    import side_effect_return_vals
+    side_effect_return_vals.test()
 }
 
 change_dir()
