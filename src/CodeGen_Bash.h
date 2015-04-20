@@ -131,6 +131,14 @@ private:
             return v->name.str();
         }
     }
+
+    std::string function_name(const Function *f) {
+	// Ensure a function name is always qualified somehow.
+	if (f->name.namespace_id.empty()) {
+	    return "bish_" + f->name.str();
+	}
+	return f->name.str();
+    }
 };
 
 }
