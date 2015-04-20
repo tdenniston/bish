@@ -1,9 +1,5 @@
 # Tests for arrays.
 
-def array_length(arr) {
-    return @(echo \${#arr[@]})
-}
-
 def square(x) {
     return x * x
 }
@@ -17,9 +13,9 @@ def arrays() {
     assert(arr[0] == 3 and arr[1] == 2 and arr[2] == 3)
     arr[0] = arr[0] + 1
     assert(arr[0] == 4 and arr[1] == 2 and arr[2] == 3)
-    assert(array_length(arr) == 3)
+    assert(len(arr) == 3)
     arr[3] = 4
-    assert(array_length(arr) == 4)
+    assert(len(arr) == 4)
 
     values = [1, 2, 3, 4]
     sum = 0

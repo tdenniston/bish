@@ -57,3 +57,8 @@ def assert(v) {
       @(exit 1);
     }
 }
+
+# Return the length of array 'arr'.
+def len(arr) {
+    return @(echo \${#arr[@]})
+}
