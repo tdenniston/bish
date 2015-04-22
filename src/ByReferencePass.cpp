@@ -39,17 +39,11 @@ void ByReferencePass::visit(Module *node) {
     }
 
     // Now visit as normal.
-    for (std::vector<Assignment *>::const_iterator I = node->global_variables.begin(),
-             E = node->global_variables.end(); I != E; ++I) {
-        (*I)->accept(this);
-    }
-    for (std::vector<Function *>::const_iterator I = node->functions.begin(),
-             E = node->functions.end(); I != E; ++I) {
-        (*I)->accept(this);
-    }
+    IRVisitor::visit(node);
 }
 
 void ByReferencePass::visit(FunctionCall *node) {
+    IRVisitor::visit(node);
     Function *f = node->function;
     for (unsigned i = 0; i < node->args.size(); i++) {
         Assignment *a = node->args[i];
@@ -58,6 +52,5 @@ void ByReferencePass::visit(FunctionCall *node) {
             assert(a->location->offset == NULL);
             a->location->variable = f->args[i]->reference;
         }
-        a->accept(this);
     }
 }

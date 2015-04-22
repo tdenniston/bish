@@ -21,10 +21,7 @@ std::vector<FunctionCall *> FindCallsToModule::function_calls() const {
 }
 
 void FindCallsToModule::visit(FunctionCall *call) {
-    for (std::vector<Assignment *>::const_iterator I = call->args.begin(),
-             E = call->args.end(); I != E; ++I) {
-        (*I)->accept(this);
-    }
+    IRVisitor::visit(call);
     if (to_find.count(call->function->name.name)) {
         calls.insert(call->function->name);
         fcalls.push_back(call);
