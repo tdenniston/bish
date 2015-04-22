@@ -51,6 +51,8 @@ Some small examples are below, but **see the [introduction](https://github.com/t
 
 ## How
 
+### Manually
+
 [Download](https://github.com/tdenniston/bish/releases/tag/v0.1) the latest stable release, or clone the repository for the latest and greatest.
 
 Build with 'make'. There are no dependencies other than the C++ standard library (and make itself). Compile a bish program to bash with the command:
@@ -66,6 +68,12 @@ You can also perform this in a single step by using the `-r` (for "run") argumen
     $ ./bish -r input.bish
     
 This compiles and pipes the output directly to a bash process.
+
+### Automagically™
+
+You can also download and install bish on OS X through [Homebrew](http://brew.sh):
+
+    $ brew install --devel homebrew/devel-only/bish
 
 ## Why
 
