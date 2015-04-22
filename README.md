@@ -73,6 +73,7 @@ However, I created this language first and foremost as a weekend project and exe
 
 ## News
 
+* Apr 20 2015 -- Bish version 0.1 released. This is the first tagged release for bish.
 * Apr 8 2015 -- I've been caught up in my day job recently, and a few of the features I want to implement before doing a 0.1 release are requiring more infrastructure work than I anticipated. I'm hoping to do a 0.1 release within the next week or two weeks.
 
 ## To do
