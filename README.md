@@ -51,7 +51,9 @@ Some small examples are below, but **see the [introduction](https://github.com/t
 
 ## How
 
-Just clone and build with 'make'. There are no dependencies other than the C++ standard library. Compile bish to bash with the command:
+[Download](https://github.com/tdenniston/bish/releases/tag/v0.1) the latest stable release, or clone the repository for the latest and greatest.
+
+Build with 'make'. There are no dependencies other than the C++ standard library (and make itself). Compile a bish program to bash with the command:
 
     $ ./bish input.bish > output.bash
     
