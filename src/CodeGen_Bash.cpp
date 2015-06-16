@@ -22,6 +22,8 @@ void CodeGen_Bash::visit(Module *n) {
 	if (!(compile_as_library && (*I)->name.name == "main"))
             (*I)->accept(this);
     }
+    // Special case for command-line arguments. TODO: tie this into Builtins somehow.
+    stream << "args=( $0 \"$@\" );\n";
     // Global variables next.
     for (std::vector<Assignment *>::const_iterator I = n->global_variables.begin(),
              E = n->global_variables.end(); I != E; ++I) {
@@ -46,9 +48,18 @@ void CodeGen_Bash::visit(Block *n) {
         Function *f = function_args_insert.top();
         function_args_insert.pop();
         unsigned i = 1;
-        for (std::vector<Variable *>::const_iterator I = f->args.begin(), E = f->args.end(); I != E; ++I, ++i) {
+        for (std::vector<Variable *>::const_iterator I = f->args.begin(), E = f->args.end(); I != E; ++I) {
             indent();
-            stream << "local " << (*I)->name.str() << "=\"$" << i << "\";\n";
+            stream << "local " << (*I)->name.str() << "=";
+            if ((*I)->is_reference()) {
+                bool array = (*I)->type().array();
+                if (array) stream << "( ";
+                (*I)->reference->accept(this);
+                if (array) stream << " )";
+                stream << ";\n";
+            } else {
+                stream << "\"$" << i++ << "\";\n";
+            }
         }
     }
 
@@ -57,7 +68,9 @@ void CodeGen_Bash::visit(Block *n) {
         if (should_emit_statement(*I)) {
             indent();
             (*I)->accept(this);
-            stream << ";\n";
+	    if (!dynamic_cast<Block *>(*I)) {
+		stream << ";\n";
+	    }
         }
     }
     // Bash doesn't allow empty functions: must insert a call to a null command.
@@ -66,16 +79,44 @@ void CodeGen_Bash::visit(Block *n) {
         stream << ": # Empty function\n";
     }
     indent_level--;
-    if (should_print_block_braces()) stream << "}\n\n";
+    if (should_print_block_braces()) {
+	indent();
+	stream << "}\n";
+    }
 }
 
 void CodeGen_Bash::visit(Variable *n) {
     if (should_quote_variable()) stream << "\"";
-    stream << "$" << lookup_name(n);
+    bool array = n->type().array();
+    stream << "$";
+    if (array) stream << "{";
+    stream << lookup_name(n);
+    if (array) stream << "[@]}";
+    if (should_quote_variable()) stream << "\"";
+}
+
+void CodeGen_Bash::visit(Location *n) {
+    if (should_quote_variable()) stream << "\"";
+    if (n->is_variable()) {
+        bool array = n->variable->type().array();
+        stream << "$";
+        if (array) stream << "{";
+        stream << lookup_name(n->variable);
+        if (array) stream << "[@]}";
+    } else {
+        assert(n->is_array_ref());
+        stream << "${" << lookup_name(n->variable) << "[";
+        n->offset->accept(this);
+        stream << "]}";
+    }
     if (should_quote_variable()) stream << "\"";
 }
 
 void CodeGen_Bash::visit(ReturnStatement *n) {
+    if (n->value == NULL) {
+	stream << "return";
+	return;
+    }
     bool external = dynamic_cast<ExternCall*>(n->value) != NULL;
     stream << "echo ";
     enable_functioncall_wrap();
@@ -102,12 +143,14 @@ void CodeGen_Bash::visit(LoopControlStatement *n) {
 
 void CodeGen_Bash::visit(IfStatement *n) {
     stream << "if [[ ";
+    // Disable comparison wrap because this is within [[ ... ]]
+    disable_comparison_wrap();
     enable_functioncall_wrap();
     n->pblock->condition->accept(this);
-    if (is_equals_op(n->pblock->condition) ||
-        !dynamic_cast<BinOp*>(n->pblock->condition)) {
+    if (!dynamic_cast<BinOp*>(n->pblock->condition)) {
         stream << " -eq 1";
     }
+    enable_comparison_wrap();
     reset_functioncall_wrap();
     stream << " ]]; then\n";
     disable_block_braces();
@@ -157,7 +200,7 @@ void CodeGen_Bash::visit(ForLoop *n) {
 
 void CodeGen_Bash::visit(Function *n) {
     if (n->body == NULL) return;
-    stream << "function " << n->name.str() << " ";
+    stream << "\nfunction " << function_name(n) << " ";
     stream << "() ";
     push_function_args_insert(n);
     if (n->body) n->body->accept(this);
@@ -166,18 +209,15 @@ void CodeGen_Bash::visit(Function *n) {
 void CodeGen_Bash::visit(FunctionCall *n) {
     const int nargs = n->args.size();
     if (should_functioncall_wrap()) stream << "$(";
-    stream << n->function->name.str();
+    stream << function_name(n->function);
     for (int i = 0; i < nargs; i++) {
+        // Variables passed by reference are communicated by a global
+        // variable, not a function argument.
+        if (n->function->args[i]->is_reference()) continue;
+        Variable *arg = n->args[i]->location->variable;
+        assert(arg);
         stream << " ";
-        enable_functioncall_wrap();
-        if (const FunctionCall *FC = dynamic_cast<const FunctionCall*>(n->args[i])) {
-          if (should_quote_variable()) stream << "\"";
-          n->args[i]->accept(this);
-          if (should_quote_variable()) stream << "\"";
-        } else {
-            n->args[i]->accept(this);
-        }
-        reset_functioncall_wrap();
+        arg->accept(this);
     }
     if (should_functioncall_wrap()) stream << ")";
 }
@@ -222,28 +262,40 @@ void CodeGen_Bash::visit(IORedirection *n) {
 }
 
 void CodeGen_Bash::visit(Assignment *n) {
-    if (!n->variable->global) stream << "local ";
-    stream << lookup_name(n->variable) << "=";
+    Location *loc = n->location;
+    if (!loc->variable->global) stream << "local ";
+    if (loc->is_variable()) {
+        stream << lookup_name(loc->variable) << "=";
+    } else {
+        assert(loc->is_array_ref());
+        stream << lookup_name(loc->variable) << "[";
+        loc->offset->accept(this);
+        stream << "]=";
+    }
     enable_functioncall_wrap();
-    n->value->accept(this);
+    const int nvals = n->values.size();
+    assert(nvals > 0);
+    bool array = nvals > 1 || n->values[0]->type().array();
+    if (array) stream << "( ";
+    for (int i = 0; i < nvals; i++) {
+        n->values[i]->accept(this);
+        if (i < nvals - 1) stream << " ";
+    }
+    if (array) stream << " )";
     reset_functioncall_wrap();
 }
 
 void CodeGen_Bash::visit(BinOp *n) {
     std::string bash_op;
-    bool comparison = false, equals = false, string = false;
-    if (n->a->type() == StringTy || n->b->type() == StringTy) {
-        string = true;
-    }
+    bool comparison = false, string = false;
+    string = n->a->type().string() || n->b->type().string();
     switch (n->op) {
     case BinOp::Eq:
         bash_op = string ? "==" : "-eq";
-        equals = true;
         comparison = true;
         break;
     case BinOp::NotEq:
         bash_op = string ? "!=" : "-ne";
-        equals = true;
         comparison = true;
         break;
     case BinOp::LT:
@@ -296,13 +348,13 @@ void CodeGen_Bash::visit(BinOp *n) {
         stream << "$([[ ";
     }
 
-    if (equals && should_comparison_wrap()) stream << "$([[ ";
+    if (comparison && should_comparison_wrap()) stream << "$([[ ";
     if (!comparison) stream << "$((";
     if (!string) disable_quote_variable();
     n->a->accept(this);
     stream << " " << bash_op << " ";
     n->b->accept(this);
-    if (equals && should_comparison_wrap()) stream << " ]] && echo 1 || echo 0)";
+    if (comparison && should_comparison_wrap()) stream << " ]] && echo 1 || echo 0)";
     if (!comparison) stream << "))";
     if (!string) reset_quote_variable();
 

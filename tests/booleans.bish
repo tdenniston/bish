@@ -2,40 +2,42 @@
 
 def bools() {
     # Note these are the commands true and false.
-    @(true);
-    assert(success());
-    @(false);
-    assert(not success());
-    @(true);
+    @(true)
+    assert(success())
+    @(false)
+    assert(not success())
+    @(true)
     if (not success()) {
-        assert(false);
+        assert(false)
     }
-    @(false);
+    @(false)
     if (success()) {
-        assert(false);
+        assert(false)
     }
-    @(true);
+    @(true)
     if (success() == false) {
-        assert(false);
+        assert(false)
     }
-    @(false);
+    @(false)
     if (success() == true) {
-        assert(false);
+        assert(false)
     }
-    @(true);
+    @(true)
     if (not (success() == true)) {
-        assert(false);
+        assert(false)
     }
-    @(false);
+    @(false)
     if (not (success() == false)) {
-        assert(false);
+        assert(false)
     }
 
-    assert(not (not (not (not true))));
-    assert(not (not (not false)));
+    assert(not (not (not (not true))))
+    assert(not (not (not false)))
 }
 
 def test() {
-    bools();
-    println("Boolean tests passed.");
+    bools()
+    println("Boolean tests passed.")
 }
+
+test()

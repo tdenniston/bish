@@ -2,16 +2,18 @@
 
 def escaping() {
     # Just need these to parse:
-    println("Allow \"double quotes\"");
-    println("\" is unmatched");
-    println("Literal \\");
-    println("'single quotes' don't need escaping.");
+    println("Allow \"double quotes\"")
+    println("\" is unmatched")
+    println("Literal \\")
+    println("'single quotes' don't need escaping.")
 
-    @(\(cd; ls\); ls);
+    @(\(cd; ls\); ls)
 }
 
 def test() {
     # Capture the output so it doesn't go to stdout:
-    output = escaping();
-    println("Escaped tokens tests passed.");
+    output = escaping()
+    println("Escaped tokens tests passed.")
 }
+
+test()

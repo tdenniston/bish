@@ -8,8 +8,10 @@ namespace Bish {
 
 class TypeChecker : public IRVisitor {
 public:
+    virtual void visit(Module *);
+    virtual void visit(Location *);
     virtual void visit(ReturnStatement *);
-    virtual void visit(Function *);
+    virtual void visit(ForLoop *);
     virtual void visit(FunctionCall *);
     virtual void visit(ExternCall *);
     virtual void visit(IORedirection *);
@@ -21,6 +23,7 @@ public:
     virtual void visit(String *);
     virtual void visit(Boolean *);
 private:
+    Module *module;
     std::set<IRNode *> visited_set;
     void propagate_if_undef(IRNode *a, IRNode *b);
     bool visited(IRNode *n) { return visited_set.find(n) != visited_set.end(); }

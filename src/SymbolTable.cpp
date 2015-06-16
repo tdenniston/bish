@@ -4,8 +4,8 @@
 
 using namespace Bish;
 
-void SymbolTable::insert(const Name &v, IRNode *n, Type ty) {
-    table[v] = new SymbolTableEntry(n, ty);
+void SymbolTable::insert(const Name &v, IRNode *n) {
+    table[v] = new SymbolTableEntry(n);
 }
 
 void SymbolTable::remove(const Name &v) {

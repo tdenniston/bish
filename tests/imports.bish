@@ -1,12 +1,14 @@
 # Tests for importing bish modules.
 
-import imports2;
+import imports2
 
 def imports() {
-    assert(imports2.import_me());    
+    assert(imports2.import_me())    
 }
 
 def test() {
-    imports();
-    println("Import tests passed.");
+    imports()
+    println("Import tests passed.")
 }
+
+test()

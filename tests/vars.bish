@@ -1,39 +1,41 @@
 # Tests for disambiguating between interpolated strings and external variables.
 
 def f(x) {
-    return "x is $x";
+    return "x is $x"
 }
 
 def vars() {
-    text = "hello";
-    result = print("interpolate $text");
-    assert(result == "interpolate hello");
-    result = print("interpolate \$text");
-    assert(result == "interpolate \$text");
-    result = print("interpolate \$0");
-    assert(result == "interpolate \$0");
-    result = print("literal backslash \\");
-    assert(result == "literal backslash \\");
-    result = print("interpolate \\$text");
-    assert(result == "interpolate \\hello");
-    result = print("this should match\nthis shouldn't") | @(awk '/match/ { print \$0 }');
-    assert(result == "this should match");
-    text = "hello with spaces";
-    result = print("interpolate $text");
-    assert(result == "interpolate hello with spaces");
-    text = "335";
-    @([[ $text =~ ^[0-9]+\$ ]]);
-    assert(success());
-    text = "335f";
-    @([[ $text =~ ^[0-9]+\$ ]]);
-    assert(not success());
-    result = f("hello");
-    assert(result == "x is hello");
-    result = f("hello:");
-    assert(result == "x is hello:");
+    text = "hello"
+    result = print("interpolate $text")
+    assert(result == "interpolate hello")
+    result = print("interpolate \$text")
+    assert(result == "interpolate \$text")
+    result = print("interpolate \$0")
+    assert(result == "interpolate \$0")
+    result = print("literal backslash \\")
+    assert(result == "literal backslash \\")
+    result = print("interpolate \\$text")
+    assert(result == "interpolate \\hello")
+    result = print("this should match\nthis shouldn't") | @(awk '/match/ { print \$0 }')
+    assert(result == "this should match")
+    text = "hello with spaces"
+    result = print("interpolate $text")
+    assert(result == "interpolate hello with spaces")
+    text = "335"
+    @([[ $text =~ ^[0-9]+\$ ]])
+    assert(success())
+    text = "335f"
+    @([[ $text =~ ^[0-9]+\$ ]])
+    assert(not success())
+    result = f("hello")
+    assert(result == "x is hello")
+    result = f("hello:")
+    assert(result == "x is hello:")
 }
 
 def test() {
-    vars();
-    println("Vars tests passed.");
+    vars()
+    println("Vars tests passed.")
 }
+
+test()

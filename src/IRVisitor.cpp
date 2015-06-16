@@ -34,11 +34,18 @@ void IRVisitor::visit(Variable *node) {
     visited_set.insert(node);
 }
 
+void IRVisitor::visit(Location *node) {
+    if (visited(node)) return;
+    visited_set.insert(node);
+    node->variable->accept(this);
+    if (node->offset) node->offset->accept(this);
+}
+
 void IRVisitor::visit(ReturnStatement *node) {
     if (visited(node)) return;
     visited_set.insert(node);
 
-    node->value->accept(this);
+    if (node->value) node->value->accept(this);
 }
 
 void IRVisitor::visit(ImportStatement *node) {
@@ -90,8 +97,7 @@ void IRVisitor::visit(FunctionCall *node) {
     if (visited(node)) return;
     visited_set.insert(node);
 
-    node->function->accept(this);
-    for (std::vector<IRNode *>::const_iterator I = node->args.begin(),
+    for (std::vector<Assignment *>::const_iterator I = node->args.begin(),
              E = node->args.end(); I != E; ++I) {
         (*I)->accept(this);
     }
@@ -114,8 +120,11 @@ void IRVisitor::visit(Assignment *node) {
     if (visited(node)) return;
     visited_set.insert(node);
 
-    node->variable->accept(this);
-    node->value->accept(this);
+    node->location->accept(this);
+    for (std::vector<IRNode *>::const_iterator I = node->values.begin(),
+             E = node->values.end(); I != E; ++I) {
+        (*I)->accept(this);
+    }
 }
 
 void IRVisitor::visit(BinOp *node) {

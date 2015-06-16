@@ -81,7 +81,7 @@ void Module::import(Module *m) {
         // Special case for stdlib functions: they can be called
         // without a namespace, so add it here.
         if (m->path == get_stdlib_path()) {
-            if (!name.has_namespace("StdLib")) name.add_namespace("StdLib");
+            if (!name.has_namespace("stdlib")) name.add_namespace("stdlib");
         }
         if (linked.find(name) != linked.end()) {
             assert(call->function->body == NULL);
@@ -104,16 +104,21 @@ void Module::import(Module *m) {
 
 Type get_primitive_type(const IRNode *n) {
     if (const Integer *v = dynamic_cast<const Integer*>(n)) {
-        return IntegerTy;
+        return Type::Integer();
     } else if (const Fractional *v = dynamic_cast<const Fractional*>(n)) {
-        return FractionalTy;
+        return Type::Fractional();
     } else if (const String *v = dynamic_cast<const String*>(n)) {
-        return StringTy;
+        return Type::String();
     } else if (const Boolean *v = dynamic_cast<const Boolean*>(n)) {
-        return BooleanTy;
+        return Type::Boolean();
     } else {
-        return UndefinedTy;
+        return Type::Undef();
     }
+}
+
+std::ostream &operator<<(std::ostream &os, const IRDebugInfo &a) {
+    os << a.str();
+    return os;
 }
 
 }

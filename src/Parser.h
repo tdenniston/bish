@@ -25,7 +25,8 @@ stmt ::= assign ';'
        | 'for' '(' var 'in' atom [ '..' atom ] ')' block
        | 'def' var '(' varlist ')' block
        | block
-assign ::= namespacedvar '=' expr
+assign ::= location '=' expr
+         | location '=' '[' exprlist ']'
 funcall ::= namespacedvar '(' exprlist ')'
 externcall ::= '@' '(' interp ')'
 expr ::= expr '|' logical | logical
@@ -38,11 +39,12 @@ arith ::= arith '+' term | arith '-' term | term
 term ::= term '*' unary | term '/' unary | term '%' unary | unary
 unary ::= '-' unary | 'not' unary | factor
 factor ::= '( expr ')' | funcall | externcall | atom
-atom ::= namespacedvar | NUMBER | '"' STRING '"' | 'true' | 'false'
+atom ::= location | NUMBER | '"' STRING '"' | 'true' | 'false'
 var ::= { ALPHANUM | '_' }
+location ::= namespacedvar | namespacedvar '[' expr ']'
 namespacedvar ::= [ var '.' ] var
 varlist ::= var { ',' var }
-atomlist ::= expr { ',' expr }
+exprlist ::= expr { ',' expr }
 interp ::= { str | '$' namespacedvar | '$' '(' any ')'}
 */
 
@@ -54,6 +56,7 @@ class ParseScope {
 public:
     ParseScope() {
         function_symbol_table = new SymbolTable();
+        unique_id = 0;
     }
 
     ~ParseScope() {
@@ -71,7 +74,9 @@ public:
     // Remove the topmost scope for variables.
     void pop_symbol_table();
     // Add the given symbol to the current variable scope.
-    void add_symbol(const Name &name, Variable *v, Type ty);
+    void add_symbol(const Name &name, Variable *v);
+    // Return a name that is guaranteed to be unique.
+    Name get_unique_name();
     // Return the variable from the symbol table corresponding to the
     // given variable. The given variable is then deleted. If there is no
     // symbol table entry, abort.
@@ -95,6 +100,8 @@ private:
     std::stack<SymbolTable *> symbol_table_stack;
     // Symbol table for functions (which are defined globally).
     SymbolTable *function_symbol_table;
+    // Counter for unique names.
+    unsigned unique_id;
 };
 
 class Parser {
@@ -108,6 +115,7 @@ private:
     ParseScope scope;
     Tokenizer *tokenizer;
     std::set<std::string> namespaces;
+    std::stack<Block *> block_stack;
 
     std::string read_stream(std::istream &is);
     std::string read_file(const std::string &path);
@@ -117,9 +125,13 @@ private:
     std::string scan_until(Token a, Token b);
     std::string scan_until(Token t);
     std::string scan_until(char c);
+    std::string scan_until_stmt_end();
+    void setup_builtin_symbols();
     void setup_global_variables(Module *m);
     void post_parse_passes(Module *m);
-
+    void push_block(Block *b);
+    void pop_block();
+    
     Module *module(const std::string &path);
     Block *block();
     IRNode *stmt();
@@ -135,6 +147,7 @@ private:
     ForLoop *forloop();
     Function *functiondef();
     IRNode *expr();
+    std::vector<IRNode *> exprlist();
     IRNode *logical();
     IRNode *equality();
     IRNode *relative();
@@ -147,7 +160,7 @@ private:
     Variable *arg();
     Name namespacedvar();
     InterpolatedString *interpolated_string(const Token &stop, bool keep_literal_backslash);
-
+    void end_stmt();
 };
 
 }

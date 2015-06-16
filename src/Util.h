@@ -15,8 +15,12 @@ inline T convert_string(const std::string &s) {
 }
 
 // Convert int to string
-inline std::string convert_string(int i) {
+inline std::string as_string(int i) {
   return dynamic_cast<std::ostringstream &>((std::ostringstream() << i )).str();
+}
+
+inline std::string as_string(const std::string &s) {
+  return s;
 }
 
 // Return true if the given path is a valid file.
@@ -37,4 +41,6 @@ std::string strip(const std::string &s);
 // Return the name of a module from a pathname.
 // E.g. module_name_from_path("/a/b/test.bish") returns "test"
 std::string module_name_from_path(const std::string &path);
+// Return the given line number from the given file.
+std::string read_line_from_file(const std::string &path, unsigned lineno);
 #endif

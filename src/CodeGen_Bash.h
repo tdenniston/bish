@@ -41,6 +41,7 @@ public:
     virtual void visit(Module *);
     virtual void visit(Block *);
     virtual void visit(Variable *);
+    virtual void visit(Location *);
     virtual void visit(ReturnStatement *);
     virtual void visit(LoopControlStatement *);
     virtual void visit(IfStatement *);
@@ -131,6 +132,14 @@ private:
         } else {
             return v->name.str();
         }
+    }
+
+    std::string function_name(const Function *f) {
+	// Ensure a function name is always qualified somehow.
+	if (f->name.namespace_id.empty()) {
+	    return "bish_" + f->name.str();
+	}
+	return f->name.str();
     }
 };
 

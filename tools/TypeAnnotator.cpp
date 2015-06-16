@@ -28,7 +28,7 @@ public:
             stream << ";\n";
         }
     }
-    
+
     void visit(ReturnStatement *n) {
         if (visited(n)) return;
         visited_set.insert(n);
@@ -54,7 +54,17 @@ public:
     }
 
     void visit(Variable *n) {
-        stream << n->name.str() << "[:" << strtype(n) << "]";
+        stream << n->name.str() << strtype(n);
+    }
+
+    void visit(Location *n) {
+        n->variable->accept(this);
+        if (n->offset) {
+            stream << "[";
+            n->offset->accept(this);
+            stream << "]";
+            stream << strtype(n);
+        }
     }
 
     void visit(IfStatement *n) {
@@ -94,7 +104,7 @@ public:
     void visit(Function *n) {
         if (visited(n)) return;
         visited_set.insert(n);
-        stream << "def " << n->name.str() << "[:" << strtype(n) << "] (";
+        stream << "def " << n->name.str() << strtype(n) << " (";
         const int nargs = n->args.size();
         int i = 0;
         for (std::vector<Variable *>::const_iterator I = n->args.begin(),
@@ -155,9 +165,16 @@ public:
     void visit(Assignment *n) {
         if (visited(n)) return;
         visited_set.insert(n);
-        n->variable->accept(this);
+        bool array_init = n->values.size() > 1;
+        n->location->accept(this);
         stream << " = ";
-        n->value->accept(this);
+        if (array_init) stream << "[";
+        const unsigned sz = n->values.size();
+        for (unsigned i = 0; i < sz; i++) {
+            n->values[i]->accept(this);
+            if (i < sz - 1) stream << ", ";
+        }
+        if (array_init) stream << "]";
     }
 
     void visit(BinOp *n) {
@@ -249,20 +266,8 @@ private:
         }
     }
     std::string strtype(IRNode *n) {
-        switch (n->type()) {
-        case UndefinedTy:
-            return "undef";
-        case IntegerTy:
-            return "int";
-        case FractionalTy:
-            return "float";
-        case StringTy:
-            return "string";
-        case BooleanTy:
-            return "bool";
-        }
+        return "{:" + n->type().str() + "}";
     }
-
 };
 
 int main(int argc, char **argv) {
@@ -282,7 +287,7 @@ int main(int argc, char **argv) {
     CodeGenerators::CodeGeneratorConstructor cg_constructor =
         CodeGenerators::get("bash");
     assert(cg_constructor);
-    compile_to(m, cg_constructor(s));
+    compile(m, cg_constructor(s));
 
     TypeAnnotator annotate(std::cout);
     m->accept(&annotate);

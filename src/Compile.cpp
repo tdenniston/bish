@@ -1,10 +1,12 @@
 #include <cassert>
 #include <cstdlib>
+#include "ByReferencePass.h"
 #include "CodeGen.h"
 #include "CodeGen_Bash.h"
 #include "Compile.h"
 #include "Config.h"
 #include "Parser.h"
+#include "ReturnValuesPass.h"
 #include "TypeChecker.h"
 #include "Util.h"
 
@@ -23,14 +25,31 @@ void link_stdlib(Bish::Module *m) {
     }
 }
 
-}
-
-void Bish::compile_to(Module *m, CodeGenerator *cg, bool compile_as_library) {
-    link_stdlib(m);
-
+// Run an ordered list of post-link passes over the IR.
+void link_time_passes(Bish::Module *m) {
     // Type checking
     TypeChecker types;
     m->accept(&types);
+
+    // Adjust the IR to handle values that should be passed by
+    // reference (e.g. arrays) to functions.
+    ByReferencePass refs;
+    m->accept(&refs);
+
+    // Convert function return values into global variable
+    // assignments.
+    ReturnValuesPass retvals;
+    m->accept(&retvals);
+}
+
+
+}
+
+// Link and compile the given Module using the given code generator.
+void Bish::compile_to(Module *m, CodeGenerator *cg, bool compile_as_library) {
+    link_stdlib(m);
+
+    link_time_passes(m);
     
 	if (!compile_as_library)
 		cg->ostream() << "#!/usr/bin/env bash\n"
@@ -38,4 +57,6 @@ void Bish::compile_to(Module *m, CodeGenerator *cg, bool compile_as_library) {
 		<< "# Bish version " << BISH_VERSION << "\n"
 		<< "# Please see " << BISH_URL << " for more information about Bish.\n\n";
     m->accept(cg);
+
+    cg->ostream().flush();
 }

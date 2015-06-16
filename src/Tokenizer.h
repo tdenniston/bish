@@ -2,6 +2,7 @@
 #define __BISH_TOKENIZER_H__
 
 #include <set>
+#include <stack>
 #include <string>
 #include <vector>
 #include "IR.h"
@@ -201,7 +202,7 @@ public:
     }
 
     static Token RAngleEquals() {
-        return Token(DoubleEqualsType, ">=");
+        return Token(RAngleEqualsType, ">=");
     }
 
     static Token Plus() {
@@ -266,12 +267,14 @@ private:
  */
 class Tokenizer {
 public:
-    Tokenizer(const std::string &t) : text(t), idx(0), lineno(0) {}
+    Tokenizer(const std::string &p, const std::string &t) : path(p), text(t), idx(0), lineno(0), got_newline(false) {}
 
     // Return the token at the head of the stream, but do not skip it.
     Token peek();
     // Skip the token currently at the head of the stream.
     void next();
+    // Return true if a newline was processed since the last call of was_newline.
+    bool was_newline();
     // Return the substring beginning at the current index and
     // continuing until the first occurrence of one of the given
     // tokens. Any of the given tokens prefixed by '\' are ignored
@@ -282,17 +285,48 @@ public:
     // keep_literal_backslash set to false.
     std::string scan_until(const std::vector<Token> &tokens, bool keep_literal_backslash);
     // Return the substring beginning at the current index and
+    // continuing until the first occurrence of one of the given
+    // characters.
+    std::string scan_until(const std::set<char> &chars);
+    // Return the substring beginning at the current index and
     // continuing until the first occurrence of a character of the
     // given value.
     std::string scan_until(char c);
     // Return a human-readable representation of the current position
     // in the string.
     std::string position() const;
+
+    // Helper class used to manage fetching debug info.
+    class Info {
+    public:
+        Info(Tokenizer *t) : tokenizer(t) {
+            tokenizer->start_debug_info();
+        }
+        ~Info() {
+            tokenizer->end_debug_info();
+        }
+        IRDebugInfo get() {
+            return tokenizer->get_debug_info();
+        }
+    private:
+        Tokenizer *tokenizer;
+    };
+
 private:
     typedef std::pair<Token, unsigned> ResultState;
+    std::stack<IRDebugInfo> debug_info_stack;
+    const std::string path;
     const std::string &text;
     unsigned idx;
     unsigned lineno;
+    bool got_newline;
+
+    // Start a debug record.
+    void start_debug_info();
+    // Finish a debug record.
+    void end_debug_info();
+    // Return the top debug record.
+    IRDebugInfo get_debug_info();
 
     // Return the current character.
     inline char curchar() const;

@@ -18,40 +18,42 @@ Some small examples are below, but **see the [introduction](https://github.com/t
 
     def fib(n) {
         if (n < 2) {
-            return 1;
+            return 1
         }
-        return fib(n-1) + fib(n-2);
+        return fib(n-1) + fib(n-2)
     }
 
 ##### Shell commands
 
     def printall(files) {
         for (f in files) {
-            println(f);
+            println(f)
         }
     }
     # cwd, ls, and cd are all builtin functions.
-    dir = cwd();
-    files = ls();
-    println("Files in current directory $dir:");
-    printall(files);
-    cd("/");
-    println("Files in root directory:");
+    dir = cwd()
+    files = ls()
+    println("Files in current directory $dir:")
+    printall(files)
+    cd("/")
+    println("Files in root directory:")
     printall(ls());
 
 ##### Shell-like features
 
     # I/O redirection (like pipes) is a first-class language feature.
-    pattern = "bish";
-    matches = ls() | @(grep $pattern);
-    println("Files in current directory matching $pattern:");
+    pattern = "bish"
+    matches = ls() | @(grep $pattern)
+    println("Files in current directory matching $pattern:")
     for (m in matches) {
-        println(m);
+        println(m)
     }
 
 ## How
 
-Just clone and build with 'make'. There are no dependencies other than the C++ standard library. Compile bish to bash with the command:
+[Download](https://github.com/tdenniston/bish/releases/tag/v0.1) the latest stable release, or clone the repository for the latest and greatest.
+
+Build with 'make'. There are no dependencies other than the C++ standard library (and make itself). Compile a bish program to bash with the command:
 
     $ ./bish input.bish > output.bash
     
@@ -59,16 +61,29 @@ Then run the compiled file:
 
     $ bash output.bash
 
+You can also perform this in a single step by using the `-r` (for "run") argument:
+
+    $ ./bish -r input.bish
+    
+This compiles and pipes the output directly to a bash process.
+
 ## Why
 
-I can't count the number of times when I wanted to write a quick shell script to automate an easy task, only to waste hours tracking down idiosyncracies in Bash syntax and semantics. Bish tries to fill this niche: when you want a lightweight shell scripting language and don't wish to break out the larger hammer of Python, Perl, etc...
+I can't count the number of times when I wanted to write a quick shell script to automate an easy task, only to waste hours tracking down idiosyncrasies in Bash syntax and semantics. Bish tries to fill this niche: when you want a lightweight shell scripting language and don't wish to break out the larger hammer of Python, Perl, etc...
 
 However, I created this language first and foremost as a weekend project and exercise in writing a compiler from scratch. I've dealt with pieces of compilers before, but have never written one from start to finish. Thus, I hope this project can also serve as a good teaching tool. I tried to design it with clarity in mind, so it should be simple to extend the language, or write a new back end.
 
+## News
+
+* Apr 20 2015 -- Bish version 0.1 released. This is the first tagged release for bish.
+* Apr 8 2015 -- I've been caught up in my day job recently, and a few of the features I want to implement before doing a 0.1 release are requiring more infrastructure work than I anticipated. I'm hoping to do a 0.1 release within the next week or two weeks.
+
 ## To do
 
-The language and compiler are pretty bare-bones as of now. A selection of things I intend to do:
-- Improve parsing error messages
-- Implement type checking
-- Figure out what to do about floats
-- Expand standard library of builtin functions
+The language and compiler are pretty bare-bones as of now, but quite functional. There are numerous things in the pipeline (see the open issues for a list). Longer term, here are some ideas of features that might be implemented:
+
+* Additional compiler targets, e.g. `sh` for even wider compatability, or `ksh` for vanilla AIX support.
+* Multidimensional arrays, and potentially arrays of mixed types.
+* Syntactical sugar for more shell-like function invocation. For example, typing `cd("path")` or `ls("-l")` might get old when writing bish scripts. Bish could support an alternate invocation syntax of `function arg0 arg1...` so that these functions could be invoked like `cd path` or `ls -l` directly in the bish script.
+* Language support for executing portions of bish scripts as other users (e.g. the administrator).
+* Language support for executing commands on remote machines.

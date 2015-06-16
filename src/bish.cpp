@@ -10,8 +10,12 @@
 #include "Parser.h"
 #include "CodeGen.h"
 
-int run_on(const std::string &sh, std::istream &is) {
-    FILE *shell = popen(sh.c_str(), "w");
+int run_on(const std::string &sh, std::istream &is, const std::string &args) {
+    // Must pass the -s parameter to bash to set the positional
+    // parameters to 'args'.  The '--' disables any of the arguments
+    // from being treated as arguments to the shell.
+    std::string cmd = sh + " -s -- " + args;
+    FILE *shell = popen(cmd.c_str(), "w");
     char buf[4096];
 
     do {
@@ -28,12 +32,13 @@ int run_on(const std::string &sh, std::istream &is) {
 }
 
 void usage(char *argv0) {
-    std::cerr << "USAGE: " << argv0 << " [-r] <INPUT>\n";
+    std::cerr << "USAGE: " << argv0 << " [-r] <INPUT> [<args>]\n";
     std::cerr << "  Compiles Bish file <INPUT> to bash. Specifying '-' for <INPUT>\n";
     std::cerr << "  reads from standard input.\n";
     std::cerr << "\nOPTIONS:\n";
     std::cerr << "  -h: Displays this help message.\n";
-    std::cerr << "  -r: Compiles and runs the file.\n";
+    std::cerr << "  -r: Compiles and runs the script.\n";
+    std::cerr << "  <ARGS>: With -r, passes <ARGS> as arguments to script.\n";
     std::cerr << "  -L: Compiles the file as a library.\n";
     std::cerr << "  -l: list all code generators.\n";
     std::cerr << "  -u <NAME>: use code generator <NAME>.\n";
@@ -59,7 +64,7 @@ int main(int argc, char **argv) {
         switch (c) {
         case 'h':
             usage(argv[0]);
-            return 1;
+            return 0;
         case 'r':
             run_after_compile = true;
             break;
@@ -87,17 +92,33 @@ int main(int argc, char **argv) {
     Bish::Parser p;
     Bish::Module *m = path.compare("-") == 0 ? p.parse(std::cin) : p.parse(path);
 
+    std::string args;
+    if (optind + 1 < argc) {
+        if (!run_after_compile) {
+            std::cerr << "Can't pass arguments to script without -r.\n";
+            return 1;
+        }
+        for (unsigned i = optind+1; i < argc; i++) {
+            args += argv[i];
+            args += " ";
+        }
+    }
+    
     Bish::CodeGenerators::CodeGeneratorConstructor cg_constructor =
         Bish::CodeGenerators::get(code_generator_name);
-
     if (cg_constructor == NULL) {
         std::cerr << "No code generator " << code_generator_name << std::endl;
         return 1;
     }
+<<<<<<< HEAD
 
     Bish::compile_to(m, cg_constructor(run_after_compile ? s : std::cout), compile_as_library);
+=======
+    Bish::CodeGenerator *cg = cg_constructor(run_after_compile ? s : std::cout);
+    Bish::compile(m, cg);
+>>>>>>> ca190addabc0576cbf82943389672a1114f06306
     if (run_after_compile) {
-        const int exit_status = run_on(code_generator_name, s);
+        const int exit_status = run_on(code_generator_name, s, args);
         exit(exit_status);
     }
 

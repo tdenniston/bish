@@ -39,11 +39,7 @@ const std::vector<Function *> &CallGraph::callers(Function *f) {
 }
 
 void CallGraphBuilder::visit(Function *f) {
-    for (std::vector<Variable *>::const_iterator I = f->args.begin(),
-             E = f->args.end(); I != E; ++I) {
-        (*I)->accept(this);
-    }
-    if (f->body) f->body->accept(this);
+    IRVisitor::visit(f);
 
     if (cg.calls_map.find(f) == cg.calls_map.end()) {
         cg.calls_map[f] = CallGraph::FuncVec();
@@ -54,11 +50,7 @@ void CallGraphBuilder::visit(Function *f) {
 }
 
 void CallGraphBuilder::visit(FunctionCall *call) {
-    call->function->accept(this);
-    for (std::vector<IRNode *>::const_iterator I = call->args.begin(),
-             E = call->args.end(); I != E; ++I) {
-        (*I)->accept(this);
-    }
+    IRVisitor::visit(call);
 
     Block *b = dynamic_cast<Block *>(call->parent());
     assert(b);

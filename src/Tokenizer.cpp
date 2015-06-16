@@ -1,6 +1,7 @@
 #include <cassert>
 #include <iostream>
 #include <sstream>
+#include <set>
 #include "Tokenizer.h"
 
 using namespace Bish;
@@ -38,6 +39,15 @@ Token Tokenizer::peek() {
 void Tokenizer::next() {
     ResultState st = get_token();
     idx = st.second;
+}
+
+// Return true if a newline was processed since the last call of was_newline.
+bool Tokenizer::was_newline() {
+    if (got_newline) {
+	got_newline = false;
+	return true;
+    }
+    return false;
 }
 
 // Return the substring beginning at the current index and
@@ -86,14 +96,23 @@ std::string Tokenizer::scan_until(const std::vector<Token> &tokens, bool keep_li
 }
 
 // Return the substring beginning at the current index and
-// continuing until the first occurrence of a character of the
-// given value.
-std::string Tokenizer::scan_until(char c) {
+// continuing until the first occurrence of one of the given
+// characters.
+std::string Tokenizer::scan_until(const std::set<char> &chars) {
     unsigned start = idx;
-    while (curchar() != c) {
+    while (chars.count(curchar()) == 0) {
         idx++;
     }
     return text.substr(start, idx - start);
+}
+
+// Return the substring beginning at the current index and
+// continuing until the first occurrence of a character of the
+// given value.
+std::string Tokenizer::scan_until(char c) {
+    std::set<char> cs;
+    cs.insert(c);
+    return scan_until(cs);
 }
 
 // Return a human-readable representation of the current position
@@ -102,6 +121,24 @@ std::string Tokenizer::position() const {
     std::stringstream s;
     s << "character '" << text[idx] << "', line " << lineno;
     return s.str();
+}
+
+// Start a debug record.
+void Tokenizer::start_debug_info() {
+    IRDebugInfo record(path, idx, 0, lineno);
+    debug_info_stack.push(record);
+}
+
+// Finish a debug record.
+void Tokenizer::end_debug_info() {
+    debug_info_stack.pop();
+}
+
+// Return the top debug record.
+IRDebugInfo Tokenizer::get_debug_info() {
+    IRDebugInfo record = debug_info_stack.top();
+    record.end = idx;
+    return record;
 }
 
 // Return the current character.
@@ -127,7 +164,10 @@ inline bool Tokenizer::eos() const {
 // Skip ahead until the next non-whitespace character.
 inline void Tokenizer::skip_whitespace() {
     while (!eos() && is_whitespace(curchar())) {
-        if (is_newline(curchar())) ++lineno;
+        if (is_newline(curchar())) {
+	    ++lineno;
+	    got_newline = true;
+	}
         ++idx;
     }
 }

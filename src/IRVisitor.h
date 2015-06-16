@@ -9,6 +9,7 @@ class IRNode;
 class Module;
 class Block;
 class Variable;
+class Location;
 class ReturnStatement;
 class ImportStatement;
 class LoopControlStatement;
@@ -32,6 +33,7 @@ public:
     virtual void visit(Module *);
     virtual void visit(Block *);
     virtual void visit(Variable *);
+    virtual void visit(Location *);
     virtual void visit(Function *);
     virtual void visit(FunctionCall *);
     virtual void visit(ExternCall *);

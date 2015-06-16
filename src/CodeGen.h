@@ -7,7 +7,7 @@
 
 namespace Bish {
 
-class CodeGenerator: public IRVisitor {
+class CodeGenerator : public IRVisitor {
 public:
     CodeGenerator(std::ostream &os): stream(os) {}
     std::ostream &ostream() { return stream; }
