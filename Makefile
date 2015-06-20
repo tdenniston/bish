@@ -1,10 +1,10 @@
-CXX?=c++
-CXXFLAGS?=-g -O0
-RM=rm -f
+CXX ?= c++
+CXXFLAGS ?= -g -O0 -Wall
+RM = rm -f
 
-SRC=src
-OBJ=obj
-BIN=/usr/bin
+SRC = src
+OBJ = obj
+BIN = /usr/bin
 
 SOURCE_FILES=ByReferencePass.cpp CallGraph.cpp CodeGen.cpp CodeGen_Bash.cpp Compile.cpp FindCalls.cpp IR.cpp IRAncestorsPass.cpp IRVisitor.cpp LinkImportsPass.cpp Parser.cpp ReplaceIRNodes.cpp ReturnValuesPass.cpp SymbolTable.cpp Tokenizer.cpp TypeChecker.cpp Util.cpp
 HEADER_FILES=ByReferencePass.h CallGraph.h CodeGen.h CodeGen_Bash.h Compile.h FindCalls.h IR.h IRAncestorsPass.h IRVisitor.h LinkImportsPass.h Parser.h ReplaceIRNodes.h ReturnValuesPass.h SymbolTable.h Tokenizer.h TypeChecker.h Util.h
@@ -16,7 +16,6 @@ ROOT_DIR = $(realpath $(dir $(firstword $(MAKEFILE_LIST))))
 CONFIG_CONSTANTS = -DSTDLIB_PATH="\"$(ROOT_DIR)/lib/stdlib.bish\""
 
 all: bish
-
 -include $(OBJ)/*.d
 
 $(OBJ)/%.o: $(SRC)/%.cpp $(SRC)/%.h
@@ -39,8 +38,12 @@ clean:
 
 .PHONY: install
 install:
-	@-cp bish $(BIN)
+	cp bish $(BIN)
 
 .PHONY: uninstall
 uninstall:
 	$(RM) $(BIN)/bish
+
+.PHONY: test
+test: bish
+	@./bish -r tests/tests.bish

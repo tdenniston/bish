@@ -19,7 +19,8 @@ void CodeGen_Bash::visit(Module *n) {
     // Define the functions first.
     for (std::vector<Function *>::const_iterator I = n->functions.begin(),
              E = n->functions.end(); I != E; ++I) {
-        (*I)->accept(this);
+	if (!(compile_as_library && (*I)->name.name == "main"))
+            (*I)->accept(this);
     }
     // Special case for command-line arguments. TODO: tie this into Builtins somehow.
     stream << "args=( $0 \"$@\" );\n";
@@ -29,12 +30,14 @@ void CodeGen_Bash::visit(Module *n) {
         (*I)->accept(this);
         stream << ";\n";
     }
-    // Insert a call to bish_main().
-    assert(n->main);
-    FunctionCall *call_main = new FunctionCall(n->main, IRDebugInfo());
-    visit(call_main);
-    stream << ";\n";
-    delete call_main;
+    if (!compile_as_library) {
+        // Insert a call to bish_main().
+        assert(n->main);
+        FunctionCall *call_main = new FunctionCall(n->main);
+        visit(call_main);
+        stream << ";\n";
+        delete call_main;
+    }
 }
 
 void CodeGen_Bash::visit(Block *n) {

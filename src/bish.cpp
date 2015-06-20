@@ -39,6 +39,7 @@ void usage(char *argv0) {
     std::cerr << "  -h: Displays this help message.\n";
     std::cerr << "  -r: Compiles and runs the script.\n";
     std::cerr << "  <ARGS>: With -r, passes <ARGS> as arguments to script.\n";
+    std::cerr << "  -L: Compiles the file as a library.\n";
     std::cerr << "  -l: list all code generators.\n";
     std::cerr << "  -u <NAME>: use code generator <NAME>.\n";
 }
@@ -56,9 +57,10 @@ int main(int argc, char **argv) {
 
     int c;
     bool run_after_compile = false;
+    bool compile_as_library = false;
     std::string code_generator_name = "bash";
 
-    while ((c = getopt(argc,argv, "hrlu:")) != -1) {
+    while ((c = getopt(argc,argv, "hrLlu:")) != -1) {
         switch (c) {
         case 'h':
             usage(argv[0]);
@@ -66,6 +68,9 @@ int main(int argc, char **argv) {
         case 'r':
             run_after_compile = true;
             break;
+		case 'L':
+			compile_as_library = true;
+			break;
         case 'l':
             show_generators_list();
             return 1;
@@ -105,8 +110,13 @@ int main(int argc, char **argv) {
         std::cerr << "No code generator " << code_generator_name << std::endl;
         return 1;
     }
+<<<<<<< HEAD
+
+    Bish::compile_to(m, cg_constructor(run_after_compile ? s : std::cout), compile_as_library);
+=======
     Bish::CodeGenerator *cg = cg_constructor(run_after_compile ? s : std::cout);
     Bish::compile(m, cg);
+>>>>>>> ca190addabc0576cbf82943389672a1114f06306
     if (run_after_compile) {
         const int exit_status = run_on(code_generator_name, s, args);
         exit(exit_status);

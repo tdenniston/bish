@@ -1,0 +1,18 @@
+def init(x) {
+    @(BISH_DYNAMIC_LINK_LIBS="|dl|");
+    if (x != "") {
+        @(BISH_DYNAMIC_LINK_PATH="$x");
+    }
+}
+def loadlib(x) {
+    if (@( \( echo $BISH_DYNAMIC_LINK_LIBS | grep "|$x|" \) && echo 1 || echo 0)) {
+        # Already loaded.
+    }
+    else {
+        @(source $BISH_DYNAMIC_LINK_PATH/$x.sh);
+        if(@(echo \$?) != "0")
+        {
+            println("Cannot load library $x");
+        }
+    }
+}
