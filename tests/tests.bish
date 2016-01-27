@@ -46,6 +46,9 @@ def run_all() {
 
     import return_vals
     return_vals.test()
+
+    import conditionals
+    conditionals.test()
 }
 
 change_dir()

@@ -1,0 +1,24 @@
+# Tests for return values.
+
+def lastchar(x) {
+    if (x != "") {
+        y = @(echo -ne "$x" | tail -c 1)
+        x = "$y"
+    }
+    return x
+}
+
+def test() {
+    h = lastchar("hello")
+    assert(h == "o")
+    assert(lastchar("hello") == "o")
+    assert(lastchar("") == "")
+    println("Return value tests passed.")
+}
+
+# Include some module-level tests
+h = lastchar("hello")
+assert(h == "o")
+assert(lastchar("hello") == "o")
+
+test()
