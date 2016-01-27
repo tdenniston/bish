@@ -152,7 +152,7 @@ void CodeGen_Bash::visit(IfStatement *n) {
     if (!dynamic_cast<BinOp*>(n->pblock->condition)) {
         stream << " -eq 1";
     }
-    enable_comparison_wrap();
+    reset_comparison_wrap();
     reset_functioncall_wrap();
     stream << " ]]; then\n";
     disable_block_braces();
@@ -162,9 +162,12 @@ void CodeGen_Bash::visit(IfStatement *n) {
              E = n->elses.end(); I != E; ++I) {
         indent();
         stream << "elif [[ ";
+        // Disable comparison wrap because this is within [[ ... ]]
+        disable_comparison_wrap();
         enable_functioncall_wrap();
         (*I)->condition->accept(this);
         reset_functioncall_wrap();
+        reset_comparison_wrap();
         stream << " ]]; then\n";
         (*I)->body->accept(this);
     }
