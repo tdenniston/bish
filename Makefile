@@ -4,6 +4,7 @@ RM=rm -f
 
 SRC=src
 OBJ=obj
+TESTS=tests
 BIN=/usr/bin
 
 SOURCE_FILES=ByReferencePass.cpp CallGraph.cpp CodeGen.cpp CodeGen_Bash.cpp Compile.cpp FindCalls.cpp IR.cpp IRAncestorsPass.cpp IRVisitor.cpp LinkImportsPass.cpp Parser.cpp ReplaceIRNodes.cpp ReturnValuesPass.cpp SymbolTable.cpp Tokenizer.cpp TypeChecker.cpp Util.cpp
@@ -30,6 +31,9 @@ $(OBJ)/libbish.a: $(OBJECTS)
 
 bish: $(SRC)/bish.cpp $(OBJ)/libbish.a
 	$(CXX) $(CXXFLAGS) -o bish $(SRC)/bish.cpp $(OBJ)/libbish.a $(CONFIG_CONSTANTS)
+
+test: bish $(TESTS)/tests.bish
+	./bish -r $(TESTS)/tests.bish
 
 .PHONY: clean
 clean:
