@@ -65,9 +65,9 @@ void CodeGen_Bash::visit(Block *n) {
         if (should_emit_statement(*I)) {
             indent();
             (*I)->accept(this);
-	    if (!dynamic_cast<Block *>(*I)) {
-		stream << ";\n";
-	    }
+            if (!dynamic_cast<Block *>(*I)) {
+                stream << ";\n";
+            }
         }
     }
     // Bash doesn't allow empty functions: must insert a call to a null command.
@@ -77,8 +77,8 @@ void CodeGen_Bash::visit(Block *n) {
     }
     indent_level--;
     if (should_print_block_braces()) {
-	indent();
-	stream << "}\n";
+        indent();
+        stream << "}\n";
     }
 }
 
@@ -111,8 +111,8 @@ void CodeGen_Bash::visit(Location *n) {
 
 void CodeGen_Bash::visit(ReturnStatement *n) {
     if (n->value == NULL) {
-	stream << "return";
-	return;
+        stream << "return";
+        return;
     }
     bool external = dynamic_cast<ExternCall*>(n->value) != NULL;
     stream << "echo ";

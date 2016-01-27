@@ -6,20 +6,20 @@
 #include <map>
 
 namespace Bish {
-  
+
 // Replaces IRNodes with other IRNodes.
 class ReplaceIRNodes : public IRVisitor {
 public:
     template <class S, class T>
     ReplaceIRNodes(const std::map<S*, T*> &replace) {
-	typename std::map<S*, T*>::const_iterator I, E;
-	for (I = replace.begin(), E = replace.end(); I != E; ++I) {
-	    IRNode *a = dynamic_cast<IRNode*>(I->first),
-		*b = dynamic_cast<IRNode*>(I->second);
-	    assert(I->first && I->second);
-	    assert(a && b);
-	    replace_map[a] = b;
-	}
+        typename std::map<S*, T*>::const_iterator I, E;
+        for (I = replace.begin(), E = replace.end(); I != E; ++I) {
+            IRNode *a = dynamic_cast<IRNode*>(I->first),
+                *b = dynamic_cast<IRNode*>(I->second);
+            assert(I->first && I->second);
+            assert(a && b);
+            replace_map[a] = b;
+        }
     }
 
     virtual void visit(Module *);

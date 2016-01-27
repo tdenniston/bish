@@ -44,8 +44,8 @@ void Tokenizer::next() {
 // Return true if a newline was processed since the last call of was_newline.
 bool Tokenizer::was_newline() {
     if (got_newline) {
-	got_newline = false;
-	return true;
+        got_newline = false;
+        return true;
     }
     return false;
 }
@@ -165,9 +165,9 @@ inline bool Tokenizer::eos() const {
 inline void Tokenizer::skip_whitespace() {
     while (!eos() && is_whitespace(curchar())) {
         if (is_newline(curchar())) {
-	    ++lineno;
-	    got_newline = true;
-	}
+            ++lineno;
+            got_newline = true;
+        }
         ++idx;
     }
 }

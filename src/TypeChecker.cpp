@@ -71,7 +71,7 @@ void TypeChecker::visit(FunctionCall *node) {
     visited_set.insert(node);
     unsigned i = 0;
     bish_assert(node->function->name != module->main->name) <<
-	"Cannot call default 'main' function directly " << node->debug_info();
+        "Cannot call default 'main' function directly " << node->debug_info();
     bish_assert(node->function->body != NULL) <<
         "Calling an undefined function " << node->debug_info();
     for (std::vector<Assignment *>::const_iterator I = node->args.begin(),

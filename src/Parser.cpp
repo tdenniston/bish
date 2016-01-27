@@ -268,7 +268,7 @@ Module *Parser::module(const std::string &path) {
 
     // Install built-in symbols (e.g. 'args' for command line args).
     setup_builtin_symbols();
-    
+
     Function *main = new Function(Name("main"), block());
     m->set_main(main);
     setup_global_variables(m);
@@ -544,7 +544,7 @@ Function *Parser::functiondef() {
     expect(tokenizer->peek(), Token::DefType, "Expected def statement");
     Name name = namespacedvar();
     if (name == Name("main")) {
-	abort_with_position("Cannot redefine default 'main' function");
+        abort_with_position("Cannot redefine default 'main' function");
     }
     expect(tokenizer->peek(), Token::LParenType, "Expected opening '('");
     std::vector<Variable *> args;
@@ -801,9 +801,9 @@ InterpolatedString *Parser::interpolated_string(const Token &stop, bool keep_lit
 // Advance the tokenizer to the beginning of the next statement.
 void Parser::end_stmt() {
     if (tokenizer->peek().isa(Token::SemicolonType)) {
-	tokenizer->next();
+        tokenizer->next();
     } else if (!tokenizer->was_newline()) {
-	abort_with_position("Expected end of statement");
+        abort_with_position("Expected end of statement");
     }
 }
 

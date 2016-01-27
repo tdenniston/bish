@@ -27,7 +27,7 @@ public:
 private:
     std::map<const Variable *, std::string> rename;
 };
- 
+
 class CodeGen_Bash : public CodeGenerator {
 public:
     CodeGen_Bash(std::ostream &os) : CodeGenerator(os) {
@@ -133,11 +133,11 @@ private:
     }
 
     std::string function_name(const Function *f) {
-	// Ensure a function name is always qualified somehow.
-	if (f->name.namespace_id.empty()) {
-	    return "bish_" + f->name.str();
-	}
-	return f->name.str();
+        // Ensure a function name is always qualified somehow.
+        if (f->name.namespace_id.empty()) {
+            return "bish_" + f->name.str();
+        }
+        return f->name.str();
     }
 };
 
