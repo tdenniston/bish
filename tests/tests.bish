@@ -43,6 +43,9 @@ def run_all() {
 
     import side_effect_return_vals
     side_effect_return_vals.test()
+
+    import return_vals
+    return_vals.test()
 }
 
 change_dir()

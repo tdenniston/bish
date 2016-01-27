@@ -55,9 +55,13 @@ void CallGraphBuilder::visit(FunctionCall *call) {
     Block *b = dynamic_cast<Block *>(call->parent());
     assert(b);
     Function *f = dynamic_cast<Function *>(b->parent());
-    assert(f);
-    cg.calls_map[f].push_back(call->function);
-    cg.callers_map[call->function].push_back(f);
+    // The parent of a block can be null if the block is the Module
+    // global variable block. Currently, don't add function calls from
+    // the global variable initializers to the callgraph.
+    if (f) {
+        cg.calls_map[f].push_back(call->function);
+        cg.callers_map[call->function].push_back(f);
+    }
 }
 
 CallGraph CallGraphBuilder::build(Module *m) {
