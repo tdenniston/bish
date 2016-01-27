@@ -36,6 +36,7 @@ public:
         disable_functioncall_wrap();
         enable_quote_variable();
         enable_comparison_wrap();
+        enable_use_local();
     }
     virtual void visit(Module *);
     virtual void visit(Block *);
@@ -63,6 +64,7 @@ private:
     std::stack<bool> functioncall_wrap;
     std::stack<bool> quote_variable;
     std::stack<bool> comparison_wrap;
+    std::stack<bool> use_local;
     unsigned indent_level;
 
     inline void disable_block_braces() { block_print_braces.push(false); }
@@ -84,6 +86,11 @@ private:
     inline void enable_comparison_wrap() { comparison_wrap.push(true); }
     inline void reset_comparison_wrap() { comparison_wrap.pop(); }
     inline bool should_comparison_wrap() const { return comparison_wrap.top(); }
+
+    inline void disable_use_local() { use_local.push(false); }
+    inline void enable_use_local() { use_local.push(true); }
+    inline void reset_use_local() { use_local.pop(); }
+    inline bool should_use_local(const Assignment *node) const;
 
     inline bool should_emit_statement(const IRNode *node) const;
 

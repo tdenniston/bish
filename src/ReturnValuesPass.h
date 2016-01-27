@@ -20,6 +20,7 @@ private:
     void initialize_unique_naming(Module *m);
     void initialize_blacklist(Module *m);
     void lower_function(Function *f);
+    void lower_blocks(std::vector<Block *> &blocks);
     Variable *get_return_value(Function *f);
     template <class T> void process_statements(std::vector<T *> &stmts);
 };

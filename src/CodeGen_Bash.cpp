@@ -15,6 +15,12 @@ bool CodeGen_Bash::should_emit_statement(const IRNode *node) const {
     return dynamic_cast<const ImportStatement*>(node) == NULL;
 }
 
+// Return true if the given assignment node should have 'local'
+// prepended to it.
+bool CodeGen_Bash::should_use_local(const Assignment *n) const {
+    return !n->location->variable->global && use_local.top();
+}
+
 void CodeGen_Bash::visit(Module *n) {
     // Define the functions first.
     for (std::vector<Function *>::const_iterator I = n->functions.begin(),
@@ -24,7 +30,10 @@ void CodeGen_Bash::visit(Module *n) {
     // Special case for command-line arguments. TODO: tie this into Builtins somehow.
     stream << "args=( $0 \"$@\" );\n";
     // Global variables next.
+    disable_use_local();
     n->global_variables->accept(this);
+    reset_use_local();
+
     // Insert a call to bish_main().
     assert(n->main);
     FunctionCall *call_main = new FunctionCall(n->main, IRDebugInfo());
@@ -256,7 +265,7 @@ void CodeGen_Bash::visit(IORedirection *n) {
 
 void CodeGen_Bash::visit(Assignment *n) {
     Location *loc = n->location;
-    if (!loc->variable->global) stream << "local ";
+    if (should_use_local(n)) stream << "local ";
     if (loc->is_variable()) {
         stream << lookup_name(loc->variable) << "=";
     } else {

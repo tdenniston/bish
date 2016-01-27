@@ -90,7 +90,9 @@ void ReturnValuesPass::initialize_blacklist(Module *m) {
 void ReturnValuesPass::visit(Module *node) {
     initialize_unique_naming(node);
     initialize_blacklist(node);
-    //process_statements(node->global_variables);
+
+    std::vector<Block *> gv_block(1, node->global_variables);
+    lower_blocks(gv_block);
 
     for (std::vector<Function *>::iterator I = node->functions.begin(), E = node->functions.end(); I != E; ++I) {
         Function *f = *I;
@@ -133,6 +135,10 @@ void ReturnValuesPass::process_statements(std::vector<T *> &stmts) {
 void ReturnValuesPass::lower_function(Function *f) {
     GetAllBlocks get_blocks(f);
     std::vector<Block *> blocks = get_blocks.blocks();
+    lower_blocks(blocks);
+}
+
+void ReturnValuesPass::lower_blocks(std::vector<Block *> &blocks) {
     std::set<Block *> block_set;
     std::set<FunctionCall *> call_set;
     for (std::vector<Block *>::iterator BI = blocks.begin(), BE = blocks.end(); BI != BE; ++BI) {
