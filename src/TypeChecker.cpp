@@ -10,10 +10,7 @@ void TypeChecker::visit(Module *node) {
     if (visited(node)) return;
     visited_set.insert(node);
     module = node;
-    for (std::vector<Assignment *>::const_iterator I = node->global_variables.begin(),
-             E = node->global_variables.end(); I != E; ++I) {
-        (*I)->accept(this);
-    }
+    node->global_variables->accept(this);
     // Functions are not visited here: only via function calls.
     if (node->main) node->main->accept(this);
 }

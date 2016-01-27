@@ -23,12 +23,7 @@ IRNode *ReplaceIRNodes::replacement(IRNode *node) {
 }
 
 void ReplaceIRNodes::visit(Module *node) {
-    for (unsigned i = 0; i < node->global_variables.size(); i++) {
-        if (IRNode *n = replacement(node->global_variables[i])) {
-            Assignment *a = assert_cast<Assignment*>(n);
-            node->global_variables[i] = a;
-        }
-    }
+    node->global_variables->accept(this);
     IRVisitor::visit(node);
 }
 

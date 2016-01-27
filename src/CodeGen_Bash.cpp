@@ -24,11 +24,7 @@ void CodeGen_Bash::visit(Module *n) {
     // Special case for command-line arguments. TODO: tie this into Builtins somehow.
     stream << "args=( $0 \"$@\" );\n";
     // Global variables next.
-    for (std::vector<Assignment *>::const_iterator I = n->global_variables.begin(),
-             E = n->global_variables.end(); I != E; ++I) {
-        (*I)->accept(this);
-        stream << ";\n";
-    }
+    n->global_variables->accept(this);
     // Insert a call to bish_main().
     assert(n->main);
     FunctionCall *call_main = new FunctionCall(n->main, IRDebugInfo());

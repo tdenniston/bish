@@ -17,7 +17,7 @@ void Module::add_function(Function *f) {
 }
 
 void Module::add_global(Assignment *a) {
-    global_variables.push_back(a);
+    global_variables->nodes.push_back(a);
 }
 
 void Module::set_path(const std::string &p) {

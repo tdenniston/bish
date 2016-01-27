@@ -4,9 +4,11 @@ using namespace Bish;
 
 void ByReferencePass::initialize_unique_naming(Module *m) {
     unique_id = 0;
-    for (std::vector<Assignment *>::const_iterator I = m->global_variables.begin(),
-             E = m->global_variables.end(); I != E; ++I) {
-        used_names.insert((*I)->location->variable->name);
+    for (Block::iterator I = m->global_variables->begin(), E = m->global_variables->end();
+         I != E; ++I) {
+        if (const Assignment *A = dynamic_cast<const Assignment *>(*I)) {
+            used_names.insert(A->location->variable->name);
+        }
     }
 }
 

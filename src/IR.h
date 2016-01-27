@@ -145,7 +145,7 @@ public:
     // If non-NULL, this Variable is a reference to 'reference'.
     Variable *reference;
     Variable(const Name &n) : name(n), global(false), reference(NULL) {}
-    
+
     void set_reference(Variable *r) { reference = r; }
     bool is_reference() const { return reference != NULL; }
 };
@@ -194,8 +194,8 @@ class Module : public BaseIRNode<Module> {
 public:
     // List of all functions in the module (including main)
     std::vector<Function *> functions;
-    // List of all global variables.
-    std::vector<Assignment *> global_variables;
+    // Global variables initializers.
+    Block *global_variables;
     // Pointer to main function
     Function *main;
     // Path to source file on disk
@@ -203,7 +203,9 @@ public:
     // Namespace identifier
     std::string namespace_id;
 
-    Module() : main(NULL) {}
+    Module() : main(NULL) {
+        global_variables = new Block();
+    }
 
     // Set the module's main function.
     void set_main(Function *f);

@@ -5,10 +5,7 @@ using namespace Bish;
 
 void LinkImportsPass::visit(Module *node) {
     module = node;
-    for (std::vector<Assignment *>::const_iterator I = node->global_variables.begin(),
-             E = node->global_variables.end(); I != E; ++I) {
-        (*I)->accept(this);
-    }
+    node->global_variables->accept(this);
     // There's probably a better way to do this. The issue is that
     // visiting functions which have import statements in them can
     // cause the list of functions in the module to change. Thus, we

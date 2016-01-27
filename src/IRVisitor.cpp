@@ -9,10 +9,8 @@ void IRVisitor::visit(Module *node) {
     if (visited(node)) return;
     visited_set.insert(node);
 
-    for (std::vector<Assignment *>::const_iterator I = node->global_variables.begin(),
-             E = node->global_variables.end(); I != E; ++I) {
-        (*I)->accept(this);
-    }
+    node->global_variables->accept(this);
+
     for (std::vector<Function *>::const_iterator I = node->functions.begin(),
              E = node->functions.end(); I != E; ++I) {
         (*I)->accept(this);
@@ -161,4 +159,3 @@ void IRVisitor::visit(Boolean *node) {
     if (visited(node)) return;
     visited_set.insert(node);
 }
-

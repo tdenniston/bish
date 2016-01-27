@@ -16,7 +16,13 @@ void IRAncestorsPass::visit(Block *node) {
     block_stack.push(node);
     IRVisitor::visit(node);
     block_stack.pop();
-    node->set_parent(function_stack.top());
+    if (function_stack.empty()) {
+        // True for global variables block.
+        assert(!block_stack.empty());
+        node->set_parent(block_stack.top());
+    } else {
+        node->set_parent(function_stack.top());
+    }
 }
 
 void IRAncestorsPass::visit(ReturnStatement *node) {
