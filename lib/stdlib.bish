@@ -6,55 +6,55 @@
 
 # Print the given string without new line.
 def print(s) {
-    @(echo -ne "$s");
+    @(echo -ne "$s")
 }
 
 # Print the given string with new line.
 def println(s) {
-    @(echo -e "$s");
+    @(echo -e "$s")
 }
 
 # Return true if the given file exists.
 def exists(file) {
-    @(test -e $file);
-    return success();
+    @(test -e $file)
+    return success()
 }
 
 # Return true if the last command exited with status 0.
 def success() {
-    rc = @(echo $(?));
+    rc = @(echo $(?))
     if (rc == 0) {
-        return true;
+        return true
     } else {
-        return false;
+        return false
     }
 }
 
 # List files.
 def ls() {
-    return @(ls);
+    return @(ls)
 }
 
 # Change directories.
 def cd(path) {
-    @(cd $path);
+    @(cd $path)
 }
 
 # Get current directory.
 def cwd() {
-    return @(pwd);
+    return @(pwd)
 }
 
 # Return the absolute path for relative path 'relpath'.
 def abspath(relpath) {
-   return @(cd $relpath ; pwd);
+    return @(cd $relpath ; pwd)
 }
 
 # Terminate the shell if 'v' is false.
 def assert(v) {
     if (v == false) {
-      println("Assertion failed.");
-      @(exit 1);
+        println("Assertion failed.")
+        @(exit 1)
     }
 }
 
