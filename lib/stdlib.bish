@@ -6,12 +6,12 @@
 
 # Print the given string without new line.
 def print(s) {
-    @(echo -ne "$s");
+    @(printf '%b' "$s");
 }
 
 # Print the given string with new line.
 def println(s) {
-    @(echo -e "$s");
+    @(printf '%b\n' "$s");
 }
 
 # Return true if the given file exists.
