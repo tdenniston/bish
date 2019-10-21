@@ -49,6 +49,9 @@ def run_all() {
 
     import conditionals
     conditionals.test()
+
+    import twelve
+    twelve.test()
 }
 
 change_dir()

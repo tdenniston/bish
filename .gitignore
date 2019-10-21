@@ -1,3 +1,4 @@
 obj
 *.dSYM
 bish
+bish.exe*

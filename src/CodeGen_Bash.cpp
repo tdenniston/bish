@@ -28,7 +28,7 @@ void CodeGen_Bash::visit(Module *n) {
         (*I)->accept(this);
     }
     // Special case for command-line arguments. TODO: tie this into Builtins somehow.
-    stream << "args=( $0 \"$@\" );\n";
+    stream << "args=( \"$0\" \"$@\" );\n";
     // Global variables next.
     disable_use_local();
     n->global_variables->accept(this);
@@ -60,7 +60,7 @@ void CodeGen_Bash::visit(Block *n) {
                 if (array) stream << " )";
                 stream << ";\n";
             } else {
-                stream << "\"$" << i++ << "\";\n";
+                stream << "\"${" << i++ << "}\";\n";
             }
         }
     }
@@ -90,10 +90,10 @@ void CodeGen_Bash::visit(Block *n) {
 void CodeGen_Bash::visit(Variable *n) {
     if (should_quote_variable()) stream << "\"";
     bool array = n->type().array();
-    stream << "$";
-    if (array) stream << "{";
+    stream << "${";
     stream << lookup_name(n);
-    if (array) stream << "[@]}";
+    if (array) stream << "[@]";
+    stream << "}";
     if (should_quote_variable()) stream << "\"";
 }
 
@@ -101,10 +101,10 @@ void CodeGen_Bash::visit(Location *n) {
     if (should_quote_variable()) stream << "\"";
     if (n->is_variable()) {
         bool array = n->variable->type().array();
-        stream << "$";
-        if (array) stream << "{";
+        stream << "${";
         stream << lookup_name(n->variable);
-        if (array) stream << "[@]}";
+        if (array) stream << "[@]";
+        stream << "}";
     } else {
         assert(n->is_array_ref());
         stream << "${" << lookup_name(n->variable) << "[";
