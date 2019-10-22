@@ -1,5 +1,5 @@
 CXX?=c++
-CXXFLAGS?=-g -O0
+CXXFLAGS?=-g -O0 -pipe -Wall -Wextra -Wno-reorder
 RM=rm -f
 
 SRC=src
@@ -26,8 +26,7 @@ $(OBJ)/%.o: $(SRC)/%.cpp $(SRC)/%.h
 
 $(OBJ)/libbish.a: $(OBJECTS)
 	$(LD) -r -o $(OBJ)/bish.o $(OBJECTS)
-	ar -ru $@ $(OBJ)/bish.o
-	ranlib $@
+	ar -rsu $@ $(OBJ)/bish.o
 
 bish: $(SRC)/bish.cpp $(OBJ)/libbish.a
 	$(CXX) $(CXXFLAGS) -o bish $(SRC)/bish.cpp $(OBJ)/libbish.a $(CONFIG_CONSTANTS)
