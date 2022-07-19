@@ -16,7 +16,7 @@ inline T convert_string(const std::string &s) {
 
 // Convert int to string
 inline std::string as_string(int i) {
-  return dynamic_cast<std::ostringstream &>((std::ostringstream() << i )).str();
+  return std::to_string(i);
 }
 
 inline std::string as_string(const std::string &s) {
